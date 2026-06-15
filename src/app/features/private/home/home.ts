@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
   styleUrl: './home.scss'
 })
 export class HomeComponent {
+  devMenuAberto = false;
 
   servicos = [
     { label: 'DELIVERY',                rota: '/delivery' },
@@ -22,7 +23,14 @@ export class HomeComponent {
 
   constructor(private router: Router) {}
 
+  toggleDevMenu() {
+    this.devMenuAberto = !this.devMenuAberto;
+  }
+
   navegar(rota: string | null) {
-    if (rota) this.router.navigate([rota]);
+    if (rota) {
+      this.devMenuAberto = false;
+      this.router.navigate([rota]);
+    }
   }
 }

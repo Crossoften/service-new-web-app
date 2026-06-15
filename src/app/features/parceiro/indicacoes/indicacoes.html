@@ -1,0 +1,56 @@
+<div class="page-container">
+
+  <div class="indicacoes-header">
+    <span class="indicacoes-header__titulo">Indicações</span>
+  </div>
+
+  <!-- TABS -->
+  <div class="indicacoes-tabs">
+    @for (tab of tabs; track tab.id) {
+      <button
+        class="indicacoes-tabs__item"
+        [class.indicacoes-tabs__item--ativo]="tabAtiva === tab.id"
+        (click)="tabAtiva = tab.id">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <div class="page-content">
+    <div class="indicacoes-lista">
+      @for (indicacao of indicacoesFiltradas; track indicacao.id) {
+        <div class="indicacao-card">
+
+          <div class="indicacao-card__foto">
+            @if (indicacao.foto) {
+              <img [src]="indicacao.foto" [alt]="indicacao.nome" />
+            } @else {
+              <div class="indicacao-card__foto-placeholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+            }
+          </div>
+
+          <div class="indicacao-card__info">
+            <span class="indicacao-card__nome">{{ indicacao.nome }}</span>
+            <span class="indicacao-card__profissao">● {{ indicacao.profissao }}</span>
+            <span class="indicacao-card__descricao">{{ indicacao.descricao }}</span>
+          </div>
+
+        </div>
+      }
+
+      @if (indicacoesFiltradas.length === 0) {
+        <div class="indicacoes-vazio">
+          <p>Nenhuma indicação encontrada.</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <app-bottom-nav-parceiro tabAtiva="indicacoes"></app-bottom-nav-parceiro>
+
+</div>

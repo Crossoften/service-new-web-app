@@ -15,11 +15,16 @@ export class LoginComponent {
   senhaVisivel: boolean = false;
   erro: string = '';
 
-  constructor(private router: Router) {}
+  // Mock de roles para teste
+  // Futuramente virá da API
+  rolesMock: Record<string, string> = {
+    '11999999999': 'cliente',
+    '11988888888': 'parceiro',
+    '11977777777': 'fornecedor',
+    '11966666666': 'entregador',
+  };
 
-  get telefoneFormatado(): string {
-    return this.telefone;
-  }
+  constructor(private router: Router) {}
 
   formatarTelefone(event: Event) {
     let valor = (event.target as HTMLInputElement).value.replace(/\D/g, '');
@@ -38,21 +43,38 @@ export class LoginComponent {
     this.senhaVisivel = !this.senhaVisivel;
   }
 
-  entrar() {
-    this.erro = '';
+entrar() {
+  this.erro = '';
 
-    const telefoneLimpo = this.telefone.replace(/\D/g, '');
-    if (telefoneLimpo.length < 10) {
-      this.erro = 'Informe um telefone válido.';
-      return;
-    }
+  const telefoneLimpo = this.telefone.replace(/\D/g, '');
+  if (telefoneLimpo.length < 10) {
+    this.erro = 'Informe um telefone válido.';
+    return;
+  }
 
-    if (this.senha.length < 6) {
-      this.erro = 'A senha deve ter no mínimo 6 caracteres.';
-      return;
-    }
+  if (this.senha.length < 6) {
+    this.erro = 'A senha deve ter no mínimo 6 caracteres.';
+    return;
+  }
 
-    this.router.navigate(['/home']);
+  // Futuramente: chamar API e receber a role do usuário
+  const role = this.rolesMock[telefoneLimpo] ?? 'cliente';
+  localStorage.setItem('role', role);
+
+  console.log('telefone limpo:', telefoneLimpo);
+  console.log('role:', role);
+
+  this.redirecionarPorRole(role);
+}
+
+  redirecionarPorRole(role: string) {
+    const rotas: Record<string, string> = {
+      cliente:     '/home',
+      parceiro:    '/parceiro/home',
+      fornecedor:  '/home',
+      entregador:  '/home',
+    };
+    this.router.navigate([rotas[role] ?? '/home']);
   }
 
   cadastrar() {

@@ -1,0 +1,107 @@
+<div class="chat-container">
+
+  <!-- HEADER -->
+  <div class="chat-header">
+    <button class="chat-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="chat-header__titulo">DIÁLOGO</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <!-- CARD PRESTADOR -->
+  <div class="chat-prestador">
+    <div class="chat-prestador__foto">
+      <div class="chat-prestador__foto-placeholder">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+    </div>
+    <span class="chat-prestador__nome">{{ prestadorNome }}</span>
+    <button class="chat-prestador__menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- MENSAGENS -->
+  <div class="chat-mensagens" #mensagensContainer>
+    @for (grupo of grupos; track grupo.data) {
+
+      <div class="chat-data">
+        <span>{{ grupo.data }}</span>
+      </div>
+
+      @for (msg of grupo.mensagens; track msg.id) {
+
+        @if (msg.horario && !msg.enviada) {
+          <span class="chat-horario">{{ msg.horario }}</span>
+        }
+
+        <div class="chat-msg" [class.chat-msg--enviada]="msg.enviada">
+
+          @if (msg.texto) {
+            <div class="chat-msg__balao" [class.chat-msg__balao--enviada]="msg.enviada">
+              {{ msg.texto }}
+            </div>
+          }
+
+          @if (msg.arquivo) {
+            <div class="chat-msg__arquivo">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <div class="chat-msg__arquivo-info">
+                <span class="chat-msg__arquivo-nome">{{ msg.arquivo.nome }}</span>
+                <span class="chat-msg__arquivo-meta">| {{ msg.arquivo.data }}</span>
+                <span class="chat-msg__arquivo-tipo">{{ msg.arquivo.tipo }}</span>
+              </div>
+              <button class="chat-msg__arquivo-download">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="8 12 12 16 16 12"/>
+                  <line x1="12" y1="8" x2="12" y2="16"/>
+                </svg>
+              </button>
+            </div>
+          }
+
+          @if (msg.horario && msg.enviada) {
+            <span class="chat-horario chat-horario--enviada">{{ msg.horario }}</span>
+          }
+
+        </div>
+      }
+    }
+  </div>
+
+  <!-- INPUT -->
+  <div class="chat-input">
+    <div class="chat-input__wrapper">
+      <input
+        type="text"
+        placeholder="Digite sua mensagem"
+        [(ngModel)]="novaMensagem"
+        (keyup.enter)="enviar()"
+      />
+      <button class="chat-input__anexar" (click)="anexarArquivo()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+    </div>
+    <button class="chat-input__enviar" (click)="enviar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+
+</div>

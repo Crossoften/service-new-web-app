@@ -1,0 +1,98 @@
+<div class="page-container">
+
+  <div class="saldo-header">
+    <button class="saldo-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="saldo-header__titulo">Saldo</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <!-- CARD SALDO -->
+  <div class="saldo-card">
+    <span class="saldo-card__label">Saldo do mês</span>
+    <span class="saldo-card__valor">{{ formatarPreco(saldoMes) }}</span>
+  </div>
+
+  <!-- TABS -->
+  <div class="saldo-tabs">
+    <button
+      class="saldo-tabs__item"
+      [class.saldo-tabs__item--ativo]="tabAtiva === 'historico'"
+      (click)="tabAtiva = 'historico'">
+      Histórico
+    </button>
+    <button
+      class="saldo-tabs__item"
+      [class.saldo-tabs__item--ativo]="tabAtiva === 'bancos'"
+      (click)="tabAtiva = 'bancos'">
+      Bancos
+    </button>
+  </div>
+
+  <div class="page-content">
+
+    <!-- HISTÓRICO -->
+    @if (tabAtiva === 'historico') {
+      <div class="saldo-lista">
+        @for (item of historico; track item.id) {
+          <div class="saldo-item">
+            <div class="saldo-item__foto">
+              @if (item.foto) {
+                <img [src]="item.foto" [alt]="item.nome" />
+              } @else {
+                <div class="saldo-item__foto-placeholder">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+              }
+            </div>
+            <div class="saldo-item__info">
+              <span class="saldo-item__nome">{{ item.nome }}</span>
+              <span class="saldo-item__profissao">● {{ item.profissao }}</span>
+              <span class="saldo-item__descricao">{{ item.descricao }}</span>
+              <span class="saldo-item__valor">{{ formatarPreco(item.valor) }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- BANCOS -->
+    @if (tabAtiva === 'bancos') {
+      <div class="saldo-bancos">
+        @for (banco of bancos; track banco.id) {
+          <div class="banco-card">
+            <p class="banco-card__nome">{{ banco.banco }}</p>
+            <p class="banco-card__info">{{ banco.tipo }}</p>
+            <p class="banco-card__info">Agência: {{ banco.agencia }}</p>
+            <p class="banco-card__info">Conta: {{ banco.conta }}</p>
+            <p class="banco-card__info">CPF: {{ banco.cpf }}</p>
+          </div>
+        }
+
+        @if (bancos.length === 0) {
+          <div class="saldo-vazio">
+            <p>Nenhum banco cadastrado.</p>
+          </div>
+        }
+      </div>
+
+      <div class="saldo-actions">
+        <button class="saldo-btn" (click)="adicionarBanco()">ADICIONAR BANCO</button>
+      </div>
+    }
+
+  </div>
+
+  @if (tabAtiva === 'bancos') {
+    <div class="saldo-actions-fixo">
+      <button class="saldo-btn" (click)="adicionarBanco()">ADICIONAR BANCO</button>
+    </div>
+  }
+
+</div>

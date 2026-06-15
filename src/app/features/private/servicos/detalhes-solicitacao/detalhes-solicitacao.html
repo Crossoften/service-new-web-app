@@ -1,0 +1,136 @@
+<div class="solicitacao-container">
+
+  <!-- HEADER -->
+  <div class="solicitacao-header">
+    <button class="solicitacao-header__btn" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="solicitacao-header__titulo">Solicitação</span>
+    <div class="solicitacao-header__acoes">
+      <button class="solicitacao-header__icon" (click)="abrirChat()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </button>
+      <button class="solicitacao-header__icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- DETALHES -->
+    <div class="solicitacao-detalhes">
+      <h3 class="solicitacao-detalhes__titulo">Detalhes da solicitação</h3>
+      <div class="solicitacao-detalhes__linha">
+        <span>Realizado em</span><span>00/00/0000</span>
+      </div>
+      <div class="solicitacao-detalhes__linha">
+        <span>Valor serviço</span><span>R$ 00,00</span>
+      </div>
+      <div class="solicitacao-detalhes__linha solicitacao-detalhes__linha--total">
+        <span>Total</span><span>R$ 00,00</span>
+      </div>
+    </div>
+
+    <!-- PRESTADOR -->
+    <div class="solicitacao-prestador">
+      <div class="solicitacao-prestador__foto">
+        <div class="solicitacao-prestador__foto-placeholder">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+      </div>
+      <div class="solicitacao-prestador__info">
+        <span class="solicitacao-prestador__nome">Prestador: {{ prestadorNome }}</span>
+        <span class="solicitacao-prestador__descricao">{{ prestadorDescricao }}</span>
+      </div>
+    </div>
+
+    <!-- ARQUIVOS -->
+    <div class="solicitacao-arquivos">
+      @for (arquivo of arquivos; track arquivo.id) {
+        <div class="solicitacao-arquivo">
+          <span>{{ arquivo.nome }}</span>
+          <button class="solicitacao-arquivo__btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="8 12 12 16 16 12"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+            </svg>
+          </button>
+        </div>
+      }
+    </div>
+
+  </div>
+
+  <!-- BOTÕES POR STEP -->
+  <div class="solicitacao-actions">
+
+    @if (stepAtual === 'aguardando') {
+      <button class="solicitacao-btn solicitacao-btn--primary" (click)="finalizar()">FINALIZAR</button>
+      <button class="solicitacao-btn solicitacao-btn--outline" (click)="revisao()">REVISÃO</button>
+    }
+
+    @if (stepAtual === 'cancelavel') {
+      <button class="solicitacao-btn solicitacao-btn--outline" (click)="cancelar()">CANCELAR</button>
+    }
+
+    @if (stepAtual === 'em_andamento') {
+      <button class="solicitacao-btn solicitacao-btn--primary" (click)="confirmarChegada()">CONFIRMAR CHEGADA</button>
+      <button class="solicitacao-btn solicitacao-btn--outline" (click)="cancelar()">CANCELAR</button>
+    }
+
+    @if (stepAtual === 'concluido') {
+      <button class="solicitacao-btn solicitacao-btn--primary" (click)="servicoConcluido()">SERVIÇO CONCLUÍDO</button>
+      <button class="solicitacao-btn solicitacao-btn--outline" (click)="solicitarGarantia()">SOLICITAR GARANTIA</button>
+    }
+
+  </div>
+
+  <!-- MODAL ACRÉSCIMO -->
+  @if (mostrarModal) {
+    <div class="modal-overlay" (click)="cancelarModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3 class="modal__titulo">Atenção!</h3>
+        <p class="modal__descricao">Ouve um acréscimo no orçamento devido a um extra adicionado pelo fornecedor:</p>
+
+        <div class="modal__detalhes">
+          <h4>Detalhes da solicitação</h4>
+          <div class="modal__linha">
+            <span>Realizado em</span><span>00/00/0000</span>
+          </div>
+          <div class="modal__linha">
+            <span>Valor serviço</span><span>R$ 00,00</span>
+          </div>
+          <div class="modal__linha">
+            <span>Extra:</span><span>R$ 00,00</span>
+          </div>
+          <div class="modal__linha modal__linha--total">
+            <span>Total</span><span>R$ 00,00</span>
+          </div>
+        </div>
+
+        <div class="modal__justificativa">
+          <h4>Justificativa</h4>
+          <p>Lorem Ipsum Dolor Sit Amet, Consectetur Lorem Ipsum Dolor Sit Amet, Consectetur Lorem Ipsum Dolor Sit Amet, Consectetur Lorem Ipsum Dolor Sit Amet, Consectetur Lorem Ipsum Dolor Sit</p>
+        </div>
+
+        <div class="modal__acoes">
+          <button class="solicitacao-btn solicitacao-btn--primary" (click)="confirmarModal()">CONFIRMAR</button>
+          <button class="solicitacao-btn solicitacao-btn--outline" (click)="cancelarModal()">CANCELAR</button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

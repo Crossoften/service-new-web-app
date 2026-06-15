@@ -1,0 +1,39 @@
+<div class="page-container">
+
+  <div class="codigo-header">
+    <span class="codigo-header__titulo">Código</span>
+  </div>
+
+  <div class="page-content">
+
+    <!-- IMAGEM HERO -->
+    <div class="codigo-hero">
+      <img src="assets/parceiro-codigo.png" alt="Compartilhe seu código" />
+    </div>
+
+    <p class="codigo-descricao">
+      Utilize seu código para divulgar nas redes sociais:
+    </p>
+
+    <!-- CARD LINK -->
+    <div class="codigo-card">
+      <h3 class="codigo-card__titulo">Seu link de indicação</h3>
+      <p class="codigo-card__subtitulo">Seu link personalizado</p>
+      <div class="codigo-card__link">
+        <span>{{ link }}</span>
+      </div>
+      <div class="codigo-card__acoes">
+        <button class="codigo-btn codigo-btn--primary" (click)="copiarLink()">
+          {{ linkCopiado ? 'Copiado!' : 'Copiar link' }}
+        </button>
+        <button class="codigo-btn codigo-btn--primary" (click)="compartilhar()">
+          Compartilhar
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <app-bottom-nav-parceiro tabAtiva="codigo"></app-bottom-nav-parceiro>
+
+</div>

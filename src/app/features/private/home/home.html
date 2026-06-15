@@ -1,7 +1,7 @@
 <div class="page-container">
 
   <div class="home-header">
-    <div class="home-user">
+    <div class="home-user" (click)="toggleDevMenu()">
       <div class="home-avatar">
         <span>U</span>
       </div>
@@ -17,6 +17,25 @@
       </svg>
     </button>
   </div>
+
+  <!-- DEV MENU -->
+  @if (devMenuAberto) {
+    <div class="dev-menu">
+      <p class="dev-menu__titulo">🛠 Atalhos Dev</p>
+      <div class="dev-menu__grid">
+        <button (click)="navegar('/login')">Login</button>
+        <button (click)="navegar('/selecionar-perfil')">Cadastro</button>
+<!--         <button (click)="navegar('/parceiro/home')">Parceiro</button>
+        <button (click)="navegar('/delivery')">Delivery</button>
+        <button (click)="navegar('/servicos')">Serviços</button>
+        <button (click)="navegar('/servicos/solicitacoes')">Solicitações</button>
+        <button (click)="navegar('/servicos/orcamentos')">Orçamentos</button>
+        <button (click)="navegar('/parceiro/mais')">Mais Parceiro</button>
+        <button (click)="navegar('/parceiro/saldo')">Saldo</button>
+      <button (click)="navegar('/cadastro/cliente')">Cad. Cliente</button> -->
+      </div>
+    </div>
+  }
 
   <div class="page-content">
     <div class="home-servicos">

@@ -1,0 +1,83 @@
+<div class="page-container">
+
+  <!-- HEADER -->
+  <div class="home-parceiro-header">
+    <div class="home-parceiro-header__user">
+      <div class="home-parceiro-header__avatar">
+        <span>U</span>
+      </div>
+      <div class="home-parceiro-header__info">
+        <span class="home-parceiro-header__welcome">Bem vindo</span>
+        <span class="home-parceiro-header__nome">João Carlos</span>
+      </div>
+    </div>
+    <button class="home-parceiro-header__sino">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="page-content">
+
+    <!-- LINK DE INDICAÇÃO -->
+    <div class="parceiro-card">
+      <h3 class="parceiro-card__titulo">Seu link de indicação</h3>
+      <p class="parceiro-card__subtitulo">Seu link personalizado</p>
+      <div class="parceiro-card__link">
+        <span>{{ link }}</span>
+      </div>
+      <div class="parceiro-card__acoes">
+        <button class="parceiro-card__btn parceiro-card__btn--primary" (click)="copiarLink()">
+          {{ linkCopiado ? 'Copiado!' : 'Copiar link' }}
+        </button>
+        <button class="parceiro-card__btn parceiro-card__btn--primary" (click)="compartilhar()">
+          Compartilhar
+        </button>
+      </div>
+    </div>
+
+    <!-- MINHAS INDICAÇÕES -->
+    <div class="parceiro-card">
+      <h3 class="parceiro-card__titulo">Minhas indicações</h3>
+      <div class="parceiro-stats">
+        <p>Total de download dos indicados: <strong>{{ stats.downloads }}</strong></p>
+        <p>Total de pagantes na plataforma: <strong>{{ stats.pagantes }}</strong></p>
+        <p>Comissão acumulada: <strong>R$ {{ stats.comissao.toFixed(2) }}</strong></p>
+        <p>Posição no ranking: <strong>#{{ stats.ranking }}</strong></p>
+      </div>
+    </div>
+
+    <!-- ÚLTIMAS INDICAÇÕES -->
+    <h3 class="parceiro-secao-titulo">Últimas indicações</h3>
+
+    <div class="parceiro-indicacoes">
+      @for (indicacao of ultimasIndicacoes; track indicacao.id) {
+        <div class="indicacao-card">
+          <div class="indicacao-card__foto">
+            @if (indicacao.foto) {
+              <img [src]="indicacao.foto" [alt]="indicacao.nome" />
+            } @else {
+              <div class="indicacao-card__foto-placeholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+            }
+          </div>
+          <div class="indicacao-card__info">
+            <span class="indicacao-card__nome">{{ indicacao.nome }}</span>
+            <span class="indicacao-card__profissao">● {{ indicacao.profissao }}</span>
+            <span class="indicacao-card__descricao">{{ indicacao.descricao }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+
+  <app-bottom-nav-parceiro tabAtiva="home"></app-bottom-nav-parceiro>
+
+</div>

@@ -1,0 +1,91 @@
+<div class="page-container">
+
+  <div class="banco-header">
+    <button class="banco-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="banco-header__titulo">Saldo</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="page-content">
+    <div class="banco-form">
+
+      <!-- BANCO -->
+      <div class="banco-field">
+        <label>Banco</label>
+        <div class="banco-field__select" (click)="toggleBanco()">
+          <span>{{ bancoSelecionado }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            [style.transform]="bancoAberto ? 'rotate(180deg)' : 'rotate(0)'">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        @if (bancoAberto) {
+          <div class="banco-field__opcoes">
+            @for (banco of bancos; track banco) {
+              <div class="banco-field__opcao"
+                [class.banco-field__opcao--ativo]="bancoSelecionado === banco"
+                (click)="selecionarBanco(banco)">
+                {{ banco }}
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- TIPO -->
+      <div class="banco-field">
+        <label>Tipo</label>
+        <div class="banco-field__select" (click)="toggleTipo()">
+          <span>{{ tipoSelecionado }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            [style.transform]="tipoAberto ? 'rotate(180deg)' : 'rotate(0)'">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        @if (tipoAberto) {
+          <div class="banco-field__opcoes">
+            @for (tipo of tipos; track tipo) {
+              <div class="banco-field__opcao"
+                [class.banco-field__opcao--ativo]="tipoSelecionado === tipo"
+                (click)="selecionarTipo(tipo)">
+                {{ tipo }}
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- AGÊNCIA -->
+      <div class="banco-field">
+        <label>Agência</label>
+        <input type="text" placeholder="000000" [(ngModel)]="agencia" />
+      </div>
+
+      <!-- CONTA -->
+      <div class="banco-field">
+        <label>Conta</label>
+        <input type="text" placeholder="000000" [(ngModel)]="conta" />
+      </div>
+
+      <!-- CPF -->
+      <div class="banco-field">
+        <label>CPF</label>
+        <input type="text" placeholder="000000" [(ngModel)]="cpf" />
+      </div>
+
+      @if (erro) {
+        <span class="banco-erro">{{ erro }}</span>
+      }
+
+    </div>
+  </div>
+
+  <div class="banco-actions">
+    <button class="banco-btn" (click)="salvar()">SALVAR</button>
+  </div>
+
+</div>

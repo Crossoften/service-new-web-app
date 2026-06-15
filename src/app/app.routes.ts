@@ -25,6 +25,15 @@ import { DetalhesPrestadorComponent } from './features/private/servicos/detalhes
 import { OrcamentosComponent } from './features/private/servicos/orcamentos/orcamentos';
 import { AprovarOrcamentoComponent } from './features/private/servicos/aprovar-orcamento/aprovar-orcamento';
 import { SolicitacoesComponent } from './features/private/servicos/solicitacoes/solicitacoes';
+import { ChatPrestadorComponent } from './features/private/servicos/chat-prestador/chat-prestador';
+import { DetalhesSolicitacaoComponent } from './features/private/servicos/detalhes-solicitacao/detalhes-solicitacao';
+import { PagamentoServicoComponent } from './features/private/servicos/pagamento-servico/pagamento-servico';
+import { HomeParceiroComponent } from './features/parceiro/home-parceiro/home-parceiro';
+import { MeuCodigoComponent } from './features/parceiro/meu-codigo/meu-codigo';
+import { IndicacoesComponent } from './features/parceiro/indicacoes/indicacoes';
+import { MaisParceiroComponent } from './features/parceiro/mais-parceiro/mais-parceiro';
+import { SaldoComponent } from './features/parceiro/saldo/saldo';
+import { NovoBancoComponent } from './features/parceiro/novo-banco/novo-banco';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'splash', pathMatch: 'full' },
@@ -53,6 +62,17 @@ export const routes: Routes = [
   { path: 'servicos/orcamentos', component: OrcamentosComponent },
   { path: 'servicos/orcamento/:id', component: AprovarOrcamentoComponent },
   { path: 'servicos/solicitacoes', component: SolicitacoesComponent },
+  { path: 'servicos/chat/:id', component: ChatPrestadorComponent },
+  { path: 'servicos/solicitacao/:id', component: DetalhesSolicitacaoComponent },
+  { path: 'servicos/pagamento/:id', component: PagamentoServicoComponent },
+
+  // Parceiro
+  { path: 'parceiro/home', component: HomeParceiroComponent },
+  { path: 'parceiro/codigo', component: MeuCodigoComponent },
+  { path: 'parceiro/indicacoes', component: IndicacoesComponent },
+  { path: 'parceiro/mais', component: MaisParceiroComponent },
+  { path: 'parceiro/saldo', component: SaldoComponent },
+  { path: 'parceiro/banco/novo', component: NovoBancoComponent },
 
   // Outras categorias
   { path: 'compra-vender', component: CategoriaCompraVenderComponent },

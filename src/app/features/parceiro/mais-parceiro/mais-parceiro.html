@@ -1,0 +1,23 @@
+<div class="mais-container">
+
+  <div class="mais-header">
+    <button class="mais-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="mais-header__titulo">Mais</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="mais-lista">
+    @for (opcao of opcoes; track opcao.label) {
+      <div class="mais-opcao"
+        [class.mais-opcao--sair]="opcao.label === 'Sair'"
+        (click)="navegar(opcao.rota)">
+        <span>{{ opcao.label }}</span>
+      </div>
+    }
+  </div>
+
+</div>

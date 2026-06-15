@@ -22,6 +22,6 @@ export class CategoriaCompraVenderComponent {
     { label: 'Livros',           icon: 'assets/categorias/compra-vender/livros.png' },
     { label: 'Ferramentas',      icon: 'assets/categorias/compra-vender/ferramentas.png' },
     { label: 'Eletrodomésticos', icon: 'assets/categorias/compra-vender/eletrodomesticos.png' },
-    { label: 'Outros',           icon: 'assets/categorias/compra-vender/outros.png' },
+   // { label: 'Outros',           icon: 'assets/categorias/compra-vender/outros.png' },
   ];
 }

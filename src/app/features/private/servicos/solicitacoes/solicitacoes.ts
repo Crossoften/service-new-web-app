@@ -66,6 +66,18 @@ export class SolicitacoesComponent implements OnInit {
     return classes[status];
   }
 
+  abrirDetalhes(solicitacao: Solicitacao) {
+  const stepMap: Record<StatusSolicitacao, string> = {
+    em_andamento: 'em_andamento',
+    em_garantia:  'concluido',
+    finalizada:   'aguardando',
+    cancelada:    'cancelavel'
+  };
+  this.router.navigate(
+    ['/servicos/solicitacao', solicitacao.id],
+    { queryParams: { step: stepMap[solicitacao.status] } }
+  );
+  }
   voltar() {
     history.back();
   }

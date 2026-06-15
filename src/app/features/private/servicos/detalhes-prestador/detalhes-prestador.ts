@@ -33,9 +33,9 @@ In in leo in magna vehicula pharetra. Vivamus ac euismod nisl.`;
     history.back();
   }
 
-  abrirChat() {
-    // implementar depois
-  }
+abrirChat() {
+  this.router.navigate(['/servicos/chat', this.prestador?.id]);
+}
 
   abrirNotificacoes() {
     // implementar depois

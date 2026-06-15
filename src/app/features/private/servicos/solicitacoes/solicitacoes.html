@@ -32,7 +32,7 @@
   <div class="page-content">
     <div class="solicitacoes-lista">
       @for (solicitacao of solicitacoesFiltradas; track solicitacao.id) {
-        <div class="solicitacao-card">
+        <div class="solicitacao-card" (click)="abrirDetalhes(solicitacao)">
 
           <div class="solicitacao-card__foto">
             @if (solicitacao.prestador.foto) {
