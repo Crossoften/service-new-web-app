@@ -1,0 +1,93 @@
+<div class="detalhes-container">
+
+  <!-- HEADER FLUTUANTE -->
+  <div class="detalhes-header">
+    <button class="detalhes-header__btn" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="detalhes-header__titulo">SOLICITAR</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <!-- IMAGEM HERO -->
+  <div class="detalhes-hero">
+    @if (prestador?.imagem) {
+      <img [src]="prestador!.imagem" [alt]="prestador!.nome" />
+    } @else {
+      <div class="detalhes-hero__placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+    }
+  </div>
+
+  <div class="page-content">
+
+    <!-- NOME + AÇÕES -->
+    <div class="detalhes-info">
+      <h1 class="detalhes-info__nome">{{ prestador?.nome }}</h1>
+      <div class="detalhes-info__acoes">
+        <button class="detalhes-info__btn" (click)="abrirChat()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </button>
+        <button class="detalhes-info__btn" (click)="abrirNotificacoes()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    @if (prestador) {
+      <div class="detalhes-stats">
+        <div class="detalhes-stats__grid">
+          <div class="detalhes-stats__item">
+            <span class="detalhes-stats__valor detalhes-stats__valor--like">👍 {{ prestador.gostei }}</span>
+            <span class="detalhes-stats__label">Gostei</span>
+          </div>
+          <div class="detalhes-stats__item">
+            <span class="detalhes-stats__valor detalhes-stats__valor--dislike">👎 {{ prestador.naoGostei }}</span>
+            <span class="detalhes-stats__label">Não gostei</span>
+          </div>
+          <div class="detalhes-stats__item">
+            <span class="detalhes-stats__valor">🗂 {{ prestador.negociacoes }}</span>
+            <span class="detalhes-stats__label">Negociações</span>
+          </div>
+        </div>
+
+        <div class="detalhes-stats__divider"></div>
+
+        <div class="detalhes-stats__grid">
+          <div class="detalhes-stats__item">
+            <span class="detalhes-stats__valor detalhes-stats__valor--like">👍 {{ prestador.atendidas }}</span>
+            <span class="detalhes-stats__label">Garantias Atendidas</span>
+          </div>
+          <div class="detalhes-stats__item">
+            <span class="detalhes-stats__valor detalhes-stats__valor--dislike">👎 {{ prestador.naoAtendidas }}</span>
+            <span class="detalhes-stats__label">Não atendidas</span>
+          </div>
+          <div class="detalhes-stats__item">
+            <span class="detalhes-stats__valor">🗂 {{ prestador.garantiasTotais }}</span>
+            <span class="detalhes-stats__label">Garantias totais</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESCRIÇÃO -->
+      <div class="detalhes-descricao">
+        <h2 class="detalhes-descricao__titulo">Descrição</h2>
+        <p class="detalhes-descricao__texto">{{ descricao }}</p>
+      </div>
+    }
+
+  </div>
+
+</div>

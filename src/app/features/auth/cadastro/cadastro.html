@@ -1,0 +1,343 @@
+<div class="cadastro-container">
+
+  <!-- HEADER -->
+  <div class="cadastro-header">
+    <button class="cadastro-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="cadastro-header__titulo">{{ tituloPasso }}</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- STEP 1 - DADOS (cliente, entregador, fornecedor) -->
+    @if (step === 1 && perfil !== 'parceiro') {
+      <div class="cadastro-content">
+        <div class="cadastro-avatar">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <div class="cadastro-avatar__add">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="cadastro-form">
+          <div class="cadastro-field">
+            <label>Nome</label>
+            <input type="text" placeholder="Digite seu nome completo" [(ngModel)]="nome" />
+          </div>
+
+          <div class="cadastro-field">
+            <label>Telefone</label>
+            <div class="cadastro-field__icon-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              <input type="tel" placeholder="(00) 00000-0000" [value]="telefone" (input)="formatarTelefone($event)" maxlength="15" />
+            </div>
+          </div>
+
+          <div class="cadastro-field">
+            <label>Código</label>
+            <input type="text" placeholder="00000" [(ngModel)]="codigo" />
+          </div>
+
+          @if (erro) {
+            <span class="cadastro-erro">{{ erro }}</span>
+          }
+
+          <label class="cadastro-termos">
+            <input type="checkbox" [(ngModel)]="termosAceitos" />
+            <span>Declaro que concordo e aceito os <u>Termos de uso</u> e <u>Políticas de privacidade</u>.</span>
+          </label>
+        </div>
+      </div>
+    }
+
+    <!-- STEP 1 - DADOS PARCEIRO -->
+    @if (step === 1 && perfil === 'parceiro') {
+      <div class="cadastro-content">
+        <div class="cadastro-avatar">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <div class="cadastro-avatar__add">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="cadastro-form">
+          <div class="cadastro-field">
+            <label>Nome</label>
+            <input type="text" placeholder="Digite seu nome completo" [(ngModel)]="nome" />
+          </div>
+
+          <div class="cadastro-field">
+            <label>Telefone</label>
+            <div class="cadastro-field__icon-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              <input type="tel" placeholder="(00) 00000-0000" [value]="telefone" (input)="formatarTelefone($event)" maxlength="15" />
+            </div>
+          </div>
+
+          <div class="cadastro-field">
+            <label>Link Instagram</label>
+            <input type="text" placeholder="instagram.com/seu-perfil" [(ngModel)]="instagram" />
+          </div>
+
+          <div class="cadastro-field">
+            <label>Link Facebook</label>
+            <input type="text" placeholder="facebook.com/seu-perfil" [(ngModel)]="facebook" />
+          </div>
+
+          <div class="cadastro-field">
+            <label>Link Youtube</label>
+            <input type="text" placeholder="youtube.com/seu-canal" [(ngModel)]="youtube" />
+          </div>
+
+          <div class="cadastro-field">
+            <label>Link Twitter</label>
+            <input type="text" placeholder="twitter.com/seu-perfil" [(ngModel)]="twitter" />
+          </div>
+
+          <div class="cadastro-field">
+            <label>Link Site</label>
+            <input type="text" placeholder="seusite.com.br" [(ngModel)]="site" />
+          </div>
+
+          @if (erro) {
+            <span class="cadastro-erro">{{ erro }}</span>
+          }
+
+          <label class="cadastro-termos">
+            <input type="checkbox" [(ngModel)]="termosAceitos" />
+            <span>Declaro que concordo e aceito os <u>Termos de uso</u> e <u>Políticas de privacidade</u>.</span>
+          </label>
+        </div>
+      </div>
+    }
+
+    <!-- STEP 2 - SMS -->
+    @if (step === 2) {
+      <div class="cadastro-content cadastro-content--centered">
+        <h2 class="cadastro-titulo-step">Insira o código</h2>
+        <p class="cadastro-descricao-step">Para cadastrar sua nova senha, insira o código que você recebeu por SMS:</p>
+
+        <div class="cadastro-sms">
+          @for (digit of sms; track $index) {
+            <input
+              [id]="'sms-' + $index"
+              class="cadastro-sms__input"
+              type="tel"
+              maxlength="1"
+              [value]="digit"
+              (input)="onSmsInput($event, $index)"
+            />
+          }
+        </div>
+
+        @if (erro) {
+          <span class="cadastro-erro">{{ erro }}</span>
+        }
+      </div>
+    }
+
+    <!-- STEP 3 - SENHA -->
+    @if (step === 3) {
+      <div class="cadastro-content cadastro-content--centered">
+        <h2 class="cadastro-titulo-step">Nova senha</h2>
+        <p class="cadastro-descricao-step">Cadastre uma senha usando números e caracteres:</p>
+
+        <div class="cadastro-form">
+          <div class="cadastro-field">
+            <label>Senha</label>
+            <div class="cadastro-field__icon-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input [type]="senhaVisivel ? 'text' : 'password'" placeholder="••••••••••" [(ngModel)]="senha" />
+              <button class="cadastro-field__toggle" (click)="toggleSenha()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="cadastro-field">
+            <label>Confirme a senha</label>
+            <div class="cadastro-field__icon-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input [type]="confirmarSenhaVisivel ? 'text' : 'password'" placeholder="••••••••••" [(ngModel)]="confirmarSenha" />
+              <button class="cadastro-field__toggle" (click)="toggleConfirmarSenha()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          @if (erro) {
+            <span class="cadastro-erro">{{ erro }}</span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- STEP 4 - PLANOS (fornecedor) -->
+    @if (step === 4) {
+      <div class="cadastro-content">
+        <h2 class="cadastro-titulo-step">Selecione o plano de assinatura</h2>
+        <p class="cadastro-descricao-step">Selecione o melhor plano para você</p>
+
+        <div class="cadastro-planos">
+          @for (plano of planos; track plano.id) {
+            <div class="cadastro-plano"
+              [class.cadastro-plano--ativo]="planoSelecionado === plano.id"
+              (click)="planoSelecionado = plano.id">
+              <div class="cadastro-plano__info">
+                <span class="cadastro-plano__nome">{{ plano.label }}</span>
+                <span class="cadastro-plano__preco">{{ plano.preco }}</span>
+              </div>
+              <div class="cadastro-plano__radio"
+                [class.cadastro-plano__radio--ativo]="planoSelecionado === plano.id">
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="cadastro-beneficios">
+          <span class="cadastro-beneficios__titulo">Benefícios</span>
+          @for (b of beneficios; track b) {
+            <div class="cadastro-beneficio">
+              <div class="cadastro-beneficio__icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <span>{{ b }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- STEP 5 - FINALIZAR ASSINATURA (fornecedor) -->
+    @if (step === 5) {
+      <div class="cadastro-content">
+        <h2 class="cadastro-titulo-step">Finalizar assinatura</h2>
+        <p class="cadastro-descricao-step">Selecione o melhor plano para você</p>
+
+        <div class="cadastro-card-info">
+          <span class="cadastro-card-info__titulo">Endereço de cobrança</span>
+          <div class="cadastro-card-info__body">
+            <div>
+              <p class="cadastro-card-info__nome">Paula Maria</p>
+              <p class="cadastro-card-info__detalhe">531 Rua 123, São Paulo, SP 18505,</p>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="cadastro-card-info" (click)="adicionarCartao()" style="cursor: pointer;">
+          <span class="cadastro-card-info__titulo">Pagamento</span>
+          <div class="cadastro-card-info__body">
+            <div class="cadastro-card-info__pagamento">
+              <div class="cadastro-card-info__card-icon"></div>
+              @if (nomeCartao) {
+                <span>**** **** **** {{ numeroCartao.slice(-4) }}</span>
+              } @else {
+                <span style="color: var(--color-primary); font-weight: 600;">+ Adicionar cartão</span>
+              }
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="cadastro-resumo">
+          <div class="cadastro-resumo__linha">
+            <span>Preço:</span><span>R$ 00,00</span>
+          </div>
+          <div class="cadastro-resumo__linha">
+            <span>Frete:</span><span>Grátis</span>
+          </div>
+          <div class="cadastro-resumo__linha cadastro-resumo__linha--total">
+            <span>Total a pagar:</span><span>R$ 00,00</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- STEP 6 - CARTÃO (fornecedor) -->
+    @if (step === 6) {
+      <div class="cadastro-content">
+        <h2 class="cadastro-titulo-step">Adicionar cartão</h2>
+        <p class="cadastro-descricao-step">Adicione o melhor cartão para o pagamento</p>
+
+        <div class="cadastro-form">
+          <div class="cadastro-field">
+            <label>Nome do Titular</label>
+            <input type="text" placeholder="Nome como no cartão" [(ngModel)]="nomeCartao" />
+          </div>
+
+          <div class="cadastro-field">
+            <label>Número do cartão</label>
+            <input type="tel" placeholder="0000 0000 0000 0000" [(ngModel)]="numeroCartao" maxlength="19" />
+          </div>
+
+          <div class="cadastro-form__row">
+            <div class="cadastro-field">
+              <label>Validade</label>
+              <input type="text" placeholder="mm/aa" [(ngModel)]="validadeCartao" maxlength="5" />
+            </div>
+            <div class="cadastro-field">
+              <label>CCV</label>
+              <input type="tel" placeholder="000" [(ngModel)]="ccv" maxlength="3" />
+            </div>
+          </div>
+
+          @if (erro) {
+            <span class="cadastro-erro">{{ erro }}</span>
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+
+  <!-- BOTÃO -->
+  <div class="cadastro-actions">
+    <button class="cadastro-btn" (click)="continuar()">
+      @if (step === 5) { REALIZAR PAGAMENTO }
+      @else if (step === 6) { SALVAR }
+      @else { CONTINUAR }
+    </button>
+  </div>
+
+</div>

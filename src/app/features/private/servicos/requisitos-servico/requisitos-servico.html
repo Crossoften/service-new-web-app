@@ -1,0 +1,81 @@
+<div class="page-container">
+
+  <div class="requisitos-header">
+    <button class="requisitos-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="requisitos-header__titulo">REQUISITOS</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="page-content">
+    <div class="requisitos-content">
+
+      <h3 class="requisitos-secao__titulo">Requisitos do pedido</h3>
+
+      <textarea
+        class="requisitos-textarea"
+        placeholder="Descreva sua solicitação"
+        [(ngModel)]="descricao"
+        rows="6">
+      </textarea>
+
+      @if (erro) {
+        <span class="requisitos-erro">{{ erro }}</span>
+      }
+
+      <div class="requisitos-arquivos">
+        @for (arquivo of arquivos; track arquivo.id) {
+          <div class="requisitos-arquivo">
+            <span class="requisitos-arquivo__nome">{{ arquivo.nome }}</span>
+            <button class="requisitos-arquivo__btn" (click)="removerArquivo(arquivo.id)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+
+      <div class="requisitos-tipo">
+        <label class="requisitos-tipo__label">Tipo do serviço</label>
+        <div class="requisitos-tipo__select" (click)="toggleTipo()">
+          <span>{{ tipoServico }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            [style.transform]="tipoAberto ? 'rotate(180deg)' : 'rotate(0)'">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+
+        @if (tipoAberto) {
+          <div class="requisitos-tipo__opcoes">
+            @for (tipo of tiposServico; track tipo) {
+              <div class="requisitos-tipo__opcao"
+                [class.requisitos-tipo__opcao--ativo]="tipoServico === tipo"
+                (click)="selecionarTipo(tipo)">
+                {{ tipo }}
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <button class="requisitos-fab" (click)="adicionarArquivo()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  </button>
+
+  <div class="requisitos-actions">
+    <button class="requisitos-btn" (click)="confirmar()">CONFIRMAR</button>
+  </div>
+
+</div>

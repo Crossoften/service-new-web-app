@@ -1,0 +1,41 @@
+.categoria-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px 8px;
+  padding: 20px 16px;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.15s;
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  &__icon {
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text);
+    text-align: center;
+    line-height: 1.3;
+  }
+}

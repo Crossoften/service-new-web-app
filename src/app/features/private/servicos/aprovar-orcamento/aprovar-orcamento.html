@@ -1,0 +1,125 @@
+<div class="aprovar-container">
+
+  <!-- HEADER -->
+  <div class="aprovar-header">
+    <button class="aprovar-header__btn" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="aprovar-header__titulo">ORÇAMENTOS</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <!-- IMAGEM HERO -->
+  <div class="aprovar-hero">
+    @if (orcamento?.prestador?.imagem) {
+      <img [src]="orcamento!.prestador.imagem" [alt]="orcamento!.prestador.nome" />
+    } @else {
+      <div class="aprovar-hero__placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+    }
+  </div>
+
+  <div class="page-content">
+
+    <!-- NOME + AÇÕES -->
+    <div class="aprovar-info">
+      <h1 class="aprovar-info__nome">{{ orcamento?.prestador?.nome }}</h1>
+      <div class="aprovar-info__acoes">
+        <button class="aprovar-info__btn" (click)="abrirChat()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </button>
+        <button class="aprovar-info__btn" (click)="abrirNotificacoes()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    @if (orcamento?.prestador) {
+      <div class="aprovar-stats">
+        <div class="aprovar-stats__grid">
+          <div class="aprovar-stats__item">
+            <span class="aprovar-stats__valor aprovar-stats__valor--like">👍 {{ orcamento!.prestador.gostei }}</span>
+            <span class="aprovar-stats__label">Gostei</span>
+          </div>
+          <div class="aprovar-stats__item">
+            <span class="aprovar-stats__valor aprovar-stats__valor--dislike">👎 {{ orcamento!.prestador.naoGostei }}</span>
+            <span class="aprovar-stats__label">Não gostei</span>
+          </div>
+          <div class="aprovar-stats__item">
+            <span class="aprovar-stats__valor">🗂 {{ orcamento!.prestador.negociacoes }}</span>
+            <span class="aprovar-stats__label">Negociações</span>
+          </div>
+        </div>
+
+        <div class="aprovar-stats__divider"></div>
+
+        <div class="aprovar-stats__grid">
+          <div class="aprovar-stats__item">
+            <span class="aprovar-stats__valor aprovar-stats__valor--like">👍 {{ orcamento!.prestador.atendidas }}</span>
+            <span class="aprovar-stats__label">Garantias Atendidas</span>
+          </div>
+          <div class="aprovar-stats__item">
+            <span class="aprovar-stats__valor aprovar-stats__valor--dislike">👎 {{ orcamento!.prestador.naoAtendidas }}</span>
+            <span class="aprovar-stats__label">Não atendidas</span>
+          </div>
+          <div class="aprovar-stats__item">
+            <span class="aprovar-stats__valor">🗂 {{ orcamento!.prestador.garantiasTotais }}</span>
+            <span class="aprovar-stats__label">Garantias totais</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- DETALHES DO ORÇAMENTO -->
+    @if (orcamento) {
+      <div class="aprovar-detalhes">
+        <div class="aprovar-detalhes__linha">
+          <div>
+            <span class="aprovar-detalhes__label">Previsão</span>
+            <div class="aprovar-detalhes__previsao">
+              <span>{{ orcamento.previsaoInicio }}</span>
+              <span class="aprovar-detalhes__dot">•</span>
+              <span>{{ orcamento.previsaoFim }}</span>
+            </div>
+          </div>
+          <span class="aprovar-detalhes__valor">{{ formatarPreco(orcamento.valor) }}</span>
+        </div>
+
+        <div class="aprovar-detalhes__item">
+          <span class="aprovar-detalhes__label">Distância</span>
+          <span class="aprovar-detalhes__texto">{{ orcamento.distancia }}</span>
+        </div>
+
+        <div class="aprovar-detalhes__item">
+          <span class="aprovar-detalhes__label">Comentário</span>
+          <span class="aprovar-detalhes__texto">{{ orcamento.comentario }}</span>
+        </div>
+      </div>
+
+      <!-- DESCRIÇÃO -->
+      <div class="aprovar-descricao">
+        <h2 class="aprovar-descricao__titulo">Descrição</h2>
+        <p class="aprovar-descricao__texto">{{ orcamento.descricao }}</p>
+      </div>
+    }
+
+  </div>
+
+  <!-- BOTÃO -->
+  <div class="aprovar-actions">
+    <button class="aprovar-btn" (click)="solicitar()">SOLICITAR</button>
+  </div>
+
+</div>

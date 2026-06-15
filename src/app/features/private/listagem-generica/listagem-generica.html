@@ -1,0 +1,70 @@
+<div class="page-container">
+
+  <div class="listagem-header">
+    <button class="listagem-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="listagem-header__titulo">{{ titulo }}</span>
+    <button class="listagem-header__filtro">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="page-content">
+    <div class="listagem-lista">
+      @for (item of items; track item.id) {
+        <div class="listagem-card" (click)="irParaLogin()">
+
+          <div class="listagem-card__imagem">
+            @if (item.imagem) {
+              <img [src]="item.imagem" [alt]="item.nome" />
+            } @else {
+              <div class="listagem-card__imagem-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              </div>
+            }
+          </div>
+
+          <div class="listagem-card__info">
+            <span class="listagem-card__nome">{{ item.nome }}</span>
+            <span class="listagem-card__descricao">{{ item.descricao }}</span>
+
+            <div class="listagem-card__avaliacao">
+              @for (estrela of estrelas(item.avaliacao); track $index) {
+                <svg width="12" height="12" viewBox="0 0 24 24"
+                  [attr.fill]="estrela ? '#F59E0B' : 'none'"
+                  stroke="#F59E0B" stroke-width="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              }
+              <span class="listagem-card__avaliacao-texto">
+                {{ item.avaliacao }} ({{ item.totalAvaliacoes }})
+              </span>
+            </div>
+
+            <div class="listagem-card__rodape">
+              <span class="listagem-card__preco">{{ item.preco }}</span>
+              <span class="listagem-card__distancia">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                {{ item.distancia }}
+              </span>
+            </div>
+          </div>
+
+        </div>
+      }
+    </div>
+  </div>
+
+</div>

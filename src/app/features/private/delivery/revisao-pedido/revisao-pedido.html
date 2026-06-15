@@ -1,0 +1,133 @@
+<div class="page-container">
+
+  <div class="revisao-header">
+    <button class="revisao-header__btn" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="revisao-header__acoes">
+      <button class="revisao-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+      </button>
+      <button class="revisao-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- CARD RESTAURANTE -->
+    @if (pedido?.restaurante) {
+      <div class="revisao-restaurante">
+        <div class="revisao-restaurante__logo">
+          <div class="revisao-restaurante__logo-placeholder">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="revisao-restaurante__info">
+          <span class="revisao-restaurante__nome">{{ pedido!.restaurante!.nome }}</span>
+          <div class="revisao-restaurante__meta">
+            <span>⭐ {{ pedido!.restaurante!.avaliacao }}</span>
+            <span>•</span>
+            <span>🕐 {{ pedido!.restaurante!.tempo }}</span>
+            <span>•</span>
+            <span class="revisao-restaurante__entrega">🛵 <strong>Entrega {{ formatarPreco(pedido!.restaurante!.taxaEntrega) }}</strong></span>
+          </div>
+          <span class="revisao-restaurante__descricao">{{ pedido!.restaurante!.descricao }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- ITENS -->
+    @for (itemPedido of pedido?.itens; track itemPedido.item.id) {
+      <div class="revisao-item">
+        <div class="revisao-item__imagem">
+          <div class="revisao-item__imagem-placeholder">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="revisao-item__info">
+          <span class="revisao-item__nome">{{ itemPedido.item.nome }}</span>
+          <span class="revisao-item__descricao">{{ itemPedido.item.descricao }}</span>
+          <span class="revisao-item__preco">{{ formatarPreco(itemPedido.item.preco) }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- INGREDIENTES EXTRA -->
+    @if (pedido?.itens?.[0]?.adicionaisSelecionados?.length) {
+      <div class="revisao-secao">
+        <h3 class="revisao-secao__titulo">Ingrediente Extra</h3>
+        @for (adicional of pedido!.itens![0].adicionaisSelecionados; track adicional.id) {
+          <div class="revisao-adicional">
+            <div class="revisao-adicional__checkbox"></div>
+            <span class="revisao-adicional__nome">{{ adicional.nome }}</span>
+            <span class="revisao-adicional__preco">+ {{ formatarPreco(adicional.preco) }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ENDEREÇO -->
+    @if (pedido?.endereco) {
+      <div class="revisao-endereco">
+        <div class="revisao-endereco__info">
+          <span class="revisao-endereco__rua">{{ pedido!.endereco }}</span>
+          <span class="revisao-endereco__bairro">{{ pedido!.bairro }}</span>
+        </div>
+        <button class="revisao-endereco__trocar">Trocar endereço</button>
+      </div>
+    }
+
+    <!-- PAGAMENTO -->
+    <div class="revisao-pagamento">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+        <line x1="1" y1="10" x2="23" y2="10"/>
+      </svg>
+      <span class="revisao-pagamento__label">{{ formaPagamentoLabel }}</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="18 15 12 9 6 15"/>
+      </svg>
+    </div>
+
+    <!-- DETALHES DA COMPRA -->
+    <div class="revisao-secao">
+      <h3 class="revisao-secao__titulo">Detalhes da compra</h3>
+      <div class="revisao-detalhes">
+        <div class="revisao-detalhes__linha">
+          <span>Realizado em</span>
+          <span>{{ pedido?.data ?? '00/00/0000' }}</span>
+        </div>
+        <div class="revisao-detalhes__linha">
+          <span>Valor serviço</span>
+          <span>{{ formatarPreco(total) }}</span>
+        </div>
+        <div class="revisao-detalhes__linha revisao-detalhes__linha--total">
+          <span>Total</span>
+          <span>{{ formatarPreco(total) }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTÃO -->
+  <div class="revisao-actions">
+    <button class="revisao-btn" (click)="finalizarPedido()">FINALIZAR PEDIDO</button>
+  </div>
+
+</div>

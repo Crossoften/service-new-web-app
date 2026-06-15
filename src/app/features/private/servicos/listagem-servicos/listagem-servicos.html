@@ -1,0 +1,95 @@
+<div class="page-container">
+
+  <div class="listagem-header">
+    <button class="listagem-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="listagem-header__titulo">SOLICITAR</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="listagem-busca">
+    <div class="listagem-busca__input">
+      <input type="text" placeholder="O QUE VOCÊ PROCURA?" [(ngModel)]="busca" />
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </div>
+    <button class="listagem-busca__filtro">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="listagem-selecionar-todos">
+    <span>Selecionar todos</span>
+    <div class="listagem-checkbox"
+      [class.listagem-checkbox--ativo]="selecionarTodos"
+      (click)="toggleTodos()">
+      @if (selecionarTodos) {
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      }
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="listagem-lista">
+      @for (prestador of prestadoresFiltrados; track prestador.id) {
+        <div class="prestador-card" (click)="togglePrestador(prestador)">
+
+          <div class="prestador-card__foto" (click)="abrirDetalhes(prestador, $event)">
+            @if (prestador.foto) {
+              <img [src]="prestador.foto" [alt]="prestador.nome" />
+            } @else {
+              <div class="prestador-card__foto-placeholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+            }
+          </div>
+
+          <div class="prestador-card__info">
+            <span class="prestador-card__nome">{{ prestador.nome }}</span>
+            <span class="prestador-card__profissao">● {{ prestador.profissao }}</span>
+            <span class="prestador-card__descricao">{{ prestador.descricao }}</span>
+            <div class="prestador-card__stats">
+              <span class="prestador-card__stat prestador-card__stat--like">
+                👍 {{ prestador.gostei }}
+              </span>
+              <span class="prestador-card__stat prestador-card__stat--dislike">
+                👎 {{ prestador.naoGostei }}
+              </span>
+              <span class="prestador-card__stat">
+                🗂 {{ prestador.negociacoes }}
+              </span>
+            </div>
+          </div>
+
+          <div class="listagem-checkbox"
+            [class.listagem-checkbox--ativo]="prestador.selecionado">
+            @if (prestador.selecionado) {
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            }
+          </div>
+
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (algumSelecionado) {
+    <div class="listagem-actions">
+      <button class="listagem-btn" (click)="confirmar()">CONFIRMAR</button>
+    </div>
+  }
+
+</div>

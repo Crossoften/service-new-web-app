@@ -1,0 +1,100 @@
+<div class="restaurante-container">
+
+  <!-- HEADER FLUTUANTE -->
+  <div class="restaurante-header">
+    <button class="restaurante-header__btn" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="restaurante-header__acoes">
+      <button class="restaurante-header__btn" (click)="abrirSacola()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+      </button>
+      <button class="restaurante-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- IMAGEM HERO -->
+  <div class="restaurante-hero">
+    @if (restaurante?.imagem) {
+      <img [src]="restaurante!.imagem" [alt]="restaurante!.nome" />
+    } @else {
+      <div class="restaurante-hero__placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+        </svg>
+      </div>
+    }
+  </div>
+
+  <div class="page-content">
+
+    <!-- INFO RESTAURANTE -->
+    <div class="restaurante-info">
+      <h1 class="restaurante-info__nome">{{ restaurante?.nome }}</h1>
+      <div class="restaurante-info__meta">
+        <span>⭐ {{ restaurante?.avaliacao }}</span>
+        <span>•</span>
+        <span>🕐 {{ restaurante?.tempo }}</span>
+        <span>•</span>
+        <span class="restaurante-info__entrega">🛵 <strong>Entrega R$ {{ restaurante?.taxaEntrega?.toFixed(2) }}</strong></span>
+      </div>
+    </div>
+
+    <!-- TABS DE CATEGORIAS -->
+    @if (restaurante?.categorias?.length) {
+      <div class="restaurante-tabs">
+        @for (cat of restaurante!.categorias; track cat.id) {
+          <button
+            class="restaurante-tabs__item"
+            [class.restaurante-tabs__item--ativo]="categoriaAtiva === cat.id"
+            (click)="selecionarCategoria(cat.id)">
+            {{ cat.nome }}
+          </button>
+        }
+      </div>
+
+      <!-- LISTA DE ITENS -->
+      <div class="restaurante-secao">
+        <h2 class="restaurante-secao__titulo">
+          {{ restaurante!.categorias.find(c => c.id === categoriaAtiva)?.nome }}
+        </h2>
+
+        <div class="restaurante-itens">
+          @for (item of categoriaAtivaItens; track item.id) {
+            <div class="item-card" (click)="abrirItem(item)">
+              <div class="item-card__info">
+                <span class="item-card__nome">{{ item.nome }}</span>
+                <span class="item-card__descricao">{{ item.descricao }}</span>
+                <span class="item-card__preco">{{ formatarPreco(item.preco) }}</span>
+              </div>
+              <div class="item-card__imagem">
+                @if (item.imagem) {
+                  <img [src]="item.imagem" [alt]="item.nome" />
+                } @else {
+                  <div class="item-card__imagem-placeholder">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+                    </svg>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  </div>
+
+</div>

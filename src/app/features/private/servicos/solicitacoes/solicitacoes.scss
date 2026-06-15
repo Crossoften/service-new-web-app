@@ -1,0 +1,205 @@
+.solicitacoes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  padding-top: calc(16px + var(--safe-top));
+
+  &__titulo {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__acoes {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+  }
+}
+
+.solicitacoes-tabs {
+  display: flex;
+  gap: 20px;
+  padding: 0 20px 12px;
+  border-bottom: 1px solid var(--color-gray-100);
+
+  &__item {
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-gray-400);
+    cursor: pointer;
+    padding-bottom: 8px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+
+    &--ativo {
+      color: var(--color-text);
+      border-bottom-color: var(--color-text);
+    }
+  }
+}
+
+.solicitacoes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.solicitacao-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+
+  &__foto {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--color-gray-100);
+    flex-shrink: 0;
+
+    img { width: 100%; height: 100%; object-fit: cover; }
+  }
+
+  &__foto-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-400);
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__nome {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__profissao {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  &__servicos {
+    font-size: 12px;
+    color: var(--color-gray-600);
+  }
+
+  &__descricao {
+    font-size: 12px;
+    color: var(--color-gray-600);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__stats {
+    display: flex;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  &__stat {
+    font-size: 12px;
+    color: var(--color-gray-600);
+    &--like { color: #16A34A; }
+    &--dislike { color: #DC2626; }
+  }
+
+  &__status-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  &__garantia {
+    font-size: 11px;
+    color: var(--color-gray-600);
+  }
+}
+
+.solicitacao-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.status--laranja {
+  background: #FFEDD5;
+  color: #C2410C;
+}
+
+.status--verde {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.status--cinza {
+  background: var(--color-gray-100);
+  color: var(--color-gray-600);
+}
+
+.status--vermelho {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.solicitacoes-vazio {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--color-gray-400);
+  font-size: 14px;
+}
+
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: var(--bottom-nav-height);
+  padding-bottom: var(--safe-bottom);
+  border-top: 1px solid var(--color-gray-100);
+  background: var(--color-white);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-gray-400);
+  cursor: pointer;
+  padding: 4px 8px;
+
+  span { font-size: 10px; font-weight: 500; }
+  &.active { color: var(--color-primary); }
+}

@@ -1,0 +1,84 @@
+<div class="cardapio-item-container">
+
+  <!-- HEADER FLUTUANTE -->
+  <div class="cardapio-item-header">
+    <button class="cardapio-item-header__btn" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="cardapio-item-header__acoes">
+      <button class="cardapio-item-header__btn" (click)="abrirSacola()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+      </button>
+      <button class="cardapio-item-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- IMAGEM HERO -->
+  <div class="cardapio-item-hero">
+    @if (item?.imagem) {
+      <img [src]="item!.imagem" [alt]="item!.nome" />
+    } @else {
+      <div class="cardapio-item-hero__placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+        </svg>
+      </div>
+    }
+  </div>
+
+  <div class="page-content">
+
+    <!-- INFO ITEM -->
+    <div class="cardapio-item-info">
+      <h1 class="cardapio-item-info__nome">{{ item?.nome }}</h1>
+      <p class="cardapio-item-info__descricao">{{ item?.descricao }}</p>
+    </div>
+
+    <!-- ADICIONAIS -->
+    @if (adicionais.length > 0) {
+      <div class="cardapio-item-adicionais">
+        <h2 class="cardapio-item-adicionais__titulo">Adicionar</h2>
+
+        @for (adicional of adicionais; track adicional.id) {
+          <div class="adicional-item" (click)="toggleAdicional(adicional)">
+            <div class="adicional-item__checkbox" [class.adicional-item__checkbox--ativo]="adicional.selecionado">
+              @if (adicional.selecionado) {
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              }
+            </div>
+            <span class="adicional-item__nome">{{ adicional.nome }}</span>
+            <span class="adicional-item__preco">+ {{ formatarPreco(adicional.preco) }}</span>
+          </div>
+        }
+      </div>
+    }
+
+  </div>
+
+  <!-- RODAPÉ: QUANTIDADE + ADICIONAR -->
+  <div class="cardapio-item-footer">
+    <div class="cardapio-item-quantidade">
+      <button class="cardapio-item-quantidade__btn" (click)="decrementar()">-</button>
+      <span class="cardapio-item-quantidade__valor">{{ quantidade }}</span>
+      <button class="cardapio-item-quantidade__btn" (click)="incrementar()">+</button>
+    </div>
+
+    <button class="cardapio-item-footer__adicionar" (click)="adicionar()">
+      ADICIONAR {{ formatarPreco(totalPreco) }}
+    </button>
+  </div>
+
+</div>

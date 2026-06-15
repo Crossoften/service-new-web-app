@@ -1,0 +1,56 @@
+<div class="page-container">
+
+  <app-header-busca
+    titulo="BUSCAR"
+    variante="delivery"
+    endereco="Rua Tuiucue 122"
+    (buscarChange)="onBuscar($event)">
+  </app-header-busca>
+
+  <div class="page-content">
+    <div class="listagem-delivery">
+
+      @for (restaurante of restaurantesFiltrados; track restaurante.id) {
+        <div class="restaurante-card" (click)="abrirRestaurante(restaurante)">
+
+          <div class="restaurante-card__logo">
+            @if (restaurante.logo) {
+              <img [src]="restaurante.logo" [alt]="restaurante.nome" />
+            } @else {
+              <div class="restaurante-card__logo-placeholder">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+                </svg>
+              </div>
+            }
+          </div>
+
+          <div class="restaurante-card__info">
+            <span class="restaurante-card__nome">{{ restaurante.nome }}</span>
+
+            <div class="restaurante-card__meta">
+              <span class="restaurante-card__avaliacao">⭐ {{ restaurante.avaliacao }}</span>
+              <span class="restaurante-card__separador">•</span>
+              <span class="restaurante-card__tempo">🕐 {{ restaurante.tempo }}</span>
+              <span class="restaurante-card__separador">•</span>
+              <span class="restaurante-card__entrega">
+                🛵 <strong>Entrega {{ formatarPreco(restaurante.taxaEntrega) }}</strong>
+              </span>
+            </div>
+
+            <span class="restaurante-card__descricao">{{ restaurante.descricao }}</span>
+          </div>
+
+        </div>
+      }
+
+      @if (restaurantesFiltrados.length === 0) {
+        <div class="listagem-delivery__vazio">
+          <p>Nenhum restaurante encontrado.</p>
+        </div>
+      }
+
+    </div>
+  </div>
+
+</div>

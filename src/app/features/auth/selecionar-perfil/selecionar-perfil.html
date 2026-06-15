@@ -1,0 +1,38 @@
+<div class="perfil-container">
+
+  <div class="perfil-header">
+    <button class="perfil-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="perfil-header__titulo">CADASTRO</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="perfil-imagem">
+    <img src="assets/cadastro-perfil.png" alt="Selecione seu perfil" />
+  </div>
+
+  <div class="perfil-content">
+    <p class="perfil-descricao">
+      Selecione o perfil que pretende para utilizar o aplicativo:
+    </p>
+
+    <div class="perfil-lista">
+      @for (perfil of perfis; track perfil.value) {
+        <button
+          class="perfil-btn"
+          [class.perfil-btn--ativo]="perfilSelecionado === perfil.value"
+          (click)="selecionar(perfil.value)">
+          {{ perfil.label }}
+        </button>
+      }
+    </div>
+
+    <button class="perfil-btn-continuar" (click)="continuar()">
+      CONTINUAR
+    </button>
+  </div>
+
+</div>

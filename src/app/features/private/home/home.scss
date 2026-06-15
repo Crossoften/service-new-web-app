@@ -1,0 +1,130 @@
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  padding-top: calc(16px + var(--safe-top));
+}
+
+.home-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--color-gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-primary);
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.home-user-info {
+  display: flex;
+  flex-direction: column;
+
+  .home-welcome {
+    font-size: 12px;
+    color: var(--color-gray-600);
+  }
+
+  .home-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+}
+
+.home-bell {
+  background: var(--color-gray-100);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.home-servicos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 20px 20px;
+}
+
+.home-servico-btn {
+  width: 100%;
+  padding: 18px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--color-white);
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:active {
+    opacity: 0.85;
+  }
+
+  &.disabled {
+    cursor: default;
+    opacity: 0.8;
+  }
+
+  // Degradê do roxo escuro ao lilás
+  &:nth-child(1) { background-color: #4A00B4; }
+  &:nth-child(2) { background-color: #5B0EC8; }
+  &:nth-child(3) { background-color: #6B21D6; }
+  &:nth-child(4) { background-color: #7C35E0; }
+  &:nth-child(5) { background-color: #8B47E8; }
+  &:nth-child(6) { background-color: #9B59EE; }
+  &:nth-child(7) { background-color: #AB6CF4; }
+  &:nth-child(8) { background-color: #BB80FA; }
+}
+
+.home-bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: var(--bottom-nav-height);
+  padding-bottom: var(--safe-bottom);
+  border-top: 1px solid var(--color-gray-100);
+  background: var(--color-white);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-gray-400);
+  cursor: pointer;
+  padding: 4px 8px;
+
+  span {
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  &.active {
+    color: var(--color-primary);
+  }
+}

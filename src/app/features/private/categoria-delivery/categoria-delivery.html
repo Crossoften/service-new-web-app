@@ -1,0 +1,15 @@
+<div class="page-container">
+  <app-header-busca
+    titulo="BUSCAR"
+    variante="delivery"
+    endereco="Rua Tuiucue 122">
+  </app-header-busca>
+
+  <div class="page-content">
+    <app-categoria-grid
+      [items]="items"
+      tipo="delivery"
+      (itemSelecionado)="onItemSelecionado($event)">
+    </app-categoria-grid>
+  </div>
+</div>

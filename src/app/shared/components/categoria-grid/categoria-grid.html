@@ -1,0 +1,10 @@
+<div class="categoria-grid">
+  @for (item of items; track item.label) {
+    <div class="categoria-grid__item" (click)="selecionar(item)">
+      <div class="categoria-grid__icon">
+        <img [src]="item.icon" [alt]="item.label" />
+      </div>
+      <span class="categoria-grid__label">{{ item.label }}</span>
+    </div>
+  }
+</div>

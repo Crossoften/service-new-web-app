@@ -1,0 +1,35 @@
+.splash-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  height: 100dvh;
+  background-color: var(--color-white);
+  position: relative;
+}
+
+.splash-logo {
+  img {
+    width: 200px;
+    object-fit: contain;
+  }
+}
+
+.splash-progress-bar {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  right: 40px;
+  height: 4px;
+  background-color: var(--color-gray-100);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.splash-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
+  border-radius: 2px;
+  transition: width 0.04s linear;
+}

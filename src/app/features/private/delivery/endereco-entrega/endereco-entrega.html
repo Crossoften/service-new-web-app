@@ -1,0 +1,88 @@
+<div class="page-container">
+
+  <div class="endereco-header">
+    <button class="endereco-header__btn" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="endereco-header__acoes">
+      <button class="endereco-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+      </button>
+      <button class="endereco-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- CARD RESTAURANTE -->
+    @if (pedido?.restaurante) {
+      <div class="endereco-restaurante">
+        <div class="endereco-restaurante__logo">
+          <div class="endereco-restaurante__logo-placeholder">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="endereco-restaurante__info">
+          <span class="endereco-restaurante__nome">{{ pedido!.restaurante!.nome }}</span>
+          <div class="endereco-restaurante__meta">
+            <span>⭐ {{ pedido!.restaurante!.avaliacao }}</span>
+            <span>•</span>
+            <span>🕐 {{ pedido!.restaurante!.tempo }}</span>
+            <span>•</span>
+            <span class="endereco-restaurante__entrega">🛵 <strong>Entrega {{ pedido!.restaurante!.taxaEntrega.toFixed(2) }}</strong></span>
+          </div>
+          <span class="endereco-restaurante__descricao">{{ pedido!.restaurante!.descricao }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- ENDEREÇO -->
+    <div class="endereco-card">
+      <div class="endereco-card__info">
+        <span class="endereco-card__rua">{{ endereco }}</span>
+        <span class="endereco-card__bairro">{{ bairro }}</span>
+      </div>
+      <button class="endereco-card__trocar">Trocar endereço</button>
+    </div>
+
+    <!-- OPÇÕES DE ENTREGA -->
+    <div class="endereco-secao">
+      <h3 class="endereco-secao__titulo">Opção de entrega</h3>
+
+      @for (opcao of opcoes; track opcao.id) {
+        <div class="opcao-entrega"
+          [class.opcao-entrega--ativa]="opcaoSelecionada === opcao.id"
+          (click)="selecionarOpcao(opcao)">
+          <div class="opcao-entrega__radio"
+            [class.opcao-entrega__radio--ativo]="opcaoSelecionada === opcao.id">
+          </div>
+          <span class="opcao-entrega__nome">{{ opcao.nome }}</span>
+          <span class="opcao-entrega__preco"
+            [class.opcao-entrega__preco--gratis]="opcao.preco === 0">
+            {{ formatarPreco(opcao.preco) }}
+          </span>
+        </div>
+      }
+    </div>
+
+  </div>
+
+  <!-- BOTÃO -->
+  <div class="endereco-actions">
+    <button class="endereco-btn" (click)="continuar()">CONTINUAR</button>
+  </div>
+
+</div>
