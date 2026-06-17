@@ -1,0 +1,244 @@
+.home-f-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  padding-top: calc(16px + var(--safe-top));
+
+  &__voltar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+  }
+
+  &__restaurante {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--color-gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-400);
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__nome {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__avaliacao {
+    font-size: 12px;
+    color: var(--color-gray-600);
+  }
+
+  &__sino {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+  }
+}
+
+.home-f-faturamento {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin: 0 16px 4px;
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  &__valor {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__divider {
+    width: 1px;
+    height: 40px;
+    background: var(--color-gray-100);
+  }
+}
+
+.home-f-ver-mais {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 4px 16px 12px;
+  display: block;
+  margin-left: auto;
+}
+
+.home-f-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 16px 12px;
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+
+  &__titulo {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  &__acao {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  &--link {
+    cursor: pointer;
+    transition: opacity 0.2s;
+    &:active { opacity: 0.8; }
+  }
+}
+
+.home-f-status {
+  display: flex;
+  gap: 8px;
+
+  &__btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--color-gray-100);
+    color: var(--color-gray-400);
+    transition: all 0.2s;
+
+    &--ativo {
+      background: var(--color-primary);
+      color: var(--color-white);
+    }
+  }
+}
+
+.home-f-secao-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 12px;
+}
+
+.home-f-secao-titulo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.home-f-pedidos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+
+.home-f-pedido {
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:active { opacity: 0.8; }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__numero {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__editar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+  }
+
+  &__item,
+  &__pagamento,
+  &__endereco {
+    font-size: 12px;
+    color: var(--color-gray-600);
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+
+  &__total {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__status {
+    font-size: 11px;
+    font-weight: 600;
+  }
+}
+
+.status--azul    { color: #2563EB; }
+.status--laranja { color: #C2410C; }
+.status--roxo    { color: var(--color-primary); }
+.status--verde   { color: #15803D; }
+.status--vermelho { color: #DC2626; }

@@ -1,0 +1,74 @@
+<div class="page-container">
+
+  <!-- HEADER -->
+  <div class="cardapio-header">
+    <button class="cardapio-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="cardapio-header__restaurante">
+      <div class="cardapio-header__logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+        </svg>
+      </div>
+      <div class="cardapio-header__info">
+        <span class="cardapio-header__nome">Pizzaria Bella Itália</span>
+        <span class="cardapio-header__avaliacao">⭐ 4.7</span>
+      </div>
+    </div>
+    <button class="cardapio-header__sino">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="page-content">
+
+    <!-- BOTÃO ADICIONAR -->
+    <div class="cardapio-adicionar">
+      <button class="cardapio-adicionar__btn" (click)="adicionar()">Adicionar</button>
+    </div>
+
+    <!-- LISTA DE ITENS -->
+    <div class="cardapio-lista">
+      @for (item of itens; track item.id) {
+        <div class="cardapio-item">
+
+          <div class="cardapio-item__imagem">
+            @if (item.imagem) {
+              <img [src]="item.imagem" [alt]="item.nome" />
+            } @else {
+              <div class="cardapio-item__imagem-placeholder">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+                </svg>
+              </div>
+            }
+          </div>
+
+          <div class="cardapio-item__info">
+            <span class="cardapio-item__nome">{{ item.nome }}</span>
+            <span class="cardapio-item__descricao">{{ item.descricao }}</span>
+            <span class="cardapio-item__preco">{{ formatarPreco(item.valor) }}</span>
+          </div>
+
+          <button class="cardapio-item__editar" (click)="editar(item)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+
+        </div>
+      }
+    </div>
+
+  </div>
+
+  <app-bottom-nav-fornecedor tabAtiva="cardapio"></app-bottom-nav-fornecedor>
+
+</div>

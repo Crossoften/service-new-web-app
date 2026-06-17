@@ -18,11 +18,11 @@ export class LoginComponent {
   // Mock de roles para teste
   // Futuramente virá da API
   rolesMock: Record<string, string> = {
-    '11999999999': 'cliente',
-    '11988888888': 'parceiro',
-    '11977777777': 'fornecedor',
-    '11966666666': 'entregador',
-  };
+  '11999999999': 'cliente',
+  '11988888888': 'parceiro',
+  '11977777777': 'fornecedor',
+  '11966666666': 'entregador',
+};
 
   constructor(private router: Router) {}
 
@@ -68,14 +68,14 @@ entrar() {
 }
 
   redirecionarPorRole(role: string) {
-    const rotas: Record<string, string> = {
-      cliente:     '/home',
-      parceiro:    '/parceiro/home',
-      fornecedor:  '/home',
-      entregador:  '/home',
-    };
-    this.router.navigate([rotas[role] ?? '/home']);
-  }
+  const rotas: Record<string, string> = {
+    cliente:    '/home',
+    parceiro:   '/parceiro/home',
+    fornecedor: '/fornecedor/home',
+    entregador: '/home',
+  };
+  this.router.navigate([rotas[role] ?? '/home']);
+}
 
   cadastrar() {
     this.router.navigate(['/selecionar-perfil']);

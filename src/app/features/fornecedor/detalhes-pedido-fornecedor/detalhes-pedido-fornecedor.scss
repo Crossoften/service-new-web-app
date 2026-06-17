@@ -1,0 +1,281 @@
+.pedido-f-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  padding-top: calc(16px + var(--safe-top));
+
+  &__voltar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+  }
+
+  &__restaurante {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--color-gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-400);
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__nome {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__avaliacao {
+    font-size: 12px;
+    color: var(--color-gray-600);
+  }
+
+  &__sino {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+  }
+}
+
+.pedido-f-titulo {
+  padding: 8px 16px 12px;
+
+  h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+}
+
+.pedido-f-item {
+  display: flex;
+  gap: 12px;
+  margin: 0 16px 12px;
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+
+  &__imagem {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    background: var(--color-gray-100);
+    flex-shrink: 0;
+  }
+
+  &__imagem-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-400);
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__nome {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__descricao {
+    font-size: 12px;
+    color: var(--color-gray-600);
+    line-height: 1.4;
+  }
+
+  &__preco {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+}
+
+.pedido-f-endereco {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 16px 12px;
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+
+  &__rua {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  &__bairro {
+    font-size: 12px;
+    color: var(--color-gray-600);
+  }
+}
+
+.pedido-f-secao {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__titulo {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+}
+
+.pedido-f-adicional {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-gray-100);
+
+  &:last-child { border-bottom: none; }
+
+  &__check {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--color-primary);
+    flex-shrink: 0;
+  }
+
+  &__nome {
+    flex: 1;
+    font-size: 14px;
+    color: var(--color-text);
+  }
+
+  &__valor {
+    font-size: 13px;
+    color: var(--color-gray-600);
+  }
+}
+
+.pedido-f-detalhes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__linha {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--color-gray-600);
+
+    &--total {
+      font-weight: 700;
+      color: var(--color-text);
+      font-size: 14px;
+      padding-top: 8px;
+      border-top: 1px solid var(--color-gray-100);
+    }
+  }
+}
+
+.pedido-f-status {
+  margin: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--color-gray-100);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  &__opcoes {
+    background: var(--color-white);
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+
+  &__opcao {
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--color-text);
+    cursor: pointer;
+    border-bottom: 1px solid var(--color-gray-100);
+    transition: background 0.15s;
+
+    &:last-child { border-bottom: none; }
+
+    &--ativo {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+  }
+}
+
+.pedido-f-actions {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  padding-bottom: calc(12px + var(--safe-bottom));
+  border-top: 1px solid var(--color-gray-100);
+}
+
+.pedido-f-btn {
+  flex: 1;
+  padding: 16px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:active { opacity: 0.85; }
+
+  &--primary {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+  }
+
+  &--outline {
+    background: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+  }
+}

@@ -1,0 +1,112 @@
+<div class="page-container">
+
+  <!-- HEADER -->
+  <div class="home-f-header">
+    <button class="home-f-header__voltar" (click)="router.navigate(['/home'])">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="home-f-header__restaurante">
+      <div class="home-f-header__logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+        </svg>
+      </div>
+      <div class="home-f-header__info">
+        <span class="home-f-header__nome">Pizzaria Bella Itália</span>
+        <span class="home-f-header__avaliacao">⭐ 4.7</span>
+      </div>
+    </div>
+    <button class="home-f-header__sino">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="page-content">
+
+    <!-- FATURAMENTO -->
+    @if (faturamento) {
+      <div class="home-f-faturamento">
+        <div class="home-f-faturamento__item">
+          <span class="home-f-faturamento__label">Dia</span>
+          <span class="home-f-faturamento__valor">{{ formatarPreco(faturamento.dia) }}</span>
+        </div>
+        <div class="home-f-faturamento__divider"></div>
+        <div class="home-f-faturamento__item">
+          <span class="home-f-faturamento__label">Semana</span>
+          <span class="home-f-faturamento__valor">{{ formatarPreco(faturamento.semana) }}</span>
+        </div>
+        <div class="home-f-faturamento__divider"></div>
+        <div class="home-f-faturamento__item">
+          <span class="home-f-faturamento__label">Mês</span>
+          <span class="home-f-faturamento__valor">{{ formatarPreco(faturamento.mes) }}</span>
+        </div>
+      </div>
+      <button class="home-f-ver-mais">Ver mais</button>
+    }
+
+    <!-- STATUS OPERACIONAL -->
+    <div class="home-f-card">
+      <span class="home-f-card__titulo">Status Operacional</span>
+      <div class="home-f-status">
+        <button
+          class="home-f-status__btn"
+          [class.home-f-status__btn--ativo]="statusOperacional === 'aberto'"
+          (click)="statusOperacional = 'aberto'">
+          Aberto
+        </button>
+        <button
+          class="home-f-status__btn"
+          [class.home-f-status__btn--ativo]="statusOperacional === 'fechado'"
+          (click)="statusOperacional = 'fechado'">
+          Fechado
+        </button>
+      </div>
+    </div>
+
+    <!-- GERENCIAR CARDÁPIO -->
+    <div class="home-f-card home-f-card--link" (click)="router.navigate(['/fornecedor/cardapio'])">
+      <span class="home-f-card__titulo">Gerenciar Cardápio</span>
+      <span class="home-f-card__acao">Editar</span>
+    </div>
+
+    <!-- ATIVIDADES RECENTES -->
+    <div class="home-f-secao-header">
+      <h3 class="home-f-secao-titulo">Atividades Recentes</h3>
+      <button class="home-f-ver-mais">Ver mais</button>
+    </div>
+
+    <div class="home-f-pedidos">
+      @for (pedido of pedidos; track pedido.id) {
+        <div class="home-f-pedido" (click)="abrirPedido(pedido)">
+          <div class="home-f-pedido__header">
+            <span class="home-f-pedido__numero">#{{ pedido.numero }} — Pedido de {{ pedido.cliente }}</span>
+            <button class="home-f-pedido__editar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+          </div>
+          <span class="home-f-pedido__item">{{ pedido.item }}</span>
+          <span class="home-f-pedido__pagamento">Pagamento: {{ pedido.pagamento }}</span>
+          <span class="home-f-pedido__endereco">Endereço: {{ pedido.endereco }} - {{ pedido.bairro }}</span>
+          <div class="home-f-pedido__footer">
+            <span class="home-f-pedido__total">Total: {{ formatarPreco(pedido.total) }}</span>
+            <span class="home-f-pedido__status" [ngClass]="statusClass(pedido.status)">
+              Status: {{ statusLabel(pedido.status) }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+
+  <app-bottom-nav-fornecedor tabAtiva="home"></app-bottom-nav-fornecedor>
+
+</div>

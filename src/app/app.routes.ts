@@ -34,6 +34,10 @@ import { IndicacoesComponent } from './features/parceiro/indicacoes/indicacoes';
 import { MaisParceiroComponent } from './features/parceiro/mais-parceiro/mais-parceiro';
 import { SaldoComponent } from './features/parceiro/saldo/saldo';
 import { NovoBancoComponent } from './features/parceiro/novo-banco/novo-banco';
+import { HomeFornecedorComponent } from './features/fornecedor/home-fornecedor/home-fornecedor';
+import { GerenciarCardapioComponent } from './features/fornecedor/gerenciar-cardapio/gerenciar-cardapio';
+import { AddCardapioComponent } from './features/fornecedor/add-cardapio/add-cardapio';
+import { DetalhesPedidoFornecedorComponent } from './features/fornecedor/detalhes-pedido-fornecedor/detalhes-pedido-fornecedor';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'splash', pathMatch: 'full' },
@@ -44,7 +48,7 @@ export const routes: Routes = [
   { path: 'cadastro/:perfil', component: CadastroComponent },
   { path: 'home', component: HomeComponent },
 
-  // Delivery
+  // Delivery Cliente
   { path: 'delivery', component: CategoriaDeliveryComponent },
   { path: 'delivery/listagem/:categoria', component: ListagemDeliveryComponent },
   { path: 'delivery/restaurante/:id', component: RestauranteComponent },
@@ -54,7 +58,7 @@ export const routes: Routes = [
   { path: 'delivery/revisao', component: RevisaoPedidoComponent },
   { path: 'delivery/status/:id', component: StatusPedidoComponent },
 
-  // Serviços
+  // Serviços Cliente
   { path: 'servicos', component: CategoriaServicosComponent },
   { path: 'servicos/listagem/:categoria', component: ListagemServicosComponent },
   { path: 'servicos/requisitos', component: RequisitosServicoComponent },
@@ -73,6 +77,13 @@ export const routes: Routes = [
   { path: 'parceiro/mais', component: MaisParceiroComponent },
   { path: 'parceiro/saldo', component: SaldoComponent },
   { path: 'parceiro/banco/novo', component: NovoBancoComponent },
+
+  // Fornecedor Delivery
+  { path: 'fornecedor/home', component: HomeFornecedorComponent },
+  { path: 'fornecedor/cardapio', component: GerenciarCardapioComponent },
+  { path: 'fornecedor/cardapio/novo', component: AddCardapioComponent },
+  { path: 'fornecedor/cardapio/editar/:id', component: AddCardapioComponent },
+  { path: 'fornecedor/pedido/:id', component: DetalhesPedidoFornecedorComponent },
 
   // Outras categorias
   { path: 'compra-vender', component: CategoriaCompraVenderComponent },
