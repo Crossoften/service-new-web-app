@@ -1,0 +1,85 @@
+<div class="page-container">
+
+  <div class="lsf-header">
+    <button class="lsf-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="lsf-header__titulo">Serviços</span>
+    <div class="lsf-header__acoes">
+      <button class="lsf-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </button>
+      <button class="lsf-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="lsf-tabs">
+    @for (tab of tabs; track tab.id) {
+      <button
+        class="lsf-tabs__item"
+        [class.lsf-tabs__item--ativo]="tabAtiva === tab.id"
+        (click)="trocarTab(tab.id)">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <div class="page-content">
+    <div class="lsf-lista">
+      @for (servico of servicos; track servico.id) {
+        <div class="lsf-card" (click)="abrirServico(servico)">
+
+          <div class="lsf-card__foto">
+            @if (servico.imagem) {
+              <img [src]="servico.imagem" [alt]="servico.nome" />
+            } @else {
+              <div class="lsf-card__foto-placeholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+            }
+          </div>
+
+          <div class="lsf-card__info">
+            <span class="lsf-card__nome">Joelson Silva</span>
+            <span class="lsf-card__categoria">● Cliente</span>
+            <span class="lsf-card__descricao">{{ servico.descricao }}</span>
+            <div class="lsf-card__stats">
+              <span class="lsf-card__stat lsf-card__stat--like">👍 80</span>
+              <span class="lsf-card__stat lsf-card__stat--dislike">👎 20</span>
+            </div>
+          </div>
+
+        </div>
+      }
+
+      @if (servicos.length === 0) {
+        <div class="lsf-vazio">
+          <p>Nenhum serviço {{ tabAtiva === 'ativos' ? 'ativo' : 'inativo' }} encontrado.</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <button class="lsf-fab" (click)="adicionar()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  </button>
+
+  <app-bottom-nav-fornecedor-servicos tabAtiva="home"></app-bottom-nav-fornecedor-servicos>
+
+</div>

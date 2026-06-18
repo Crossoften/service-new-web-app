@@ -1,0 +1,77 @@
+<div class="page-container">
+
+  <div class="tf-header">
+    <h1 class="tf-header__titulo">Trabalhos</h1>
+    <div class="tf-header__acoes">
+      <button class="tf-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </button>
+      <button class="tf-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tf-tabs">
+    @for (tab of tabs; track tab.id) {
+      <button
+        class="tf-tabs__item"
+        [class.tf-tabs__item--ativo]="tabAtiva === tab.id"
+        (click)="tabAtiva = tab.id">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <div class="page-content">
+    <div class="tf-lista">
+      @for (trabalho of trabalhosFiltrados; track trabalho.id) {
+        <div class="tf-card" (click)="abrirTrabalho(trabalho)">
+
+          <div class="tf-card__foto">
+            @if (trabalho.clienteFoto) {
+              <img [src]="trabalho.clienteFoto" [alt]="trabalho.cliente" />
+            } @else {
+              <div class="tf-card__foto-placeholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+            }
+          </div>
+
+          <div class="tf-card__info">
+            <span class="tf-card__nome">{{ trabalho.cliente }}</span>
+            <span class="tf-card__descricao">{{ trabalho.descricao }}</span>
+          </div>
+
+          @if (trabalho.status === 'em_garantia') {
+            <div class="tf-card__status-col">
+              <span class="tf-status status--verde">Em garantia</span>
+              @if (trabalho.validadeGarantia) {
+                <span class="tf-card__garantia">Val: {{ trabalho.validadeGarantia }}</span>
+              }
+            </div>
+          }
+
+        </div>
+      }
+
+      @if (trabalhosFiltrados.length === 0) {
+        <div class="tf-vazio">
+          <p>Nenhum trabalho encontrado.</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <app-bottom-nav-fornecedor-servicos tabAtiva="trabalhos"></app-bottom-nav-fornecedor-servicos>
+
+</div>

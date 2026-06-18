@@ -1,0 +1,100 @@
+<div class="page-container">
+
+  <div class="of-header">
+    <h1 class="of-header__titulo">Orçamentos</h1>
+    <div class="of-header__acoes">
+      <button class="of-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </button>
+      <button class="of-header__btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="of-tabs">
+    @for (tab of tabs; track tab.id) {
+      <button
+        class="of-tabs__item"
+        [class.of-tabs__item--ativo]="tabAtiva === tab.id"
+        (click)="tabAtiva = tab.id">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <!-- BUSCA -->
+  <div class="of-busca">
+    <div class="of-busca__input">
+      <input type="text" placeholder="O QUE VOCÊ PROCURA?" [(ngModel)]="busca" />
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </div>
+    <button class="of-busca__filtro" (click)="toggleFiltro()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- FILTRO DROPDOWN -->
+  @if (filtroAberto) {
+    <div class="of-filtro">
+      <span class="of-filtro__titulo">Filtro</span>
+      <div class="of-filtro__opcao">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <span>Distância</span>
+      </div>
+    </div>
+  }
+
+  <div class="page-content">
+    <div class="of-lista">
+      @for (orcamento of orcamentosFiltrados; track orcamento.id) {
+        <div class="of-card" (click)="abrirOrcamento(orcamento)">
+
+          <div class="of-card__foto">
+            @if (orcamento.clienteFoto) {
+              <img [src]="orcamento.clienteFoto" [alt]="orcamento.cliente" />
+            } @else {
+              <div class="of-card__foto-placeholder">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+            }
+          </div>
+
+          <div class="of-card__info">
+            <span class="of-card__nome">{{ orcamento.cliente }}</span>
+            <span class="of-card__descricao">{{ orcamento.descricao }}</span>
+            @if (orcamento.distancia) {
+              <span class="of-card__distancia"><strong>Distância: {{ orcamento.distancia }}</strong></span>
+            }
+          </div>
+
+        </div>
+      }
+
+      @if (orcamentosFiltrados.length === 0) {
+        <div class="of-vazio">
+          <p>Nenhum orçamento encontrado.</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <app-bottom-nav-fornecedor-servicos tabAtiva="orcamentos"></app-bottom-nav-fornecedor-servicos>
+
+</div>

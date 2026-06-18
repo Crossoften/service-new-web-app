@@ -1,0 +1,185 @@
+<div class="fo-container">
+
+  <div class="fo-header">
+    <button class="fo-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="fo-header__titulo">Orçamento</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- CARD CLIENTE -->
+    @if (orcamento) {
+      <div class="fo-cliente">
+        <div class="fo-cliente__foto">
+          @if (orcamento.clienteFoto) {
+            <img [src]="orcamento.clienteFoto" [alt]="orcamento.cliente" />
+          } @else {
+            <div class="fo-cliente__foto-placeholder">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+          }
+        </div>
+        <div class="fo-cliente__info">
+          <span class="fo-cliente__nome">{{ orcamento.cliente }}</span>
+          <span class="fo-cliente__descricao">{{ orcamento.descricao }}</span>
+        </div>
+      </div>
+
+      <!-- ARQUIVOS DO CLIENTE -->
+      <div class="fo-arquivos">
+        @for (arquivo of orcamento.arquivos; track arquivo.nome) {
+          <div class="fo-arquivo">
+            <span>{{ arquivo.nome }}</span>
+            <button class="fo-arquivo__btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="8 12 12 16 16 12"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="fo-divider"></div>
+
+    <!-- PREVISÃO -->
+    <div class="fo-secao">
+      <h3 class="fo-secao__titulo">Previsão</h3>
+      <div class="fo-secao__row">
+        <div class="fo-field fo-field--flex">
+          <label>Data inicio</label>
+          <input type="datetime-local" [(ngModel)]="dataInicio" />
+        </div>
+        <div class="fo-field fo-field--flex">
+          <label>Dias previstos execução</label>
+          <div class="fo-field__select" (click)="toggleDias()">
+            <span>{{ diasPrevistos }}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              [style.transform]="diasAberto ? 'rotate(180deg)' : 'rotate(0)'">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+          @if (diasAberto) {
+            <div class="fo-field__opcoes">
+              @for (d of diasOpcoes; track d) {
+                <div class="fo-field__opcao"
+                  [class.fo-field__opcao--ativo]="diasPrevistos === d"
+                  (click)="selecionarDias(d)">
+                  {{ d }}
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- DETALHES -->
+    <div class="fo-secao">
+      <h3 class="fo-secao__titulo">Detalhes</h3>
+      <div class="fo-secao__row">
+        <div class="fo-field fo-field--flex">
+          <label>Valor</label>
+          <input type="number" placeholder="00,00" [(ngModel)]="valor" />
+        </div>
+        <div class="fo-field fo-field--flex">
+          <label>Forma de pagamento</label>
+          <div class="fo-field__select" (click)="togglePagamento()">
+            <span>{{ formaPagamento }}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              [style.transform]="pagamentoAberto ? 'rotate(180deg)' : 'rotate(0)'">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+          @if (pagamentoAberto) {
+            <div class="fo-field__opcoes">
+              @for (f of formasPagamento; track f) {
+                <div class="fo-field__opcao"
+                  [class.fo-field__opcao--ativo]="formaPagamento === f"
+                  (click)="selecionarPagamento(f)">
+                  {{ f }}
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- GARANTIA -->
+    <div class="fo-secao">
+      <h3 class="fo-secao__titulo">Garantia</h3>
+      <div class="fo-field">
+        <label>Tempo de garantia</label>
+        <input type="text" placeholder="6 meses" [(ngModel)]="garantia" />
+      </div>
+    </div>
+
+    <!-- DESCRIÇÃO -->
+    <div class="fo-field fo-field--padding">
+      <textarea placeholder="Descreva sua solicitação" [(ngModel)]="descricao" rows="5"></textarea>
+    </div>
+
+    @if (erro) {
+      <span class="fo-erro">{{ erro }}</span>
+    }
+
+  </div>
+
+  <!-- BOTÕES -->
+  <div class="fo-actions">
+    <button class="fo-btn fo-btn--primary" (click)="enviar()">ENVIAR</button>
+    <button class="fo-btn fo-btn--outline" (click)="abrirMaisInfos()">PEDIR MAIS INFORMAÇÕES</button>
+  </div>
+
+  <!-- MODAL MAIS INFORMAÇÕES -->
+  @if (mostrarModalMaisInfos) {
+    <div class="modal-overlay" (click)="fecharMaisInfos()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3 class="modal__titulo">Mais informações</h3>
+        <p class="modal__descricao">Solicite mais informações do cliente para que consiga finalizar o orçamento</p>
+
+        <textarea
+          class="modal__textarea"
+          placeholder="Descreva sua solicitação"
+          [(ngModel)]="maisInfosDescricao"
+          rows="5">
+        </textarea>
+
+        <div class="modal__arquivos">
+          @for (arquivo of maisInfosArquivos; track arquivo.id) {
+            <div class="modal__arquivo">
+              <span>{{ arquivo.nome }}</span>
+              <button class="modal__arquivo-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="8 12 12 16 16 12"/>
+                  <line x1="12" y1="8" x2="12" y2="16"/>
+                </svg>
+              </button>
+            </div>
+          }
+        </div>
+
+        <button class="modal__fab" (click)="adicionarArquivoMaisInfos()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+
+        <button class="modal__btn" (click)="confirmarMaisInfos()">CONFIRMAR</button>
+      </div>
+    </div>
+  }
+
+</div>

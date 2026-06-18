@@ -1,0 +1,148 @@
+<div class="dt-container">
+
+  <!-- HEADER -->
+  <div class="dt-header">
+    <button class="dt-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="dt-header__titulo">Trabalhos</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="page-content">
+
+    @if (trabalho) {
+
+      <!-- DETALHES DO SERVIÇO -->
+      <div class="dt-detalhes">
+        <h3 class="dt-detalhes__titulo">Detalhes do serviço</h3>
+        <div class="dt-detalhes__linha">
+          <span>Realizado em</span><span>{{ trabalho.realizado }}</span>
+        </div>
+        <div class="dt-detalhes__linha">
+          <span>Valor serviço</span><span>R$ {{ trabalho.valorServico.toFixed(2) }}</span>
+        </div>
+        <div class="dt-detalhes__linha dt-detalhes__linha--total">
+          <span>Total</span><span>R$ {{ trabalho.total.toFixed(2) }}</span>
+        </div>
+      </div>
+
+      <!-- CARD CLIENTE -->
+      <div class="dt-cliente">
+        <div class="dt-cliente__foto">
+          @if (trabalho.clienteFoto) {
+            <img [src]="trabalho.clienteFoto" [alt]="trabalho.cliente" />
+          } @else {
+            <div class="dt-cliente__foto-placeholder">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+          }
+        </div>
+        <div class="dt-cliente__info">
+          <span class="dt-cliente__nome">{{ trabalho.cliente }}</span>
+          <span class="dt-cliente__descricao">{{ trabalho.descricao }}</span>
+        </div>
+      </div>
+
+      <!-- ARQUIVOS DO CLIENTE -->
+      <div class="dt-arquivos">
+        @for (arquivo of trabalho.arquivosCliente; track arquivo.nome) {
+          <div class="dt-arquivo">
+            <span>{{ arquivo.nome }}</span>
+            <button class="dt-arquivo__btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="8 12 12 16 16 12"/>
+                <line x1="12" y1="8" x2="12" y2="16"/>
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- RESPOSTA (só no step em_andamento) -->
+      @if (stepAtual === 'em_andamento') {
+        <div class="dt-divider"></div>
+
+        <div class="dt-resposta">
+          <textarea
+            class="dt-resposta__textarea"
+            placeholder="Descreva sua solicitação"
+            [(ngModel)]="respostaDescricao"
+            rows="5">
+          </textarea>
+
+          <div class="dt-arquivos">
+            @for (arquivo of respostaArquivos; track arquivo.id) {
+              <div class="dt-arquivo">
+                <span>{{ arquivo.nome }}</span>
+                <button class="dt-arquivo__btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="8 12 12 16 16 12"/>
+                    <line x1="12" y1="8" x2="12" y2="16"/>
+                  </svg>
+                </button>
+              </div>
+            }
+          </div>
+
+          <button class="dt-fab" (click)="adicionarArquivo()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+        </div>
+      }
+
+    }
+
+  </div>
+
+  <!-- BOTÕES POR STEP -->
+  <div class="dt-actions">
+    @if (stepAtual === 'inicial') {
+      <button class="dt-btn dt-btn--primary" (click)="iniciarServico()">INICIAR SERVIÇO</button>
+      <button class="dt-btn dt-btn--outline" (click)="cancelar()">CANCELAR</button>
+    }
+    @if (stepAtual === 'em_andamento') {
+      <button class="dt-btn dt-btn--primary" (click)="enviarResposta()">ENVIAR</button>
+    }
+    @if (stepAtual === 'concluido') {
+      <button class="dt-btn dt-btn--primary" (click)="finalizarServico()">FINALIZAR SERVIÇO</button>
+    }
+  </div>
+
+  <!-- MODAL ACRÉSCIMO -->
+  @if (mostrarModalAcrescimo) {
+    <div class="modal-overlay" (click)="mostrarModalAcrescimo = false">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3 class="modal__titulo">Atenção!</h3>
+        <p class="modal__descricao">
+          Ouve algum acréscimo no orçamento devido a algum serviço extra?
+          Se sim, justifique e insira o valor, se não, clique apenas em "continuar"
+        </p>
+
+        <textarea
+          class="modal__textarea"
+          placeholder="Descreva sua justificativa"
+          [(ngModel)]="justificativa"
+          rows="4">
+        </textarea>
+
+        <div class="modal__field">
+          <label>Valor</label>
+          <input type="number" placeholder="00,00" [(ngModel)]="valorAcrescimo" />
+        </div>
+
+        <button class="modal__btn" (click)="confirmarAcrescimo()">CONFIRMAR</button>
+      </div>
+    </div>
+  }
+
+</div>

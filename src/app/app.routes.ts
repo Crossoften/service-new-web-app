@@ -38,6 +38,12 @@ import { HomeFornecedorComponent } from './features/fornecedor/home-fornecedor/h
 import { GerenciarCardapioComponent } from './features/fornecedor/gerenciar-cardapio/gerenciar-cardapio';
 import { AddCardapioComponent } from './features/fornecedor/add-cardapio/add-cardapio';
 import { DetalhesPedidoFornecedorComponent } from './features/fornecedor/detalhes-pedido-fornecedor/detalhes-pedido-fornecedor';
+import { ListagemServicosFornecedorComponent } from './features/fornecedor/servicos/listagem-servicos-fornecedor/listagem-servicos-fornecedor';
+import { CriarServicoComponent } from './features/fornecedor/servicos/criar-servico/criar-servico';
+import { OrcamentosFornecedorComponent } from './features/fornecedor/servicos/orcamentos-fornecedor/orcamentos-fornecedor';
+import { FazerOrcamentoComponent } from './features/fornecedor/servicos/fazer-orcamento/fazer-orcamento';
+import { TrabalhosFornecedorComponent } from './features/fornecedor/servicos/trabalhos-fornecedor/trabalhos-fornecedor';
+import { DetalhesTrabalhoComponent } from './features/fornecedor/servicos/detalhes-trabalho/detalhes-trabalho';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'splash', pathMatch: 'full' },
@@ -84,6 +90,15 @@ export const routes: Routes = [
   { path: 'fornecedor/cardapio/novo', component: AddCardapioComponent },
   { path: 'fornecedor/cardapio/editar/:id', component: AddCardapioComponent },
   { path: 'fornecedor/pedido/:id', component: DetalhesPedidoFornecedorComponent },
+
+  // Fornecedor Serviços
+  { path: 'fornecedor/servicos', component: ListagemServicosFornecedorComponent },
+  { path: 'fornecedor/servicos/categoria', component: CategoriaServicosComponent },
+  { path: 'fornecedor/servicos/criar', component: CriarServicoComponent },
+  { path: 'fornecedor/servicos/orcamentos', component: OrcamentosFornecedorComponent },
+  { path: 'fornecedor/servicos/orcamento/:id', component: FazerOrcamentoComponent },
+  { path: 'fornecedor/servicos/trabalhos', component: TrabalhosFornecedorComponent },
+  { path: 'fornecedor/servicos/trabalho/:id', component: DetalhesTrabalhoComponent },
 
   // Outras categorias
   { path: 'compra-vender', component: CategoriaCompraVenderComponent },
