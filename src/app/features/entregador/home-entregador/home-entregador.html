@@ -1,0 +1,131 @@
+<div class="page-container">
+
+  <!-- HEADER -->
+  <div class="he-header">
+    <button class="he-header__voltar" (click)="router.navigate(['/home'])">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="he-header__user">
+      <div class="he-header__foto">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div class="he-header__info">
+        <span class="he-header__nome">Olá, Carlos Oliveira!</span>
+        <span class="he-header__role">Entregador</span>
+      </div>
+    </div>
+    <button class="he-header__sino">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="page-content">
+
+    <!-- FATURAMENTO -->
+    @if (faturamento) {
+      <div class="he-faturamento">
+        <div class="he-faturamento__item">
+          <span class="he-faturamento__label">Dia</span>
+          <span class="he-faturamento__valor">{{ formatarPreco(faturamento.dia) }}</span>
+        </div>
+        <div class="he-faturamento__divider"></div>
+        <div class="he-faturamento__item">
+          <span class="he-faturamento__label">Semana</span>
+          <span class="he-faturamento__valor">{{ formatarPreco(faturamento.semana) }}</span>
+        </div>
+        <div class="he-faturamento__divider"></div>
+        <div class="he-faturamento__item">
+          <span class="he-faturamento__label">Mês</span>
+          <span class="he-faturamento__valor">{{ formatarPreco(faturamento.mes) }}</span>
+        </div>
+      </div>
+      <button class="he-ver-mais">Ver mais</button>
+    }
+
+    <!-- STATUS OPERACIONAL -->
+    <div class="he-card">
+      <span class="he-card__titulo">Status Operacional</span>
+      <div class="he-status">
+        <button
+          class="he-status__btn"
+          [class.he-status__btn--ativo]="statusOperacional === 'ativo'"
+          (click)="statusOperacional = 'ativo'">
+          Ativo
+        </button>
+        <button
+          class="he-status__btn"
+          [class.he-status__btn--ativo]="statusOperacional === 'inativo'"
+          (click)="statusOperacional = 'inativo'">
+          Inativo
+        </button>
+      </div>
+    </div>
+
+    <!-- PEDIDO PENDENTE -->
+    @if (pedidoPendente) {
+      <div class="he-pedido-pendente">
+        <div class="he-pedido-pendente__header">
+          <div class="he-pedido-pendente__logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+            </svg>
+          </div>
+          <div class="he-pedido-pendente__info">
+            <span class="he-pedido-pendente__titulo">Pedido #{{ pedidoPendente.numero }} — {{ pedidoPendente.restaurante }}</span>
+            <div class="he-pedido-pendente__meta">
+              <span class="he-pedido-pendente__valor">{{ formatarPreco(pedidoPendente.valor) }}</span>
+              <span class="he-pedido-pendente__dot">•</span>
+              <span class="he-pedido-pendente__pag">{{ pedidoPendente.pagamento }}</span>
+              <span class="he-pedido-pendente__dot">•</span>
+              <span class="he-pedido-pendente__status">A caminho</span>
+            </div>
+            <span class="he-pedido-pendente__cliente">Cliente: {{ pedidoPendente.cliente }}</span>
+            <span class="he-pedido-pendente__endereco">Endereço: {{ pedidoPendente.endereco }} – {{ pedidoPendente.bairro }}</span>
+          </div>
+        </div>
+
+        <div class="he-pedido-pendente__acoes">
+          <button class="he-pedido-pendente__btn he-pedido-pendente__btn--recusar" (click)="recusarPedido()">
+            RECUSAR
+          </button>
+          <button class="he-pedido-pendente__btn he-pedido-pendente__btn--aceitar" (click)="aceitarPedido()">
+            ACEITAR
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ATIVIDADES RECENTES -->
+    <div class="he-secao-header">
+      <h3 class="he-secao-titulo">Atividades Recentes</h3>
+      <button class="he-ver-mais" (click)="router.navigate(['/entregador/trabalhos'])">Ver mais</button>
+    </div>
+
+    <div class="he-atividades">
+     @for (atividade of atividades; track atividade.id) {
+    <div class="he-atividade" (click)="abrirEntrega(atividade.id)">
+      <span class="he-atividade__numero">#{{ atividade.numero }} — {{ atividade.restaurante }}</span>
+      <div class="he-atividade__meta">
+        <span>{{ formatarPreco(atividade.valor) }}</span>
+        <span>•</span>
+        <span class="he-atividade__status">{{ atividade.status }}</span>
+        <span>•</span>
+        <span>{{ atividade.data }} às {{ atividade.hora }}</span>
+      </div>
+    </div>
+  }
+    </div>
+
+  </div>
+
+  <app-bottom-nav-entregador tabAtiva="home"></app-bottom-nav-entregador>
+
+</div>

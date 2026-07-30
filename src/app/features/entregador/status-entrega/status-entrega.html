@@ -1,0 +1,91 @@
+<div class="se-container">
+
+  <!-- HEADER -->
+  <div class="se-header">
+    <button class="se-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="se-header__user">
+      <div class="se-header__foto">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <div class="se-header__info">
+        <span class="se-header__nome">Olá, Carlos Oliveira!</span>
+        <span class="se-header__role">Entregador</span>
+      </div>
+    </div>
+    <button class="se-header__sino">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- MAPA PLACEHOLDER -->
+  <div class="se-mapa">
+    <div class="se-mapa__placeholder">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      <span>Mapa disponível em breve</span>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    @if (pedido) {
+
+      <!-- CARD RESTAURANTE -->
+      <div class="se-restaurante">
+        <div class="se-restaurante__logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+          </svg>
+        </div>
+        <div class="se-restaurante__info">
+          <span class="se-restaurante__nome">{{ pedido.restaurante }}</span>
+          <div class="se-restaurante__meta">
+            <span class="se-restaurante__valor">{{ formatarPreco(pedido.valor) }}</span>
+            <span>•</span>
+            <span class="se-restaurante__pag">{{ pedido.pagamento }}</span>
+          </div>
+          <span class="se-restaurante__endereco">Endereço: {{ pedido.endereco }} – {{ pedido.bairro }}</span>
+        </div>
+      </div>
+
+      <!-- BARRA DE PROGRESSO -->
+      <div class="se-progresso">
+        <div class="se-progresso__barra">
+          @for (etapa of etapas; track etapa.id; let i = $index) {
+            <div class="se-progresso__ponto"
+              [class.se-progresso__ponto--ativo]="etapaAtingida(i)">
+            </div>
+            @if (i < etapas.length - 1) {
+              <div class="se-progresso__linha"
+                [class.se-progresso__linha--ativa]="etapaAtingida(i + 1)">
+              </div>
+            }
+          }
+        </div>
+        <div class="se-progresso__label">
+          <span>{{ labelAtual }}</span>
+        </div>
+      </div>
+
+    }
+
+  </div>
+
+  <!-- BOTÃO -->
+  <div class="se-actions">
+    <button class="se-btn" (click)="avancar()">{{ labelBotao }}</button>
+  </div>
+
+</div>

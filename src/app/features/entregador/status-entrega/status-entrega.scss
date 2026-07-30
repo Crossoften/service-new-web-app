@@ -1,0 +1,222 @@
+.se-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  padding-top: var(--safe-top);
+  background: var(--color-white);
+  overflow: hidden;
+}
+
+.se-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+
+  &__voltar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__foto {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-400);
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__nome {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__role {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  &__sino {
+    background: var(--color-gray-100);
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--color-text);
+  }
+}
+
+.se-mapa {
+  width: 100%;
+  height: 220px;
+  background: #e8f0e8;
+  flex-shrink: 0;
+
+  &__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--color-gray-400);
+
+    span { font-size: 12px; }
+  }
+}
+
+.se-restaurante {
+  display: flex;
+  gap: 12px;
+  margin: 12px 16px;
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  align-items: flex-start;
+
+  &__logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--color-gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-400);
+    flex-shrink: 0;
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__nome {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  &__valor {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  &__pag {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  &__endereco {
+    font-size: 12px;
+    color: var(--color-gray-600);
+  }
+}
+
+.se-progresso {
+  padding: 0 16px 16px;
+
+  &__barra {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  &__ponto {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-gray-100);
+    border: 2px solid var(--color-gray-400);
+    flex-shrink: 0;
+    transition: all 0.3s;
+
+    &--ativo {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+  }
+
+  &__linha {
+    flex: 1;
+    height: 3px;
+    background: var(--color-gray-100);
+    transition: all 0.3s;
+
+    &--ativa {
+      background: var(--color-primary);
+    }
+  }
+
+  &__label {
+    margin-top: 4px;
+
+    span {
+      display: inline-block;
+      background: var(--color-primary);
+      color: var(--color-white);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 50px;
+    }
+  }
+}
+
+.se-actions {
+  padding: 12px 16px;
+  padding-bottom: calc(12px + var(--safe-bottom));
+  border-top: 1px solid var(--color-gray-100);
+}
+
+.se-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 50px;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:active { opacity: 0.85; }
+}

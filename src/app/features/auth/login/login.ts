@@ -72,7 +72,7 @@ entrar() {
     cliente:    '/home',
     parceiro:   '/parceiro/home',
     fornecedor: '/fornecedor/home',
-    entregador: '/home',
+    entregador: '/entregador/home',
   };
   this.router.navigate([rotas[role] ?? '/home']);
 }

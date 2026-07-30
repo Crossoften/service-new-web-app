@@ -44,6 +44,12 @@ import { OrcamentosFornecedorComponent } from './features/fornecedor/servicos/or
 import { FazerOrcamentoComponent } from './features/fornecedor/servicos/fazer-orcamento/fazer-orcamento';
 import { TrabalhosFornecedorComponent } from './features/fornecedor/servicos/trabalhos-fornecedor/trabalhos-fornecedor';
 import { DetalhesTrabalhoComponent } from './features/fornecedor/servicos/detalhes-trabalho/detalhes-trabalho';
+import { HomeEntregadorComponent } from './features/entregador/home-entregador/home-entregador';
+import { TrabalhosEntregadorComponent } from './features/entregador/trabalhos-entregador/trabalhos-entregador';
+import { StatusEntregaComponent } from './features/entregador/status-entrega/status-entrega';
+//import { ListagemProdutosComponent } from './features/fornecedor/compra-venda/listagem-produtos/listagem-produtos';
+//import { CriarProdutoComponent } from './features/fornecedor/compra-venda/criar-produto/criar-produto';
+//import { DetalheVendaComponent } from './features/fornecedor/compra-venda/detalhe-venda/detalhe-venda';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'splash', pathMatch: 'full' },
@@ -99,6 +105,18 @@ export const routes: Routes = [
   { path: 'fornecedor/servicos/orcamento/:id', component: FazerOrcamentoComponent },
   { path: 'fornecedor/servicos/trabalhos', component: TrabalhosFornecedorComponent },
   { path: 'fornecedor/servicos/trabalho/:id', component: DetalhesTrabalhoComponent },
+
+  // Fornecedor Compra e Venda
+  //{ path: 'fornecedor/compra-venda/produtos', component: ListagemProdutosComponent },
+  //{ path: 'fornecedor/compra-venda/categoria', component: CategoriaCompraVenderComponent },
+  //{ path: 'fornecedor/compra-venda/produto/novo', component: CriarProdutoComponent },
+  //{ path: 'fornecedor/compra-venda/produto/editar/:id', component: CriarProdutoComponent },
+  //{ path: 'fornecedor/compra-venda/venda/:id', component: DetalheVendaComponent },
+
+  // Entregador
+  { path: 'entregador/home', component: HomeEntregadorComponent },
+  { path: 'entregador/trabalhos', component: TrabalhosEntregadorComponent },
+  { path: 'entregador/entrega/:id', component: StatusEntregaComponent },
 
   // Outras categorias
   { path: 'compra-vender', component: CategoriaCompraVenderComponent },
