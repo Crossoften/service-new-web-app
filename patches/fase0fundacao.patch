@@ -1,0 +1,687 @@
+diff --git a/angular.json b/angular.json
+index 2f6ac93..17fe6be 100644
+--- a/angular.json
++++ b/angular.json
+@@ -51,7 +51,13 @@
+             "development": {
+               "optimization": false,
+               "extractLicenses": false,
+-              "sourceMap": true
++              "sourceMap": true,
++              "fileReplacements": [
++                {
++                  "replace": "src/environments/environment.ts",
++                  "with": "src/environments/environment.development.ts"
++                }
++              ]
+             }
+           },
+           "defaultConfiguration": "production"
+diff --git a/docs/backend-demandas.md b/docs/backend-demandas.md
+new file mode 100644
+index 0000000..e3bcb56
+--- /dev/null
++++ b/docs/backend-demandas.md
+@@ -0,0 +1,170 @@
++# Demandas de Back-end — Auditoria Front-end × Swagger
++
++> Documento gerado durante a auditoria de aderência entre o Angular PWA (`service-app`) e o
++> contrato da API (`Documentação da API Projeto Service.` — NestJS 10, base `https://homolog.crosoften.com:8029`, prefixo `/v1`).
++>
++> **Escopo:** apenas registro de pendências do **Back-end**. Nenhuma alteração de API é feita pelo time de Front-end.
++> As correções de Front-end são tratadas separadamente, via patches por módulo.
++
++## Legenda de prioridade
++
++| Prioridade | Significado |
++|---|---|
++| 🔴 Crítica | Bloqueia um módulo inteiro do app; sem isso não há integração possível. |
++| 🟠 Alta | Funcionalidade prevista no Front-end sem contrato; impacto direto na jornada. |
++| 🟡 Média | Lacuna ou inconsistência que degrada UX/robustez, com contorno possível. |
++| ⚪ Baixa | Ajuste de qualidade/documentação do contrato. |
++
++## Resumo
++
++| # | Demanda | Área | Prioridade |
++|---|---|---|---|
++| BE-01 | Domínio de **Delivery** (comida) inexistente | Delivery cliente + fornecedor | 🔴 Crítica |
++| BE-02 | Vertical **Empregos** inexistente | Empregos | 🟠 Alta |
++| BE-03 | **Indicações do usuário logado** só existem no admin | Parceiro | 🟠 Alta |
++| BE-04 | Ambiguidade **Parceiro (Partner) × Influencer** | Auth/Parceiro | 🟠 Alta |
++| BE-05 | `ResetPasswordDto.password` com `maxLength: 8` | Auth | 🟡 Média |
++| BE-06 | `birthDate` tipado como `object` no schema | Cadastro/Perfil | ⚪ Baixa |
++| BE-07 | Sem endpoint de **logout / invalidação de token** | Auth | ⚪ Baixa |
++
++---
++
++## BE-01 — Domínio de Delivery (comida) inexistente 🔴
++
++**Problema.** Toda a vertical de delivery de comida do Front-end não possui contrapartida na API.
++Telas afetadas (cliente): `categoria-delivery`, `listagem-delivery`, `restaurante`, `cardapio-item`,
++`sacola`, `endereco-entrega`, `revisao-pedido`, `status-pedido`. Telas afetadas (fornecedor):
++`home-fornecedor`, `gerenciar-cardapio`, `add-cardapio`, `detalhes-pedido-fornecedor`.
++
++**Causa.** A API modela um marketplace de **Serviços / Produtos / Transportes / Hospedagens /
++Negociações**, sem entidades de restaurante, cardápio, item de cardápio, sacola/carrinho ou pedido de comida.
++
++**Endpoints esperados pelo Front (hoje sem destino):** listagem de restaurantes por categoria; detalhe do
++restaurante com cardápio; detalhe de item + adicionais; criação de pedido; acompanhamento de status;
++CRUD de cardápio do fornecedor; fila de pedidos do fornecedor + atualização de status.
++
++**Contrato esperado (proposta de mínimo viável):**
++
++| Método | Rota sugerida | Objetivo |
++|---|---|---|
++| `GET` | `/v1/restaurants` (com `categoryId`, `search`, `take`, `skip`) | Listar restaurantes ativos |
++| `GET` | `/v1/restaurants/{id}` | Restaurante + categorias de cardápio + itens |
++| `GET` | `/v1/menu-items/{id}` | Item + adicionais |
++| `POST` | `/v1/food-orders` | Criar pedido (itens, adicionais, endereço, entrega, pagamento) |
++| `GET` | `/v1/food-orders/{id}` | Status do pedido (`recebido/preparo/caminho/entregue`) |
++| `GET` | `/v1/restaurants/me/menu` + `POST/PATCH/DELETE` | Gestão de cardápio (fornecedor) |
++| `GET` | `/v1/restaurants/me/orders` + `PATCH /{id}/status` | Fila de pedidos (fornecedor) |
++
++**Decisão de produto tomada:** manter as telas de delivery **congeladas como mock** no Front até que o
++contrato exista. **Nenhuma integração de delivery será feita** enquanto BE-01 não for atendido.
++
++**Impacto se não for feito:** a vertical de delivery permanece não-funcional (dados fixos, sem persistência).
++
++---
++
++## BE-02 — Vertical "Empregos" inexistente 🟠
++
++**Problema.** A categoria **Empregos** (`categoria-empregos`, e o card de empregos na home) não tem endpoint.
++
++**Causa.** Não há entidade de vaga/candidatura no contrato.
++
++**Contrato esperado (proposta):**
++
++| Método | Rota sugerida | Objetivo |
++|---|---|---|
++| `GET` | `/v1/jobs` (`categoryId`, `search`, `take`, `skip`) | Listar vagas ativas |
++| `GET` | `/v1/jobs/categories` | Categorias de vagas |
++| `GET` | `/v1/jobs/{id}` | Detalhe da vaga |
++| `POST` | `/v1/jobs` / `/v1/jobs/{id}/apply` | Publicar vaga / candidatar-se |
++
++**Decisão de produto tomada:** Empregos permanece **mock**; vira demanda de back-end.
++
++**Impacto se não for feito:** categoria decorativa, sem função real.
++
++---
++
++## BE-03 — Indicações do usuário logado só existem no portal admin 🟠
++
++**Problema.** O módulo **Parceiro** do app precisa exibir, para o **próprio usuário autenticado**:
++seu código de indicação, a lista de indicados e o total/estado das comissões
++(telas `meu-codigo`, `indicacoes`, `home-parceiro`).
++
++**Causa.** As únicas rotas de indicação são **administrativas** e exigem perfil admin:
++`GET /v1/admin-users/referrals` e `GET /v1/admin-influencers/{id}/referrals`
++(tags "…Portal Gerencial", `bearerAuth` de admin). Não há rota "minhas indicações" para o usuário comum.
++O `GET /v1/profile/me` já devolve `referralCode`, mas não os indicados nem a comissão acumulada.
++
++**Contrato esperado (proposta):**
++
++| Método | Rota sugerida | Retorno |
++|---|---|---|
++| `GET` | `/v1/referrals/me` | Lista de usuários indicados pelo autenticado (nome, data, status da comissão) |
++| `GET` | `/v1/referrals/me/summary` | `{ referralCode, totalReferrals, totalPaying, accumulatedCommission }` |
++
++**Impacto se não for feito:** as telas de indicação do Parceiro ficam sem dados reais (mock).
++
++---
++
++## BE-04 — Ambiguidade Parceiro (Partner) × Influencer 🟠
++
++**Problema.** O Front trata "Parceiro" como quem indica pessoas e ganha comissão. No contrato, o fluxo de
++indicação/comissão (`referralCode`, `inviteCode`, `commissionRate`, `referrals`) está modelado sob o perfil
++**`Influencer`**, enquanto existe também um perfil **`Partner`** com cadastro próprio
++(`POST /v1/no-auth/register/partner`) cujo papel funcional não está descrito.
++
++**Causa.** Dois perfis (`Partner` e `Influencer`) com semântica sobreposta e sem documentação de fronteira.
++
++**Pergunta ao time de API:** o "Parceiro" do app corresponde a `Partner` ou a `Influencer`? Se forem papéis
++distintos, qual a jornada e quais recursos (código de indicação, comissão, saldo) pertencem a cada um?
++
++**Impacto se não for esclarecido:** risco de integrar o módulo Parceiro contra o perfil errado, quebrando
++indicações e comissões.
++
++---
++
++## BE-05 — `ResetPasswordDto.password` limitado a 8 caracteres 🟡
++
++**Problema.** No schema `ResetPasswordDto`, os campos `password` e `confirmPassword` têm `maxLength: 8`,
++enquanto o cadastro (`RegisterBaseDto`) não impõe esse limite (exemplos usam 8 dígitos, mas sem `max`).
++Um usuário que se cadastrou com senha > 8 caracteres não conseguiria redefini-la pela rota de reset.
++
++**Endpoint:** `POST /v1/no-auth/reset`.
++
++**Contrato esperado:** alinhar a política de senha entre cadastro e reset (provavelmente **remover** o
++`maxLength: 8` do reset, ou aplicar o mesmo mínimo/máximo em ambos).
++
++**Impacto se não for feito:** possíveis falhas 400 no fluxo de "esqueci minha senha".
++
++---
++
++## BE-06 — `birthDate` tipado como `object` no schema ⚪
++
++**Problema.** Em `RegisterBaseDto`, `RegisterInfluencerDto` e `UpdateUserDto`, `birthDate` está descrito como
++`type: object` com `example: "1990-01-01"` (uma data). Isso gera tipagem inadequada no cliente gerado.
++
++**Contrato esperado:** declarar `type: string`, `format: date` (ISO 8601), para tipagem forte no Front.
++
++**Impacto se não for feito:** o Front precisa fazer cast manual; documentação enganosa.
++
++---
++
++## BE-07 — Ausência de logout / invalidação de token ⚪
++
++**Problema.** Não há rota para invalidar o JWT no servidor (logout). O Front fará logout apenas local
++(descartando o token).
++
++**Contrato esperado (opcional):** `POST /v1/logout` para revogação server-side, caso a política de segurança exija.
++
++**Impacto se não for feito:** logout permanece somente client-side (token válido até expirar). Aceitável para
++JWT stateless, mas registrado para ciência do time.
++
++---
++
++## Observações de contrato (sem ação obrigatória)
++
++- **Login por email:** `POST /v1/login` usa `email` + `password`. O Front foi alinhado a isso (decisão de
++  produto: migrar de telefone para email). Sem demanda de back-end.
++- **Verificação por SMS:** `POST /v1/no-auth/verify-code` é documentada como *"somente para mobile, web não
++  precisa consumir"*. O fluxo web de cadastro **não** terá etapa de SMS. Sem demanda de back-end.
++- **Preços como string:** respostas devolvem valores monetários como string (`"350.00"`) e requests esperam
++  `number`. O Front tratará a conversão. Sem demanda de back-end.
+diff --git a/src/app/app.config.ts b/src/app/app.config.ts
+index 655d9ae..2593029 100644
+--- a/src/app/app.config.ts
++++ b/src/app/app.config.ts
+@@ -1,13 +1,17 @@
+ import { ApplicationConfig, provideBrowserGlobalErrorListeners, isDevMode } from '@angular/core';
+ import { provideRouter } from '@angular/router';
++import { provideHttpClient, withInterceptors } from '@angular/common/http';
+ 
+ import { routes } from './app.routes';
+ import { provideServiceWorker } from '@angular/service-worker';
++import { authInterceptor } from './core/interceptors/auth-interceptor';
++import { errorInterceptor } from './core/interceptors/error-interceptor';
+ 
+ export const appConfig: ApplicationConfig = {
+   providers: [
+     provideBrowserGlobalErrorListeners(),
+     provideRouter(routes),
++    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
+     provideServiceWorker('ngsw-worker.js', {
+       enabled: !isDevMode(),
+       registrationStrategy: 'registerWhenStable:30000',
+diff --git a/src/app/core/guards/auth-guard.ts b/src/app/core/guards/auth-guard.ts
+index 543fa0e..9c37440 100644
+--- a/src/app/core/guards/auth-guard.ts
++++ b/src/app/core/guards/auth-guard.ts
+@@ -1,5 +1,16 @@
+-import { CanActivateFn } from '@angular/router';
++import { inject } from '@angular/core';
++import { CanActivateFn, Router } from '@angular/router';
++import { SessionService } from '../services/session';
+ 
+-export const authGuard: CanActivateFn = (route, state) => {
+-  return true;
++/**
++ * Bloqueia rotas privadas: exige sessão autenticada, senão redireciona ao login.
++ *
++ * NOTA: ainda não está aplicado às rotas (app.routes.ts) — será conectado no
++ * módulo de Auth, quando o login real passar a popular a SessionService.
++ */
++export const authGuard: CanActivateFn = () => {
++  const session = inject(SessionService);
++  const router = inject(Router);
++
++  return session.isAuthenticated() ? true : router.createUrlTree(['/login']);
+ };
+diff --git a/src/app/core/guards/profile-guard.ts b/src/app/core/guards/profile-guard.ts
+new file mode 100644
+index 0000000..90e8d8f
+--- /dev/null
++++ b/src/app/core/guards/profile-guard.ts
+@@ -0,0 +1,26 @@
++import { inject } from '@angular/core';
++import { CanActivateFn, Router } from '@angular/router';
++import { SessionService } from '../services/session';
++import { UserProfileType } from '../models/enums';
++
++/**
++ * Restringe uma rota a determinados perfis (profileType do usuário logado).
++ * Uso: `canActivate: [authGuard, profileGuard('Supplier')]`.
++ *
++ * NOTA: ainda não aplicado às rotas — pronto para o wiring nos módulos.
++ */
++export function profileGuard(...allowed: UserProfileType[]): CanActivateFn {
++  return () => {
++    const session = inject(SessionService);
++    const router = inject(Router);
++
++    if (!session.isAuthenticated()) {
++      return router.createUrlTree(['/login']);
++    }
++    const profile = session.profileType();
++    if (profile && allowed.includes(profile)) {
++      return true;
++    }
++    return router.createUrlTree(['/home']);
++  };
++}
+diff --git a/src/app/core/interceptors/auth-interceptor.ts b/src/app/core/interceptors/auth-interceptor.ts
+new file mode 100644
+index 0000000..7e0de36
+--- /dev/null
++++ b/src/app/core/interceptors/auth-interceptor.ts
+@@ -0,0 +1,17 @@
++import { HttpInterceptorFn } from '@angular/common/http';
++import { inject } from '@angular/core';
++import { SessionService } from '../services/session';
++
++/**
++ * Anexa o Bearer JWT (securityScheme `bearerAuth`) em toda requisição autenticada.
++ * Requisições sem sessão seguem sem o header (rotas /no-auth, /login, /plans/active…).
++ */
++export const authInterceptor: HttpInterceptorFn = (req, next) => {
++  const token = inject(SessionService).token();
++  if (!token) {
++    return next(req);
++  }
++  return next(
++    req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }),
++  );
++};
+diff --git a/src/app/core/interceptors/error-interceptor.ts b/src/app/core/interceptors/error-interceptor.ts
+new file mode 100644
+index 0000000..570f305
+--- /dev/null
++++ b/src/app/core/interceptors/error-interceptor.ts
+@@ -0,0 +1,59 @@
++import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
++import { inject } from '@angular/core';
++import { Router } from '@angular/router';
++import { catchError, throwError } from 'rxjs';
++import { SessionService } from '../services/session';
++import { ApiError } from '../models/common';
++
++/** Mensagens padrão por código HTTP (fallback quando a API não envia texto). */
++const DEFAULT_MESSAGES: Record<number, string> = {
++  0: 'Falha de conexão. Verifique sua internet e tente novamente.',
++  400: 'Requisição inválida. Confira os dados informados.',
++  401: 'Sessão expirada. Faça login novamente.',
++  403: 'Você não tem permissão para essa ação.',
++  404: 'Recurso não encontrado.',
++  409: 'Já existe um registro com esses dados.',
++  422: 'Tamanho ou tipo de arquivo inválido.',
++  500: 'Erro interno no servidor. Tente novamente mais tarde.',
++};
++
++/**
++ * Normaliza erros HTTP para um `ApiError` estável e trata o 401 de forma central:
++ * limpa a sessão e redireciona ao login.
++ */
++export const errorInterceptor: HttpInterceptorFn = (req, next) => {
++  const session = inject(SessionService);
++  const router = inject(Router);
++
++  return next(req).pipe(
++    catchError((error: HttpErrorResponse) => {
++      if (error.status === 401) {
++        session.clear();
++        void router.navigate(['/login']);
++      }
++      return throwError(() => normalize(error));
++    }),
++  );
++};
++
++function normalize(error: HttpErrorResponse): ApiError {
++  const raw = error.error as unknown;
++  const message = extractMessage(raw) ?? DEFAULT_MESSAGES[error.status] ?? 'Ocorreu um erro inesperado.';
++  return { status: error.status, message, raw };
++}
++
++function extractMessage(raw: unknown): string | null {
++  if (typeof raw === 'string' && raw.trim().length > 0) {
++    return raw;
++  }
++  if (raw && typeof raw === 'object' && 'message' in raw) {
++    const message = (raw as { message: unknown }).message;
++    if (typeof message === 'string') {
++      return message;
++    }
++    if (Array.isArray(message) && message.length > 0) {
++      return message.join(' ');
++    }
++  }
++  return null;
++}
+diff --git a/src/app/core/models/common.ts b/src/app/core/models/common.ts
+new file mode 100644
+index 0000000..6466312
+--- /dev/null
++++ b/src/app/core/models/common.ts
+@@ -0,0 +1,22 @@
++/**
++ * Contratos utilitários compartilhados por vários módulos.
++ */
++
++/** Corpo de resposta { message } (ImessageEntity no Swagger). */
++export interface ApiMessage {
++  message: string;
++}
++
++/** Retorno das rotas de upload (ResponseOneFileDto / IfileEntity). */
++export interface UploadedFile {
++  fileUrl: string;
++  fileKey: string;
++}
++
++/** Erro HTTP já normalizado pelo errorInterceptor. */
++export interface ApiError {
++  status: number;
++  message: string;
++  /** Payload original de erro devolvido pela API, quando houver. */
++  raw?: unknown;
++}
+diff --git a/src/app/core/models/enums.ts b/src/app/core/models/enums.ts
+new file mode 100644
+index 0000000..d434840
+--- /dev/null
++++ b/src/app/core/models/enums.ts
+@@ -0,0 +1,59 @@
++/**
++ * Enums compartilhados, espelhando os schemas do Swagger (fonte da verdade).
++ * Mantidos como union types de string para aderência ao estilo do projeto.
++ */
++
++// ── Usuário ──────────────────────────────────────────────────────────────────
++export type UserProfileType = 'Client' | 'Supplier' | 'Partner' | 'Delivery' | 'Influencer';
++export type UserRole = 'Master' | 'Admin' | 'User';
++export type UserStatus = 'Active' | 'Pending' | 'Inactive';
++export type BillingType = 'None' | 'Subscription' | 'Commission';
++export type SocialNetwork = 'Instagram' | 'TikTok' | 'YouTube' | 'Facebook' | 'X' | 'Other';
++
++// ── Serviços ─────────────────────────────────────────────────────────────────
++export type ServiceType = 'Online' | 'Presential' | 'Home';
++
++// ── Orçamentos (Budgets) ─────────────────────────────────────────────────────
++export type BudgetStatus = 'Pending' | 'Responded' | 'WaitingInformation' | 'Cancelled';
++export type BudgetScope = 'Requested' | 'Received';
++export type BudgetTimeUnit = 'Hour' | 'Day' | 'Week' | 'Month';
++export type BudgetFileType = 'Request' | 'InformationRequest';
++
++// ── Trabalhos (Works) ────────────────────────────────────────────────────────
++export type WorkStatus = 'Pending' | 'InProgress' | 'Finished' | 'Cancelled';
++export type WorkScope = 'Requested' | 'Received';
++export type WorkFileType = 'Requester' | 'Provider' | 'Completion' | 'WarrantyRequest';
++
++// ── Fluxos comuns de acréscimo/garantia ──────────────────────────────────────
++export type ExtraRequestStatus = 'Pending' | 'Approved' | 'Rejected';
++export type WarrantyRequestStatus = 'Pending' | 'Approved' | 'Rejected';
++
++// ── Avaliações ───────────────────────────────────────────────────────────────
++export type ReviewType = 'Positive' | 'Negative';
++
++// ── Pagamentos ───────────────────────────────────────────────────────────────
++export type PaymentMethod = 'CreditCard' | 'Pix' | 'BankSlip';
++export type PaymentStatus = 'Pending' | 'Paid' | 'Cancelled';
++
++// ── Produtos / Negociações ───────────────────────────────────────────────────
++export type ProductTransactionType = 'Rent' | 'Sale' | 'RentAndSale';
++export type CommercialTransactionStatus =
++  | 'Requested'
++  | 'Accepted'
++  | 'Rejected'
++  | 'Cancelled'
++  | 'Paid'
++  | 'Completed';
++
++// ── Assinaturas / Planos ─────────────────────────────────────────────────────
++export type SubscriptionStatus = 'Active' | 'Cancelled' | 'Expired';
++export type PlanInterval = 'Month' | 'Year';
++
++// ── Dados bancários ──────────────────────────────────────────────────────────
++export type BankAccountType = 'Checking' | 'Savings';
++
++// ── Chat ─────────────────────────────────────────────────────────────────────
++export type ChatContextType = 'Budget' | 'Work' | 'CommercialTransaction';
++
++// ── Textos institucionais ────────────────────────────────────────────────────
++export type InstitutionalTextType = 'About' | 'Policies' | 'Terms' | 'Tips' | 'Cookies';
+diff --git a/src/app/core/models/pagination.ts b/src/app/core/models/pagination.ts
+new file mode 100644
+index 0000000..31a69b5
+--- /dev/null
++++ b/src/app/core/models/pagination.ts
+@@ -0,0 +1,30 @@
++/**
++ * Contrato de paginação padrão da API.
++ *
++ * Query params: take (qtd por página) + skip (página, 1-based) + search + sortBy + sortDirection.
++ * Respostas paginadas retornam { <chave da lista>, currentPage, totalPages, totalRecords }.
++ * A chave da lista varia por endpoint (services, works, budgets, products…), por isso
++ * o `Page<T>` normaliza os itens em `items` no service de cada módulo.
++ */
++
++export type SortDirection = 'asc' | 'desc';
++
++export interface PaginationParams {
++  take?: number;
++  skip?: number;
++  search?: string;
++  sortBy?: string;
++  sortDirection?: SortDirection;
++}
++
++/** Metadados presentes em toda resposta paginada. */
++export interface PaginationMeta {
++  currentPage: number;
++  totalPages: number;
++  totalRecords: number;
++}
++
++/** Página normalizada, com os itens sempre em `items`. */
++export interface Page<T> extends PaginationMeta {
++  items: T[];
++}
+diff --git a/src/app/core/models/session.ts b/src/app/core/models/session.ts
+new file mode 100644
+index 0000000..18941ee
+--- /dev/null
++++ b/src/app/core/models/session.ts
+@@ -0,0 +1,12 @@
++import { UserProfileType, UserRole } from './enums';
++
++/**
++ * Sessão autenticada persistida localmente.
++ * Preenchida a partir do ResponseLoginDto (token, id, profileType, role).
++ */
++export interface AuthSession {
++  token: string;
++  userId: number;
++  profileType: UserProfileType | null;
++  role: UserRole | null;
++}
+diff --git a/src/app/core/services/api.ts b/src/app/core/services/api.ts
+new file mode 100644
+index 0000000..bc56e7b
+--- /dev/null
++++ b/src/app/core/services/api.ts
+@@ -0,0 +1,79 @@
++import { HttpClient, HttpParams } from '@angular/common/http';
++import { Injectable, inject } from '@angular/core';
++import { Observable } from 'rxjs';
++import { environment } from '../../../environments/environment';
++import { ApiMessage, UploadedFile } from '../models/common';
++
++type ParamValue = string | number | boolean | null | undefined;
++type ParamsInput = Record<string, ParamValue>;
++
++/**
++ * Wrapper fino sobre HttpClient:
++ *  - prefixa o apiBaseUrl (`/v1`);
++ *  - remove params nulos/vazios;
++ *  - centraliza os helpers de upload de arquivo.
++ * Cada service de módulo injeta este ApiService em vez de HttpClient diretamente.
++ */
++@Injectable({ providedIn: 'root' })
++export class ApiService {
++  private readonly http = inject(HttpClient);
++  private readonly baseUrl = environment.apiBaseUrl;
++
++  get<T>(path: string, params?: ParamsInput): Observable<T> {
++    return this.http.get<T>(this.url(path), { params: this.toHttpParams(params) });
++  }
++
++  post<T>(path: string, body?: unknown): Observable<T> {
++    return this.http.post<T>(this.url(path), body ?? {});
++  }
++
++  patch<T>(path: string, body?: unknown): Observable<T> {
++    return this.http.patch<T>(this.url(path), body ?? {});
++  }
++
++  put<T>(path: string, body?: unknown): Observable<T> {
++    return this.http.put<T>(this.url(path), body ?? {});
++  }
++
++  delete<T>(path: string, params?: ParamsInput): Observable<T> {
++    return this.http.delete<T>(this.url(path), { params: this.toHttpParams(params) });
++  }
++
++  /** Upload de um arquivo (multipart) — POST /upload/one-file. */
++  uploadOne(file: File): Observable<UploadedFile> {
++    const form = new FormData();
++    form.append('file', file);
++    return this.http.post<UploadedFile>(this.url('/upload/one-file'), form);
++  }
++
++  /** Upload de múltiplos arquivos (máx. 5) — POST /upload/many-files. */
++  uploadMany(files: File[]): Observable<UploadedFile[]> {
++    const form = new FormData();
++    files.forEach((file) => form.append('files', file));
++    return this.http.post<UploadedFile[]>(this.url('/upload/many-files'), form);
++  }
++
++  /** Remove um arquivo pelo id — DELETE /one-file/{id}. */
++  deleteFile(id: number): Observable<ApiMessage> {
++    return this.http.delete<ApiMessage>(this.url(`/one-file/${id}`));
++  }
++
++  private url(path: string): string {
++    return `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
++  }
++
++  private toHttpParams(params?: ParamsInput): HttpParams {
++    let httpParams = new HttpParams();
++    if (!params) {
++      return httpParams;
++    }
++    for (const key of Object.keys(params)) {
++      const value = params[key];
++      if (value === null || value === undefined || value === '') {
++        continue;
++      }
++      httpParams = httpParams.set(key, String(value));
++    }
++    return httpParams;
++  }
++}
+diff --git a/src/app/core/services/session.ts b/src/app/core/services/session.ts
+new file mode 100644
+index 0000000..d818b19
+--- /dev/null
++++ b/src/app/core/services/session.ts
+@@ -0,0 +1,57 @@
++import { Injectable, computed, signal } from '@angular/core';
++import { AuthSession } from '../models/session';
++import { UserProfileType } from '../models/enums';
++
++const STORAGE_KEY = 'service-app.session';
++
++/**
++ * Fonte única da sessão do usuário: guarda token + identidade e expõe estado reativo
++ * via signals. Persiste em localStorage para sobreviver a reloads (PWA).
++ */
++@Injectable({ providedIn: 'root' })
++export class SessionService {
++  private readonly _session = signal<AuthSession | null>(this.restore());
++
++  /** Sessão atual (readonly). */
++  readonly session = this._session.asReadonly();
++
++  readonly isAuthenticated = computed(() => this._session() !== null);
++  readonly token = computed<string | null>(() => this._session()?.token ?? null);
++  readonly userId = computed<number | null>(() => this._session()?.userId ?? null);
++  readonly profileType = computed<UserProfileType | null>(
++    () => this._session()?.profileType ?? null,
++  );
++
++  /** Define a sessão após login bem-sucedido. */
++  setSession(session: AuthSession): void {
++    this._session.set(session);
++    this.persist(session);
++  }
++
++  /** Encerra a sessão (logout / 401). */
++  clear(): void {
++    this._session.set(null);
++    try {
++      localStorage.removeItem(STORAGE_KEY);
++    } catch {
++      // storage indisponível — estado em memória já foi limpo.
++    }
++  }
++
++  private persist(session: AuthSession): void {
++    try {
++      localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
++    } catch {
++      // storage indisponível — segue apenas com o estado em memória.
++    }
++  }
++
++  private restore(): AuthSession | null {
++    try {
++      const raw = localStorage.getItem(STORAGE_KEY);
++      return raw ? (JSON.parse(raw) as AuthSession) : null;
++    } catch {
++      return null;
++    }
++  }
++}
+diff --git a/src/environments/environment.development.ts b/src/environments/environment.development.ts
+new file mode 100644
+index 0000000..5ad187e
+--- /dev/null
++++ b/src/environments/environment.development.ts
+@@ -0,0 +1,8 @@
++/**
++ * Configuração de ambiente (desenvolvimento).
++ * Substitui environment.ts em builds `development` via fileReplacements (angular.json).
++ */
++export const environment = {
++  production: false,
++  apiBaseUrl: 'https://homolog.crosoften.com:8029/v1',
++};
+diff --git a/src/environments/environment.ts b/src/environments/environment.ts
+new file mode 100644
+index 0000000..0ab2cdf
+--- /dev/null
++++ b/src/environments/environment.ts
+@@ -0,0 +1,11 @@
++/**
++ * Configuração de ambiente (produção / padrão).
++ *
++ * O Swagger declara apenas o host de homologação:
++ *   https://homolog.crosoften.com:8029  (prefixo /v1)
++ * Ajuste `apiBaseUrl` quando o host de produção for disponibilizado.
++ */
++export const environment = {
++  production: true,
++  apiBaseUrl: 'https://homolog.crosoften.com:8029/v1',
++};
