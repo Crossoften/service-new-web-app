@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth-guard';
 import { profileGuard } from './core/guards/profile-guard';
+import { guestGuard } from './core/guards/guest-guard';
 import { SplashComponent } from './features/private/splash/splash';
 import { HomeComponent } from './features/private/home/home';
 import { CategoriaDeliveryComponent } from './features/private/categoria-delivery/categoria-delivery';
@@ -42,6 +43,7 @@ import { SaldoComponent } from './features/parceiro/saldo/saldo';
 import { NovoBancoComponent } from './features/parceiro/novo-banco/novo-banco';
 import { HomeFornecedorComponent } from './features/fornecedor/home-fornecedor/home-fornecedor';
 import { RestauranteFornecedorComponent } from './features/fornecedor/restaurante-fornecedor/restaurante-fornecedor';
+import { AssinaturaFornecedorComponent } from './features/fornecedor/assinatura-fornecedor/assinatura-fornecedor';
 import { GerenciarCardapioComponent } from './features/fornecedor/gerenciar-cardapio/gerenciar-cardapio';
 import { AddCardapioComponent } from './features/fornecedor/add-cardapio/add-cardapio';
 import { DetalhesPedidoFornecedorComponent } from './features/fornecedor/detalhes-pedido-fornecedor/detalhes-pedido-fornecedor';
@@ -62,12 +64,12 @@ export const routes: Routes = [
   // Públicas (sem sessão)
   { path: '', redirectTo: 'splash', pathMatch: 'full' },
   { path: 'splash', component: SplashComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'selecionar-perfil', component: SelecionarPerfilComponent },
-  { path: 'esqueci-senha', component: EsqueciSenhaComponent },
-  { path: 'redefinir-senha', component: RedefinirSenhaComponent },
-  { path: 'cadastro/sucesso', component: CadastroSucessoComponent },
-  { path: 'cadastro/:perfil', component: CadastroComponent },
+  { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
+  { path: 'selecionar-perfil', component: SelecionarPerfilComponent, canActivate: [guestGuard] },
+  { path: 'esqueci-senha', component: EsqueciSenhaComponent, canActivate: [guestGuard] },
+  { path: 'redefinir-senha', component: RedefinirSenhaComponent, canActivate: [guestGuard] },
+  { path: 'cadastro/sucesso', component: CadastroSucessoComponent, canActivate: [guestGuard] },
+  { path: 'cadastro/:perfil', component: CadastroComponent, canActivate: [guestGuard] },
 
   // Cliente / área geral (exige sessão)
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
@@ -98,6 +100,7 @@ export const routes: Routes = [
 
   // Parceiro (Influencer)
   { path: 'parceiro/home', component: HomeParceiroComponent, canActivate: [authGuard, profileGuard('Influencer')] },
+  { path: 'parceiro/perfil', component: PerfilComponent, canActivate: [authGuard, profileGuard('Influencer')] },
   { path: 'parceiro/codigo', component: MeuCodigoComponent, canActivate: [authGuard, profileGuard('Influencer')] },
   { path: 'parceiro/indicacoes', component: IndicacoesComponent, canActivate: [authGuard, profileGuard('Influencer')] },
   { path: 'parceiro/mais', component: MaisParceiroComponent, canActivate: [authGuard, profileGuard('Influencer')] },
@@ -107,6 +110,8 @@ export const routes: Routes = [
   // Fornecedor Delivery (Supplier)
   { path: 'fornecedor/home', component: HomeFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/restaurante', component: RestauranteFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/perfil', component: PerfilComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/assinatura', component: AssinaturaFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/cardapio', component: GerenciarCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/cardapio/novo', component: AddCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/cardapio/editar/:id', component: AddCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },
@@ -120,6 +125,7 @@ export const routes: Routes = [
   { path: 'fornecedor/servicos/orcamento/:id', component: FazerOrcamentoComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/servicos/trabalhos', component: TrabalhosFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/servicos/trabalho/:id', component: DetalhesTrabalhoComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/servicos/perfil', component: PerfilComponent, canActivate: [authGuard, profileGuard('Supplier')] },
 
   // Fornecedor Compra e Venda
   //{ path: 'fornecedor/compra-venda/produtos', component: ListagemProdutosComponent },
@@ -132,6 +138,7 @@ export const routes: Routes = [
   { path: 'entregador/home', component: HomeEntregadorComponent, canActivate: [authGuard, profileGuard('Delivery')] },
   { path: 'entregador/trabalhos', component: TrabalhosEntregadorComponent, canActivate: [authGuard, profileGuard('Delivery')] },
   { path: 'entregador/entrega/:id', component: StatusEntregaComponent, canActivate: [authGuard, profileGuard('Delivery')] },
+  { path: 'entregador/perfil', component: PerfilComponent, canActivate: [authGuard, profileGuard('Delivery')] },
 
   // Outras categorias (exige sessão)
   { path: 'compra-vender', component: CategoriaCompraVenderComponent, canActivate: [authGuard] },

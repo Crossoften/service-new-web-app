@@ -33,6 +33,8 @@ export class AuthService {
 
   /** Autentica e persiste a sessão (token + profileType) em caso de sucesso. */
   login(dto: LoginUserDto): Observable<ResponseLoginDto> {
+    // Limpa qualquer sessão anterior antes de autenticar (evita mistura ao trocar de conta).
+    this.session.clear();
     return this.api
       .post<ResponseLoginDto>('/login', dto)
       .pipe(tap((res) => this.session.setSession(this.toSession(res))));

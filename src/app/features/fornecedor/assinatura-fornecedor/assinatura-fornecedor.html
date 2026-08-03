@@ -1,0 +1,71 @@
+<div class="assin-container">
+
+  <div class="assin-header">
+    <button class="assin-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="assin-header__titulo">ASSINATURA</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="assin-content">
+
+    <p class="assin-hint">Para cadastrar seu restaurante e receber pedidos, escolha um plano de assinatura.</p>
+
+    @if (carregando) {
+      <p class="assin-msg">Carregando planos…</p>
+    } @else if (planos.length === 0) {
+      <p class="assin-msg">{{ erro || 'Nenhum plano disponível no momento.' }}</p>
+    } @else {
+
+      <!-- PLANOS -->
+      <div class="assin-planos">
+        @for (plano of planos; track plano.id) {
+          <div class="assin-plano"
+            [class.assin-plano--ativo]="planoSelecionado === plano.id"
+            (click)="planoSelecionado = plano.id">
+            <div class="assin-plano__info">
+              <span class="assin-plano__nome">{{ plano.name }}</span>
+              <span class="assin-plano__preco">{{ precoFmt(plano) }} · {{ intervaloLabel(plano) }}</span>
+              @if (plano.description) {
+                <span class="assin-plano__desc">{{ plano.description }}</span>
+              }
+            </div>
+            <div class="assin-plano__radio" [class.assin-plano__radio--ativo]="planoSelecionado === plano.id"></div>
+          </div>
+        }
+      </div>
+
+      <!-- MÉTODO -->
+      <span class="assin-secao">Forma de pagamento</span>
+      <div class="assin-metodos">
+        <button class="assin-metodo" [class.assin-metodo--ativo]="metodo === 'CreditCard'" (click)="selecionarMetodo('CreditCard')">Cartão de Crédito</button>
+        <button class="assin-metodo" [class.assin-metodo--ativo]="metodo === 'Pix'" (click)="selecionarMetodo('Pix')">PIX</button>
+      </div>
+
+      @if (metodo === 'CreditCard') {
+        <div class="assin-field">
+          <label>Nome do titular</label>
+          <input type="text" placeholder="Nome como no cartão" [(ngModel)]="nomeCartao" />
+        </div>
+        <div class="assin-field">
+          <label>Número do cartão</label>
+          <input type="tel" placeholder="0000 0000 0000 0000" [(ngModel)]="numeroCartao" maxlength="19" />
+        </div>
+      }
+
+      @if (erro) { <span class="assin-erro">{{ erro }}</span> }
+
+    }
+
+  </div>
+
+  <div class="assin-actions">
+    <button class="assin-btn" (click)="assinar()" [disabled]="assinando || carregando || planos.length === 0">
+      {{ assinando ? 'PROCESSANDO…' : 'ASSINAR' }}
+    </button>
+  </div>
+
+</div>

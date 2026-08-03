@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, catchError, map, of, timeout } from 'rxjs';
 import { ApiService } from './api';
 import {
   CreateMenuCategoryDto,
@@ -74,9 +74,16 @@ export class FornecedorService {
 
   // ── Restaurante (API) ─────────────────────────────────────────────────────
 
-  /** Restaurante do fornecedor — `GET /v1/restaurants/me` (null se ainda não existir). */
+  /**
+   * Restaurante do fornecedor — `GET /v1/restaurants/me`.
+   * Retorna `null` se não existir (404/400) **ou** se a requisição travar (timeout),
+   * garantindo que a UI nunca fique presa em "carregando".
+   */
   meuRestaurante(): Observable<ResponseRestaurantDto | null> {
-    return this.api.get<ResponseRestaurantDto>('/restaurants/me').pipe(catchError(() => of(null)));
+    return this.api.get<ResponseRestaurantDto>('/restaurants/me').pipe(
+      timeout(12000),
+      catchError(() => of(null)),
+    );
   }
 
   /** Cria o restaurante — `POST /v1/restaurants`. */

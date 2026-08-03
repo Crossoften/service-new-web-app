@@ -36,7 +36,10 @@
 | **D3 — Assinatura** | Todas as verticais de fornecedor exigem assinatura; delivery híbrido. |
 | **D4 — Entregador** | Repasse por entrega, sem assinatura. |
 | **A9 — Rota entregador** | `Delivery` → `/home` **provisório** até o módulo Entregador. |
-| **Cadastro fornecedor** | Sequência: register → **login automático** → planos → `POST /subscriptions`. |
+| **Cadastro fornecedor** | register → **Sucesso → Login** (todos os perfis iguais). Assinatura = **onboarding pós-login** em `/fornecedor/assinatura` (`GET /plans/active` + `POST /subscriptions`). **BE-15 confirmado**: `POST /restaurants` sem assinatura → 403 → Front redireciona aos planos. |
+| **Telefone** | **Obrigatório** no Front (cliente/fornecedor/etc.); validação alinhada à mensagem do back (BE-Q2). |
+| **Confirmação de conta** | **Ativa**: register → **código por email** → `POST /no-auth/verify-code` → Sucesso → Login. ("mobile" no contrato = este webapp; "web" = portal admin.) Falta rota de reenvio (BE-Q1). |
+| **Sessão / troca de conta** | `guestGuard` bloqueia telas de auth com sessão ativa (sem "login por cima de login"); `login()` limpa sessão anterior. Logout via **perfil** — adicionadas rotas `/{fornecedor,parceiro,entregador,fornecedor/servicos}/perfil` (os bottom-navs apontavam para rotas inexistentes → logout inacessível). |
 
 ---
 
@@ -106,6 +109,7 @@
 
 ## 🔧 Estado técnico
 
+- ⚠️ **Change detection (zone.js):** o projeto foi criado **zoneless** (sem `zone.js`), o que funcionava com o mock **síncrono** mas **não atualizava a tela** em respostas **assíncronas** (HTTP) — telas ficavam presas em "carregando". **Corrigido reintroduzindo `zone.js`** (`fix-zonejs-change-detection.patch`: `package.json` + `angular.json` polyfills). **Após aplicar esse patch, rode `npm install`.**
 - **Build:** `ng build --configuration development` → ✅ (Fase 0).
 - **Ambiente:** `apiBaseUrl = https://homolog.crosoften.com:8029/v1` (env prod e dev).
 - **Fundação disponível:** `SessionService` (signals+localStorage), `ApiService` (baseURL+params+upload),

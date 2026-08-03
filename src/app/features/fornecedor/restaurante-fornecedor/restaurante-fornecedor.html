@@ -12,53 +12,67 @@
 
   <div class="rest-content">
 
-    @if (carregando) {
-      <p class="rest-msg">Carregando…</p>
-    } @else {
-      <div class="rest-form">
+    <div class="rest-form">
 
-        <div class="rest-field">
-          <label>Nome</label>
-          <input type="text" placeholder="Nome do restaurante" [(ngModel)]="nome" />
+      @if (!modoEdicao) {
+        <p class="rest-hint">Cadastre seu restaurante para começar a montar o cardápio e receber pedidos.</p>
+      }
+      @if (carregando || carregandoCategorias) {
+        <p class="rest-msg">Carregando dados…</p>
+      }
+
+      <div class="rest-field">
+        <label>Nome</label>
+        <input type="text" placeholder="Nome do restaurante" [(ngModel)]="nome" />
+      </div>
+
+      <div class="rest-field">
+        <label>Descrição</label>
+        <textarea rows="3" placeholder="Descrição" [(ngModel)]="descricao"></textarea>
+      </div>
+
+      <div class="rest-field">
+        <label>Categoria</label>
+        <div class="rest-select" (click)="toggleCategoria()">
+          <span>{{ categoriaLabel }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            [style.transform]="categoriaAberta ? 'rotate(180deg)' : 'rotate(0)'">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
         </div>
-
-        <div class="rest-field">
-          <label>Descrição</label>
-          <textarea rows="3" placeholder="Descrição" [(ngModel)]="descricao"></textarea>
-        </div>
-
-        <div class="rest-field">
-          <label>Categoria</label>
-          <div class="rest-select" (click)="toggleCategoria()">
-            <span>{{ categoriaLabel }}</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              [style.transform]="categoriaAberta ? 'rotate(180deg)' : 'rotate(0)'">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </div>
-          @if (categoriaAberta) {
-            <div class="rest-opcoes">
-              @for (cat of categorias; track cat.id) {
-                <div class="rest-opcao" [class.rest-opcao--ativo]="categoriaId === cat.id" (click)="selecionarCategoria(cat)">
-                  {{ cat.name }}
-                </div>
-              }
-            </div>
-          }
-        </div>
-
-        @if (modoEdicao) {
-          <div class="rest-toggle" (click)="toggleAberto()">
-            <span>Loja {{ aberto ? 'aberta' : 'fechada' }}</span>
-            <div class="rest-toggle__switch" [class.rest-toggle__switch--on]="aberto">
-              <div class="rest-toggle__bola"></div>
-            </div>
+        @if (categoriaAberta) {
+          <div class="rest-opcoes">
+            @for (cat of categorias; track cat.id) {
+              <div class="rest-opcao" [class.rest-opcao--ativo]="categoriaId === cat.id" (click)="selecionarCategoria(cat)">
+                {{ cat.name }}
+              </div>
+            }
           </div>
         }
-
-        @if (erro) { <span class="rest-erro">{{ erro }}</span> }
+        @if (erroCategorias && !carregandoCategorias) {
+          <button class="rest-recarregar" (click)="carregarCategorias()">Não carregou as categorias — tentar novamente</button>
+        }
       </div>
-    }
+
+      @if (modoEdicao) {
+        <div class="rest-toggle" (click)="toggleAberto()">
+          <span>Loja {{ aberto ? 'aberta' : 'fechada' }}</span>
+          <div class="rest-toggle__switch" [class.rest-toggle__switch--on]="aberto">
+            <div class="rest-toggle__bola"></div>
+          </div>
+        </div>
+      }
+
+      @if (erro) { <span class="rest-erro">{{ erro }}</span> }
+      @if (aviso) { <span class="rest-aviso">{{ aviso }}</span> }
+
+      @if (precisaAssinatura) {
+        <div class="rest-assinatura">
+          <p>Você precisa de uma assinatura ativa para cadastrar seu restaurante.</p>
+          <button class="rest-btn" (click)="irParaAssinatura()">VER PLANOS DE ASSINATURA</button>
+        </div>
+      }
+    </div>
 
   </div>
 
@@ -66,6 +80,9 @@
     <button class="rest-btn" (click)="salvar()" [disabled]="salvando">
       {{ salvando ? 'SALVANDO…' : (modoEdicao ? 'SALVAR' : 'CRIAR RESTAURANTE') }}
     </button>
+    @if (modoEdicao) {
+      <button class="rest-btn rest-btn--outline" (click)="irParaCardapio()">IR PARA O CARDÁPIO</button>
+    }
   </div>
 
 </div>

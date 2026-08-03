@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { finalize } from 'rxjs';
 import { FornecedorService, ItemCardapioFornecedor } from '../../../core/services/fornecedor';
 import { BottomNavFornecedorComponent } from '../../../shared/components/bottom-nav-fornecedor/bottom-nav-fornecedor';
 import { ResponseRestaurantDto } from '../../../core/models/restaurant';
@@ -32,17 +33,18 @@ export class GerenciarCardapioComponent implements OnInit {
   carregar() {
     this.carregando = true;
     this.erro = '';
-    this.fornecedorService.meuRestaurante().subscribe({
-      next: (r) => {
-        this.carregando = false;
-        this.restaurante = r;
-        this.itens = r ? this.fornecedorService.itensDe(r) : [];
-      },
-      error: (err: ApiError) => {
-        this.carregando = false;
-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o cardápio.';
-      },
-    });
+    this.fornecedorService
+      .meuRestaurante()
+      .pipe(finalize(() => (this.carregando = false)))
+      .subscribe({
+        next: (r) => {
+          this.restaurante = r;
+          this.itens = r ? this.fornecedorService.itensDe(r) : [];
+        },
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o cardápio.';
+        },
+      });
   }
 
   criarRestaurante() {

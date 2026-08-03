@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { finalize } from 'rxjs';
 import {
   FornecedorService,
   PedidoFornecedor,
@@ -28,17 +29,23 @@ export class HomeFornecedorComponent implements OnInit {
 
   ngOnInit() {
     this.carregando = true;
-    this.fornecedorService.meuRestaurante().subscribe({
-      next: (r) => {
-        this.carregando = false;
-        this.restaurante = r;
-        if (r) {
-          this.carregarPayout();
-          this.carregarPedidos();
-        }
-      },
-      error: () => (this.carregando = false),
-    });
+    this.fornecedorService
+      .meuRestaurante()
+      .pipe(finalize(() => (this.carregando = false)))
+      .subscribe({
+        next: (r) => {
+          this.restaurante = r;
+          if (r) {
+            this.carregarPayout();
+            this.carregarPedidos();
+          }
+        },
+        error: () => {},
+      });
+  }
+
+  irParaRestaurante() {
+    this.router.navigate(['/fornecedor/restaurante']);
   }
 
   get semRestaurante(): boolean {

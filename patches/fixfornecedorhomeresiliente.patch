@@ -1,0 +1,136 @@
+diff --git a/src/app/core/services/fornecedor.ts b/src/app/core/services/fornecedor.ts
+index 0adaf12..c5cb3f1 100644
+--- a/src/app/core/services/fornecedor.ts
++++ b/src/app/core/services/fornecedor.ts
+@@ -1,5 +1,5 @@
+ import { Injectable, inject } from '@angular/core';
+-import { Observable, catchError, map, of } from 'rxjs';
++import { Observable, catchError, map, of, timeout } from 'rxjs';
+ import { ApiService } from './api';
+ import {
+   CreateMenuCategoryDto,
+@@ -74,9 +74,16 @@ export class FornecedorService {
+ 
+   // ── Restaurante (API) ─────────────────────────────────────────────────────
+ 
+-  /** Restaurante do fornecedor — `GET /v1/restaurants/me` (null se ainda não existir). */
++  /**
++   * Restaurante do fornecedor — `GET /v1/restaurants/me`.
++   * Retorna `null` se não existir (404/400) **ou** se a requisição travar (timeout),
++   * garantindo que a UI nunca fique presa em "carregando".
++   */
+   meuRestaurante(): Observable<ResponseRestaurantDto | null> {
+-    return this.api.get<ResponseRestaurantDto>('/restaurants/me').pipe(catchError(() => of(null)));
++    return this.api.get<ResponseRestaurantDto>('/restaurants/me').pipe(
++      timeout(12000),
++      catchError(() => of(null)),
++    );
+   }
+ 
+   /** Cria o restaurante — `POST /v1/restaurants`. */
+diff --git a/src/app/features/fornecedor/gerenciar-cardapio/gerenciar-cardapio.ts b/src/app/features/fornecedor/gerenciar-cardapio/gerenciar-cardapio.ts
+index 1009cd2..442bf2a 100644
+--- a/src/app/features/fornecedor/gerenciar-cardapio/gerenciar-cardapio.ts
++++ b/src/app/features/fornecedor/gerenciar-cardapio/gerenciar-cardapio.ts
+@@ -1,6 +1,7 @@
+ import { Component, OnInit, inject } from '@angular/core';
+ import { Router } from '@angular/router';
+ import { CommonModule } from '@angular/common';
++import { finalize } from 'rxjs';
+ import { FornecedorService, ItemCardapioFornecedor } from '../../../core/services/fornecedor';
+ import { BottomNavFornecedorComponent } from '../../../shared/components/bottom-nav-fornecedor/bottom-nav-fornecedor';
+ import { ResponseRestaurantDto } from '../../../core/models/restaurant';
+@@ -32,17 +33,18 @@ export class GerenciarCardapioComponent implements OnInit {
+   carregar() {
+     this.carregando = true;
+     this.erro = '';
+-    this.fornecedorService.meuRestaurante().subscribe({
+-      next: (r) => {
+-        this.carregando = false;
+-        this.restaurante = r;
+-        this.itens = r ? this.fornecedorService.itensDe(r) : [];
+-      },
+-      error: (err: ApiError) => {
+-        this.carregando = false;
+-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o cardápio.';
+-      },
+-    });
++    this.fornecedorService
++      .meuRestaurante()
++      .pipe(finalize(() => (this.carregando = false)))
++      .subscribe({
++        next: (r) => {
++          this.restaurante = r;
++          this.itens = r ? this.fornecedorService.itensDe(r) : [];
++        },
++        error: (err: ApiError) => {
++          this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o cardápio.';
++        },
++      });
+   }
+ 
+   criarRestaurante() {
+diff --git a/src/app/features/fornecedor/home-fornecedor/home-fornecedor.html b/src/app/features/fornecedor/home-fornecedor/home-fornecedor.html
+index 090a8bd..213e7c3 100644
+--- a/src/app/features/fornecedor/home-fornecedor/home-fornecedor.html
++++ b/src/app/features/fornecedor/home-fornecedor/home-fornecedor.html
+@@ -31,6 +31,12 @@
+       </div>
+     }
+ 
++    <!-- MEU RESTAURANTE (sempre acessível) -->
++    <div class="home-f-card home-f-card--link" (click)="irParaRestaurante()">
++      <span class="home-f-card__titulo">Meu restaurante</span>
++      <span class="home-f-card__acao">{{ semRestaurante ? 'Cadastrar' : 'Configurar' }}</span>
++    </div>
++
+     <!-- FATURAMENTO (payout) -->
+     @if (payout) {
+       <div class="home-f-faturamento">
+diff --git a/src/app/features/fornecedor/home-fornecedor/home-fornecedor.ts b/src/app/features/fornecedor/home-fornecedor/home-fornecedor.ts
+index 4a48bf3..f8f4a4c 100644
+--- a/src/app/features/fornecedor/home-fornecedor/home-fornecedor.ts
++++ b/src/app/features/fornecedor/home-fornecedor/home-fornecedor.ts
+@@ -1,6 +1,7 @@
+ import { Component, OnInit, inject } from '@angular/core';
+ import { Router } from '@angular/router';
+ import { CommonModule } from '@angular/common';
++import { finalize } from 'rxjs';
+ import {
+   FornecedorService,
+   PedidoFornecedor,
+@@ -28,17 +29,23 @@ export class HomeFornecedorComponent implements OnInit {
+ 
+   ngOnInit() {
+     this.carregando = true;
+-    this.fornecedorService.meuRestaurante().subscribe({
+-      next: (r) => {
+-        this.carregando = false;
+-        this.restaurante = r;
+-        if (r) {
+-          this.carregarPayout();
+-          this.carregarPedidos();
+-        }
+-      },
+-      error: () => (this.carregando = false),
+-    });
++    this.fornecedorService
++      .meuRestaurante()
++      .pipe(finalize(() => (this.carregando = false)))
++      .subscribe({
++        next: (r) => {
++          this.restaurante = r;
++          if (r) {
++            this.carregarPayout();
++            this.carregarPedidos();
++          }
++        },
++        error: () => {},
++      });
++  }
++
++  irParaRestaurante() {
++    this.router.navigate(['/fornecedor/restaurante']);
+   }
+ 
+   get semRestaurante(): boolean {

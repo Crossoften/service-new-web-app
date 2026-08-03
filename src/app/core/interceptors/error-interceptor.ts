@@ -21,6 +21,9 @@ const DEFAULT_MESSAGES: Record<number, string> = {
  * Normaliza erros HTTP para um `ApiError` estável e trata o 401 de forma central:
  * limpa a sessão e redireciona ao login.
  */
+/** Trecho que identifica o 403 de "assinatura ativa" exigida do fornecedor. */
+const SUBSCRIPTION_REQUIRED = 'assinatura ativa';
+
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const session = inject(SessionService);
   const router = inject(Router);
@@ -30,11 +33,25 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 401) {
         session.clear();
         void router.navigate(['/login']);
+      } else if (error.status === 403 && requiresSubscription(error)) {
+        // Fornecedor sem assinatura ativa → leva à tela de planos (não redireciona
+        // a partir da própria tela de assinatura nem das rotas de planos/assinatura).
+        const url = error.url ?? '';
+        const naTelaDeAssinatura = router.url.startsWith('/fornecedor/assinatura');
+        const chamadaDeAssinatura = url.includes('/plans') || url.includes('/subscriptions');
+        if (!naTelaDeAssinatura && !chamadaDeAssinatura) {
+          void router.navigate(['/fornecedor/assinatura']);
+        }
       }
       return throwError(() => normalize(error));
     }),
   );
 };
+
+function requiresSubscription(error: HttpErrorResponse): boolean {
+  const message = extractMessage(error.error as unknown) ?? '';
+  return message.toLowerCase().includes(SUBSCRIPTION_REQUIRED);
+}
 
 function normalize(error: HttpErrorResponse): ApiError {
   const raw = error.error as unknown;
