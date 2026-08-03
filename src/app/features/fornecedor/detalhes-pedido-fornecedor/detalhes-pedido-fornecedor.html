@@ -2,72 +2,48 @@
 
   <!-- HEADER -->
   <div class="pedido-f-header">
-    <button class="pedido-f-header__voltar" (click)="cancelar()">
+    <button class="pedido-f-header__voltar" (click)="voltar()">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
     </button>
     <div class="pedido-f-header__restaurante">
-      <div class="pedido-f-header__logo">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
-        </svg>
-      </div>
       <div class="pedido-f-header__info">
-        <span class="pedido-f-header__nome">Pizzaria Bella Itália</span>
-        <span class="pedido-f-header__avaliacao">⭐ 4.7</span>
+        <span class="pedido-f-header__nome">{{ pedido?.restaurant?.name ?? 'Pedido' }}</span>
       </div>
     </div>
-    <button class="pedido-f-header__sino">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-      </svg>
-    </button>
+    <div style="width: 30px"></div>
   </div>
 
   <div class="page-content">
 
-    @if (pedido) {
+    @if (carregando) {
+      <p class="pedido-f-msg">Carregando pedido…</p>
+    } @else if (erro && !pedido) {
+      <p class="pedido-f-msg">{{ erro }}</p>
+    } @else if (pedido) {
 
-      <!-- NÚMERO DO PEDIDO -->
+      <!-- NÚMERO -->
       <div class="pedido-f-titulo">
-        <h2>#{{ pedido.numero }} — Pedido de {{ pedido.cliente }}</h2>
+        <h2>#{{ pedido.id }} — Pedido de {{ pedido.customer.name }}</h2>
+        <span class="pedido-f-badge">{{ statusLabel }}</span>
       </div>
 
-      <!-- ITEM -->
-      <div class="pedido-f-item">
-        <div class="pedido-f-item__imagem">
-          <div class="pedido-f-item__imagem-placeholder">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M3 11l19-9-9 19-2-8-8-2z"/>
-            </svg>
-          </div>
-        </div>
-        <div class="pedido-f-item__info">
-          <span class="pedido-f-item__nome">{{ pedido.item }}</span>
-          <span class="pedido-f-item__descricao">{{ pedido.descricaoItem }}</span>
-          <span class="pedido-f-item__preco">{{ formatarPreco(pedido.total) }}</span>
-        </div>
-      </div>
-
-      <!-- ENDEREÇO -->
-      <div class="pedido-f-endereco">
-        <span class="pedido-f-endereco__rua">{{ pedido.endereco }}</span>
-        <span class="pedido-f-endereco__bairro">{{ pedido.bairro }}</span>
-      </div>
-
-      <!-- INGREDIENTES EXTRA -->
-      @if (pedido.adicionais.length > 0) {
-        <div class="pedido-f-secao">
-          <h3 class="pedido-f-secao__titulo">Ingrediente Extra</h3>
-          @for (adicional of pedido.adicionais; track adicional.nome) {
-            <div class="pedido-f-adicional">
-              <div class="pedido-f-adicional__check"></div>
-              <span class="pedido-f-adicional__nome">{{ adicional.nome }}</span>
-              <span class="pedido-f-adicional__valor">+ {{ formatarPreco(adicional.valor) }}</span>
+      <!-- ITENS -->
+      @for (item of pedido.items; track item.id) {
+        <div class="pedido-f-item">
+          <div class="pedido-f-item__imagem">
+            <div class="pedido-f-item__imagem-placeholder">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+              </svg>
             </div>
-          }
+          </div>
+          <div class="pedido-f-item__info">
+            <span class="pedido-f-item__nome">{{ item.quantity }}× {{ item.name }}</span>
+            @if (item.notes) { <span class="pedido-f-item__descricao">{{ item.notes }}</span> }
+            <span class="pedido-f-item__preco">{{ fmt(item.unitPrice) }}</span>
+          </div>
         </div>
       }
 
@@ -76,48 +52,43 @@
         <h3 class="pedido-f-secao__titulo">Detalhes da compra</h3>
         <div class="pedido-f-detalhes">
           <div class="pedido-f-detalhes__linha">
-            <span>Realizado em</span><span>00/00/0000</span>
+            <span>Realizado em</span><span>{{ pedido.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
           </div>
           <div class="pedido-f-detalhes__linha">
-            <span>Valor serviço</span><span>{{ formatarPreco(pedido.total) }}</span>
+            <span>Pagamento</span><span>{{ pedido.paymentMethod }}</span>
+          </div>
+          <div class="pedido-f-detalhes__linha">
+            <span>Itens</span><span>{{ fmt(pedido.itemsValue) }}</span>
+          </div>
+          <div class="pedido-f-detalhes__linha">
+            <span>Entrega</span><span>{{ fmt(pedido.deliveryFee) }}</span>
           </div>
           <div class="pedido-f-detalhes__linha pedido-f-detalhes__linha--total">
-            <span>Total</span><span>{{ formatarPreco(pedido.total) }}</span>
+            <span>Total</span><span>{{ fmt(pedido.totalValue) }}</span>
           </div>
         </div>
       </div>
 
-      <!-- STATUS -->
-      <div class="pedido-f-status">
-        <div class="pedido-f-status__select" (click)="toggleStatus()">
-          <span>{{ statusAtualLabel }}</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            [style.transform]="statusAberto ? 'rotate(180deg)' : 'rotate(0)'">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </div>
-
-        @if (statusAberto) {
-          <div class="pedido-f-status__opcoes">
-            @for (opcao of statusOpcoes; track opcao.id) {
-              <div class="pedido-f-status__opcao"
-                [class.pedido-f-status__opcao--ativo]="pedido.status === opcao.id"
-                (click)="selecionarStatus(opcao.id)">
-                {{ opcao.label }}
-              </div>
-            }
-          </div>
-        }
-      </div>
+      @if (erro) { <span class="pedido-f-erro">{{ erro }}</span> }
 
     }
 
   </div>
 
-  <!-- BOTÕES -->
-  <div class="pedido-f-actions">
-    <button class="pedido-f-btn pedido-f-btn--outline" (click)="cancelar()">CANCELAR</button>
-    <button class="pedido-f-btn pedido-f-btn--primary" (click)="salvar()">SALVAR</button>
-  </div>
+  <!-- AÇÕES -->
+  @if (pedido) {
+    <div class="pedido-f-actions">
+      @if (podeResponder) {
+        <button class="pedido-f-btn pedido-f-btn--outline" (click)="recusar()" [disabled]="processando">RECUSAR</button>
+        <button class="pedido-f-btn pedido-f-btn--primary" (click)="aceitar()" [disabled]="processando">ACEITAR</button>
+      } @else if (podePreparar) {
+        <button class="pedido-f-btn pedido-f-btn--primary" (click)="emPreparo()" [disabled]="processando">
+          {{ processando ? 'ATUALIZANDO…' : 'MARCAR EM PREPARO' }}
+        </button>
+      } @else {
+        <button class="pedido-f-btn pedido-f-btn--outline" (click)="voltar()">VOLTAR</button>
+      }
+    </div>
+  }
 
 </div>

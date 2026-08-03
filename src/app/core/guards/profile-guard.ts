@@ -6,8 +6,7 @@ import { UserProfileType } from '../models/enums';
 /**
  * Restringe uma rota a determinados perfis (profileType do usuário logado).
  * Uso: `canActivate: [authGuard, profileGuard('Supplier')]`.
- *
- * NOTA: ainda não aplicado às rotas — pronto para o wiring nos módulos.
+ * Aplicado aos hubs de fornecedor/parceiro/entregador em `app.routes.ts` (Auth Slice 3).
  */
 export function profileGuard(...allowed: UserProfileType[]): CanActivateFn {
   return () => {

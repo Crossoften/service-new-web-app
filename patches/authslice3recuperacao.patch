@@ -1,0 +1,880 @@
+diff --git a/src/app/app.routes.ts b/src/app/app.routes.ts
+index 88b4e4f..23db159 100644
+--- a/src/app/app.routes.ts
++++ b/src/app/app.routes.ts
+@@ -1,4 +1,6 @@
+ import { Routes } from '@angular/router';
++import { authGuard } from './core/guards/auth-guard';
++import { profileGuard } from './core/guards/profile-guard';
+ import { SplashComponent } from './features/private/splash/splash';
+ import { HomeComponent } from './features/private/home/home';
+ import { CategoriaDeliveryComponent } from './features/private/categoria-delivery/categoria-delivery';
+@@ -12,6 +14,8 @@ import { LoginComponent } from './features/auth/login/login';
+ import { SelecionarPerfilComponent } from './features/auth/selecionar-perfil/selecionar-perfil';
+ import { CadastroComponent } from './features/auth/cadastro/cadastro';
+ import { CadastroSucessoComponent } from './features/auth/cadastro-sucesso/cadastro-sucesso';
++import { EsqueciSenhaComponent } from './features/auth/esqueci-senha/esqueci-senha';
++import { RedefinirSenhaComponent } from './features/auth/redefinir-senha/redefinir-senha';
+ import { ListagemDeliveryComponent } from './features/private/delivery/listagem-delivery/listagem-delivery';
+ import { RestauranteComponent } from './features/private/delivery/restaurante/restaurante';
+ import { CardapioItemComponent } from './features/private/delivery/cardapio-item/cardapio-item';
+@@ -52,59 +56,64 @@ import { StatusEntregaComponent } from './features/entregador/status-entrega/sta
+ //import { DetalheVendaComponent } from './features/fornecedor/compra-venda/detalhe-venda/detalhe-venda';
+ 
+ export const routes: Routes = [
++  // Públicas (sem sessão)
+   { path: '', redirectTo: 'splash', pathMatch: 'full' },
+   { path: 'splash', component: SplashComponent },
+   { path: 'login', component: LoginComponent },
+   { path: 'selecionar-perfil', component: SelecionarPerfilComponent },
++  { path: 'esqueci-senha', component: EsqueciSenhaComponent },
++  { path: 'redefinir-senha', component: RedefinirSenhaComponent },
+   { path: 'cadastro/sucesso', component: CadastroSucessoComponent },
+   { path: 'cadastro/:perfil', component: CadastroComponent },
+-  { path: 'home', component: HomeComponent },
++
++  // Cliente / área geral (exige sessão)
++  { path: 'home', component: HomeComponent, canActivate: [authGuard] },
+ 
+   // Delivery Cliente
+-  { path: 'delivery', component: CategoriaDeliveryComponent },
+-  { path: 'delivery/listagem/:categoria', component: ListagemDeliveryComponent },
+-  { path: 'delivery/restaurante/:id', component: RestauranteComponent },
+-  { path: 'delivery/item/:id', component: CardapioItemComponent },
+-  { path: 'delivery/sacola', component: SacolaComponent },
+-  { path: 'delivery/endereco', component: EnderecoEntregaComponent },
+-  { path: 'delivery/revisao', component: RevisaoPedidoComponent },
+-  { path: 'delivery/status/:id', component: StatusPedidoComponent },
++  { path: 'delivery', component: CategoriaDeliveryComponent, canActivate: [authGuard] },
++  { path: 'delivery/listagem/:categoria', component: ListagemDeliveryComponent, canActivate: [authGuard] },
++  { path: 'delivery/restaurante/:id', component: RestauranteComponent, canActivate: [authGuard] },
++  { path: 'delivery/item/:id', component: CardapioItemComponent, canActivate: [authGuard] },
++  { path: 'delivery/sacola', component: SacolaComponent, canActivate: [authGuard] },
++  { path: 'delivery/endereco', component: EnderecoEntregaComponent, canActivate: [authGuard] },
++  { path: 'delivery/revisao', component: RevisaoPedidoComponent, canActivate: [authGuard] },
++  { path: 'delivery/status/:id', component: StatusPedidoComponent, canActivate: [authGuard] },
+ 
+   // Serviços Cliente
+-  { path: 'servicos', component: CategoriaServicosComponent },
+-  { path: 'servicos/listagem/:categoria', component: ListagemServicosComponent },
+-  { path: 'servicos/requisitos', component: RequisitosServicoComponent },
+-  { path: 'servicos/prestador/:id', component: DetalhesPrestadorComponent },
+-  { path: 'servicos/orcamentos', component: OrcamentosComponent },
+-  { path: 'servicos/orcamento/:id', component: AprovarOrcamentoComponent },
+-  { path: 'servicos/solicitacoes', component: SolicitacoesComponent },
+-  { path: 'servicos/chat/:id', component: ChatPrestadorComponent },
+-  { path: 'servicos/solicitacao/:id', component: DetalhesSolicitacaoComponent },
+-  { path: 'servicos/pagamento/:id', component: PagamentoServicoComponent },
++  { path: 'servicos', component: CategoriaServicosComponent, canActivate: [authGuard] },
++  { path: 'servicos/listagem/:categoria', component: ListagemServicosComponent, canActivate: [authGuard] },
++  { path: 'servicos/requisitos', component: RequisitosServicoComponent, canActivate: [authGuard] },
++  { path: 'servicos/prestador/:id', component: DetalhesPrestadorComponent, canActivate: [authGuard] },
++  { path: 'servicos/orcamentos', component: OrcamentosComponent, canActivate: [authGuard] },
++  { path: 'servicos/orcamento/:id', component: AprovarOrcamentoComponent, canActivate: [authGuard] },
++  { path: 'servicos/solicitacoes', component: SolicitacoesComponent, canActivate: [authGuard] },
++  { path: 'servicos/chat/:id', component: ChatPrestadorComponent, canActivate: [authGuard] },
++  { path: 'servicos/solicitacao/:id', component: DetalhesSolicitacaoComponent, canActivate: [authGuard] },
++  { path: 'servicos/pagamento/:id', component: PagamentoServicoComponent, canActivate: [authGuard] },
+ 
+-  // Parceiro
+-  { path: 'parceiro/home', component: HomeParceiroComponent },
+-  { path: 'parceiro/codigo', component: MeuCodigoComponent },
+-  { path: 'parceiro/indicacoes', component: IndicacoesComponent },
+-  { path: 'parceiro/mais', component: MaisParceiroComponent },
+-  { path: 'parceiro/saldo', component: SaldoComponent },
+-  { path: 'parceiro/banco/novo', component: NovoBancoComponent },
++  // Parceiro (Influencer)
++  { path: 'parceiro/home', component: HomeParceiroComponent, canActivate: [authGuard, profileGuard('Influencer')] },
++  { path: 'parceiro/codigo', component: MeuCodigoComponent, canActivate: [authGuard, profileGuard('Influencer')] },
++  { path: 'parceiro/indicacoes', component: IndicacoesComponent, canActivate: [authGuard, profileGuard('Influencer')] },
++  { path: 'parceiro/mais', component: MaisParceiroComponent, canActivate: [authGuard, profileGuard('Influencer')] },
++  { path: 'parceiro/saldo', component: SaldoComponent, canActivate: [authGuard, profileGuard('Influencer')] },
++  { path: 'parceiro/banco/novo', component: NovoBancoComponent, canActivate: [authGuard, profileGuard('Influencer')] },
+ 
+-  // Fornecedor Delivery
+-  { path: 'fornecedor/home', component: HomeFornecedorComponent },
+-  { path: 'fornecedor/cardapio', component: GerenciarCardapioComponent },
+-  { path: 'fornecedor/cardapio/novo', component: AddCardapioComponent },
+-  { path: 'fornecedor/cardapio/editar/:id', component: AddCardapioComponent },
+-  { path: 'fornecedor/pedido/:id', component: DetalhesPedidoFornecedorComponent },
++  // Fornecedor Delivery (Supplier)
++  { path: 'fornecedor/home', component: HomeFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
++  { path: 'fornecedor/cardapio', component: GerenciarCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },
++  { path: 'fornecedor/cardapio/novo', component: AddCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },
++  { path: 'fornecedor/cardapio/editar/:id', component: AddCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },
++  { path: 'fornecedor/pedido/:id', component: DetalhesPedidoFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+ 
+-  // Fornecedor Serviços
+-  { path: 'fornecedor/servicos', component: ListagemServicosFornecedorComponent },
+-  { path: 'fornecedor/servicos/categoria', component: CategoriaServicosComponent },
+-  { path: 'fornecedor/servicos/criar', component: CriarServicoComponent },
+-  { path: 'fornecedor/servicos/orcamentos', component: OrcamentosFornecedorComponent },
+-  { path: 'fornecedor/servicos/orcamento/:id', component: FazerOrcamentoComponent },
+-  { path: 'fornecedor/servicos/trabalhos', component: TrabalhosFornecedorComponent },
+-  { path: 'fornecedor/servicos/trabalho/:id', component: DetalhesTrabalhoComponent },
++  // Fornecedor Serviços (Supplier)
++  { path: 'fornecedor/servicos', component: ListagemServicosFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
++  { path: 'fornecedor/servicos/categoria', component: CategoriaServicosComponent, canActivate: [authGuard, profileGuard('Supplier')] },
++  { path: 'fornecedor/servicos/criar', component: CriarServicoComponent, canActivate: [authGuard, profileGuard('Supplier')] },
++  { path: 'fornecedor/servicos/orcamentos', component: OrcamentosFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
++  { path: 'fornecedor/servicos/orcamento/:id', component: FazerOrcamentoComponent, canActivate: [authGuard, profileGuard('Supplier')] },
++  { path: 'fornecedor/servicos/trabalhos', component: TrabalhosFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
++  { path: 'fornecedor/servicos/trabalho/:id', component: DetalhesTrabalhoComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+ 
+   // Fornecedor Compra e Venda
+   //{ path: 'fornecedor/compra-venda/produtos', component: ListagemProdutosComponent },
+@@ -113,16 +122,16 @@ export const routes: Routes = [
+   //{ path: 'fornecedor/compra-venda/produto/editar/:id', component: CriarProdutoComponent },
+   //{ path: 'fornecedor/compra-venda/venda/:id', component: DetalheVendaComponent },
+ 
+-  // Entregador
+-  { path: 'entregador/home', component: HomeEntregadorComponent },
+-  { path: 'entregador/trabalhos', component: TrabalhosEntregadorComponent },
+-  { path: 'entregador/entrega/:id', component: StatusEntregaComponent },
++  // Entregador (Delivery)
++  { path: 'entregador/home', component: HomeEntregadorComponent, canActivate: [authGuard, profileGuard('Delivery')] },
++  { path: 'entregador/trabalhos', component: TrabalhosEntregadorComponent, canActivate: [authGuard, profileGuard('Delivery')] },
++  { path: 'entregador/entrega/:id', component: StatusEntregaComponent, canActivate: [authGuard, profileGuard('Delivery')] },
+ 
+-  // Outras categorias
+-  { path: 'compra-vender', component: CategoriaCompraVenderComponent },
+-  { path: 'aluguel', component: CategoriaAluguelComponent },
+-  { path: 'transporte', component: CategoriaTransporteComponent },
+-  { path: 'empregos', component: CategoriaEmpregosComponent },
+-  { path: 'listagem/:tipo', component: ListagemGenericaComponent },
++  // Outras categorias (exige sessão)
++  { path: 'compra-vender', component: CategoriaCompraVenderComponent, canActivate: [authGuard] },
++  { path: 'aluguel', component: CategoriaAluguelComponent, canActivate: [authGuard] },
++  { path: 'transporte', component: CategoriaTransporteComponent, canActivate: [authGuard] },
++  { path: 'empregos', component: CategoriaEmpregosComponent, canActivate: [authGuard] },
++  { path: 'listagem/:tipo', component: ListagemGenericaComponent, canActivate: [authGuard] },
+   { path: '**', redirectTo: 'splash' }
+-];
+\ No newline at end of file
++];
+diff --git a/src/app/core/guards/auth-guard.ts b/src/app/core/guards/auth-guard.ts
+index 9c37440..610a869 100644
+--- a/src/app/core/guards/auth-guard.ts
++++ b/src/app/core/guards/auth-guard.ts
+@@ -4,9 +4,7 @@ import { SessionService } from '../services/session';
+ 
+ /**
+  * Bloqueia rotas privadas: exige sessão autenticada, senão redireciona ao login.
+- *
+- * NOTA: ainda não está aplicado às rotas (app.routes.ts) — será conectado no
+- * módulo de Auth, quando o login real passar a popular a SessionService.
++ * Aplicado às rotas privadas em `app.routes.ts` (Auth Slice 3).
+  */
+ export const authGuard: CanActivateFn = () => {
+   const session = inject(SessionService);
+diff --git a/src/app/core/guards/profile-guard.ts b/src/app/core/guards/profile-guard.ts
+index 90e8d8f..373fd96 100644
+--- a/src/app/core/guards/profile-guard.ts
++++ b/src/app/core/guards/profile-guard.ts
+@@ -6,8 +6,7 @@ import { UserProfileType } from '../models/enums';
+ /**
+  * Restringe uma rota a determinados perfis (profileType do usuário logado).
+  * Uso: `canActivate: [authGuard, profileGuard('Supplier')]`.
+- *
+- * NOTA: ainda não aplicado às rotas — pronto para o wiring nos módulos.
++ * Aplicado aos hubs de fornecedor/parceiro/entregador em `app.routes.ts` (Auth Slice 3).
+  */
+ export function profileGuard(...allowed: UserProfileType[]): CanActivateFn {
+   return () => {
+diff --git a/src/app/features/auth/esqueci-senha/esqueci-senha.html b/src/app/features/auth/esqueci-senha/esqueci-senha.html
+new file mode 100644
+index 0000000..a55f695
+--- /dev/null
++++ b/src/app/features/auth/esqueci-senha/esqueci-senha.html
+@@ -0,0 +1,49 @@
++<div class="rec-container">
++
++  <div class="rec-header">
++    <button class="rec-header__voltar" (click)="voltarLogin()">
++      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
++        <polyline points="15 18 9 12 15 6"/>
++      </svg>
++    </button>
++    <span class="rec-header__titulo">RECUPERAR SENHA</span>
++    <div style="width: 30px"></div>
++  </div>
++
++  <div class="rec-content">
++
++    <h2 class="rec-titulo">Esqueceu a senha?</h2>
++    <p class="rec-descricao">Informe seu email e enviaremos um código para você redefinir a sua senha.</p>
++
++    <div class="rec-form">
++      <div class="rec-field">
++        <label>Email</label>
++        <div class="rec-field__input-wrapper">
++          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
++            <rect x="2" y="4" width="20" height="16" rx="2"/>
++            <path d="m22 7-10 6L2 7"/>
++          </svg>
++          <input
++            type="email"
++            placeholder="seu@email.com"
++            [(ngModel)]="email"
++            autocomplete="email"
++            inputmode="email"
++          />
++        </div>
++      </div>
++
++      @if (erro) {
++        <span class="rec-erro">{{ erro }}</span>
++      }
++    </div>
++
++  </div>
++
++  <div class="rec-actions">
++    <button class="rec-btn rec-btn--primary" (click)="enviar()" [disabled]="carregando">
++      {{ carregando ? 'ENVIANDO…' : 'ENVIAR CÓDIGO' }}
++    </button>
++  </div>
++
++</div>
+diff --git a/src/app/features/auth/esqueci-senha/esqueci-senha.scss b/src/app/features/auth/esqueci-senha/esqueci-senha.scss
+new file mode 100644
+index 0000000..2323468
+--- /dev/null
++++ b/src/app/features/auth/esqueci-senha/esqueci-senha.scss
+@@ -0,0 +1,162 @@
++.rec-container {
++  display: flex;
++  flex-direction: column;
++  height: 100vh;
++  height: 100dvh;
++  padding-top: var(--safe-top);
++  padding-bottom: var(--safe-bottom);
++  background: var(--color-white);
++}
++
++.rec-header {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  padding: 16px 20px;
++
++  &__voltar {
++    background: none;
++    border: none;
++    cursor: pointer;
++    color: var(--color-text);
++    display: flex;
++    align-items: center;
++    padding: 0;
++  }
++
++  &__titulo {
++    font-size: 16px;
++    font-weight: 700;
++    color: var(--color-text);
++    letter-spacing: 0.3px;
++  }
++}
++
++.rec-content {
++  flex: 1;
++  display: flex;
++  flex-direction: column;
++  padding: 24px;
++  overflow-y: auto;
++}
++
++.rec-titulo {
++  font-size: 20px;
++  font-weight: 700;
++  color: var(--color-text);
++  margin: 8px 0 8px;
++}
++
++.rec-descricao {
++  font-size: 14px;
++  color: var(--color-gray-600);
++  margin-bottom: 24px;
++  line-height: 1.4;
++}
++
++.rec-form {
++  width: 100%;
++  display: flex;
++  flex-direction: column;
++  gap: 16px;
++}
++
++.rec-field {
++  display: flex;
++  flex-direction: column;
++  gap: 6px;
++
++  label {
++    font-size: 13px;
++    font-weight: 500;
++    color: var(--color-gray-600);
++  }
++
++  &__input-wrapper {
++    display: flex;
++    align-items: center;
++    gap: 10px;
++    background: var(--color-gray-100);
++    border-radius: 10px;
++    padding: 12px 14px;
++
++    svg {
++      color: var(--color-gray-400);
++      flex-shrink: 0;
++    }
++
++    input {
++      flex: 1;
++      border: none;
++      background: none;
++      outline: none;
++      font-size: 14px;
++      color: var(--color-text);
++
++      &::placeholder {
++        color: var(--color-gray-400);
++      }
++    }
++  }
++
++  &__toggle {
++    background: none;
++    border: none;
++    cursor: pointer;
++    color: var(--color-gray-400);
++    display: flex;
++    align-items: center;
++    padding: 0;
++  }
++}
++
++.rec-erro {
++  font-size: 12px;
++  color: #dc2626;
++  margin-top: -8px;
++}
++
++.rec-sucesso {
++  font-size: 12px;
++  color: #16a34a;
++  margin-top: -8px;
++}
++
++.rec-actions {
++  display: flex;
++  flex-direction: column;
++  gap: 12px;
++  padding: 24px;
++}
++
++.rec-btn {
++  width: 100%;
++  padding: 16px;
++  border-radius: 50px;
++  font-size: 14px;
++  font-weight: 700;
++  letter-spacing: 0.5px;
++  cursor: pointer;
++  transition: opacity 0.2s;
++
++  &:active {
++    opacity: 0.85;
++  }
++
++  &:disabled {
++    opacity: 0.6;
++    cursor: default;
++  }
++
++  &--primary {
++    background: var(--color-primary);
++    color: var(--color-white);
++    border: none;
++  }
++
++  &--outline {
++    background: transparent;
++    color: var(--color-primary);
++    border: 2px solid var(--color-primary);
++  }
++}
+diff --git a/src/app/features/auth/esqueci-senha/esqueci-senha.spec.ts b/src/app/features/auth/esqueci-senha/esqueci-senha.spec.ts
+new file mode 100644
+index 0000000..8e67605
+--- /dev/null
++++ b/src/app/features/auth/esqueci-senha/esqueci-senha.spec.ts
+@@ -0,0 +1,26 @@
++import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
++
++import { EsqueciSenhaComponent } from './esqueci-senha';
++
++describe('EsqueciSenhaComponent', () => {
++  let component: EsqueciSenhaComponent;
++  let fixture: ComponentFixture<EsqueciSenhaComponent>;
++
++  beforeEach(async () => {
++    await TestBed.configureTestingModule({
++      imports: [EsqueciSenhaComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
++    }).compileComponents();
++
++    fixture = TestBed.createComponent(EsqueciSenhaComponent);
++    component = fixture.componentInstance;
++    await fixture.whenStable();
++  });
++
++  it('should create', () => {
++    expect(component).toBeTruthy();
++  });
++});
+diff --git a/src/app/features/auth/esqueci-senha/esqueci-senha.ts b/src/app/features/auth/esqueci-senha/esqueci-senha.ts
+new file mode 100644
+index 0000000..7126dc0
+--- /dev/null
++++ b/src/app/features/auth/esqueci-senha/esqueci-senha.ts
+@@ -0,0 +1,46 @@
++import { Component, inject } from '@angular/core';
++import { Router } from '@angular/router';
++import { CommonModule } from '@angular/common';
++import { FormsModule } from '@angular/forms';
++import { AuthService } from '../../../core/services/auth';
++import { ApiError } from '../../../core/models/common';
++
++/** Solicita o código de redefinição por email — `POST /no-auth/forgot`. */
++@Component({
++  selector: 'app-esqueci-senha',
++  imports: [CommonModule, FormsModule],
++  templateUrl: './esqueci-senha.html',
++  styleUrl: './esqueci-senha.scss',
++})
++export class EsqueciSenhaComponent {
++  private readonly router = inject(Router);
++  private readonly auth = inject(AuthService);
++
++  email = '';
++  erro = '';
++  carregando = false;
++
++  enviar() {
++    this.erro = '';
++    const email = this.email.trim();
++    if (!email.includes('@')) {
++      this.erro = 'Informe um email válido.';
++      return;
++    }
++    this.carregando = true;
++    this.auth.forgot({ email }).subscribe({
++      next: () => {
++        this.carregando = false;
++        this.router.navigate(['/redefinir-senha'], { state: { email } });
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = err?.message?.trim() ? err.message : 'Não foi possível enviar o código. Tente novamente.';
++      },
++    });
++  }
++
++  voltarLogin() {
++    this.router.navigate(['/login']);
++  }
++}
+diff --git a/src/app/features/auth/redefinir-senha/redefinir-senha.html b/src/app/features/auth/redefinir-senha/redefinir-senha.html
+new file mode 100644
+index 0000000..9115e0f
+--- /dev/null
++++ b/src/app/features/auth/redefinir-senha/redefinir-senha.html
+@@ -0,0 +1,103 @@
++<div class="rec-container">
++
++  <div class="rec-header">
++    <button class="rec-header__voltar" (click)="reenviarCodigo()">
++      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
++        <polyline points="15 18 9 12 15 6"/>
++      </svg>
++    </button>
++    <span class="rec-header__titulo">REDEFINIR SENHA</span>
++    <div style="width: 30px"></div>
++  </div>
++
++  <div class="rec-content">
++
++    <h2 class="rec-titulo">Nova senha</h2>
++    <p class="rec-descricao">Digite o código que enviamos ao seu email e cadastre uma nova senha.</p>
++
++    <div class="rec-form">
++      <div class="rec-field">
++        <label>Código</label>
++        <div class="rec-field__input-wrapper">
++          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
++            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
++            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
++          </svg>
++          <input
++            type="tel"
++            placeholder="0000"
++            [(ngModel)]="codigo"
++            maxlength="4"
++            inputmode="numeric"
++          />
++        </div>
++      </div>
++
++      <div class="rec-field">
++        <label>Nova senha</label>
++        <div class="rec-field__input-wrapper">
++          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
++            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
++            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
++          </svg>
++          <input [type]="senhaVisivel ? 'text' : 'password'" placeholder="••••••••••" [(ngModel)]="senha" />
++          <button class="rec-field__toggle" (click)="toggleSenha()">
++            @if (senhaVisivel) {
++              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
++                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
++                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
++                <line x1="1" y1="1" x2="23" y2="23"/>
++              </svg>
++            } @else {
++              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
++                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
++                <circle cx="12" cy="12" r="3"/>
++              </svg>
++            }
++          </button>
++        </div>
++      </div>
++
++      <div class="rec-field">
++        <label>Confirme a nova senha</label>
++        <div class="rec-field__input-wrapper">
++          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
++            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
++            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
++          </svg>
++          <input [type]="confirmarSenhaVisivel ? 'text' : 'password'" placeholder="••••••••••" [(ngModel)]="confirmarSenha" />
++          <button class="rec-field__toggle" (click)="toggleConfirmarSenha()">
++            @if (confirmarSenhaVisivel) {
++              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
++                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
++                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
++                <line x1="1" y1="1" x2="23" y2="23"/>
++              </svg>
++            } @else {
++              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
++                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
++                <circle cx="12" cy="12" r="3"/>
++              </svg>
++            }
++          </button>
++        </div>
++      </div>
++
++      @if (erro) {
++        <span class="rec-erro">{{ erro }}</span>
++      }
++
++      <button class="rec-link" (click)="reenviarCodigo()">
++        Não recebeu o código? Reenviar
++      </button>
++    </div>
++
++  </div>
++
++  <div class="rec-actions">
++    <button class="rec-btn rec-btn--primary" (click)="redefinir()" [disabled]="carregando">
++      {{ carregando ? 'SALVANDO…' : 'REDEFINIR SENHA' }}
++    </button>
++  </div>
++
++</div>
+diff --git a/src/app/features/auth/redefinir-senha/redefinir-senha.scss b/src/app/features/auth/redefinir-senha/redefinir-senha.scss
+new file mode 100644
+index 0000000..86dbd5b
+--- /dev/null
++++ b/src/app/features/auth/redefinir-senha/redefinir-senha.scss
+@@ -0,0 +1,167 @@
++.rec-container {
++  display: flex;
++  flex-direction: column;
++  height: 100vh;
++  height: 100dvh;
++  padding-top: var(--safe-top);
++  padding-bottom: var(--safe-bottom);
++  background: var(--color-white);
++}
++
++.rec-header {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  padding: 16px 20px;
++
++  &__voltar {
++    background: none;
++    border: none;
++    cursor: pointer;
++    color: var(--color-text);
++    display: flex;
++    align-items: center;
++    padding: 0;
++  }
++
++  &__titulo {
++    font-size: 16px;
++    font-weight: 700;
++    color: var(--color-text);
++    letter-spacing: 0.3px;
++  }
++}
++
++.rec-content {
++  flex: 1;
++  display: flex;
++  flex-direction: column;
++  padding: 24px;
++  overflow-y: auto;
++}
++
++.rec-titulo {
++  font-size: 20px;
++  font-weight: 700;
++  color: var(--color-text);
++  margin: 8px 0 8px;
++}
++
++.rec-descricao {
++  font-size: 14px;
++  color: var(--color-gray-600);
++  margin-bottom: 24px;
++  line-height: 1.4;
++}
++
++.rec-form {
++  width: 100%;
++  display: flex;
++  flex-direction: column;
++  gap: 16px;
++}
++
++.rec-field {
++  display: flex;
++  flex-direction: column;
++  gap: 6px;
++
++  label {
++    font-size: 13px;
++    font-weight: 500;
++    color: var(--color-gray-600);
++  }
++
++  &__input-wrapper {
++    display: flex;
++    align-items: center;
++    gap: 10px;
++    background: var(--color-gray-100);
++    border-radius: 10px;
++    padding: 12px 14px;
++
++    svg {
++      color: var(--color-gray-400);
++      flex-shrink: 0;
++    }
++
++    input {
++      flex: 1;
++      border: none;
++      background: none;
++      outline: none;
++      font-size: 14px;
++      color: var(--color-text);
++
++      &::placeholder {
++        color: var(--color-gray-400);
++      }
++    }
++  }
++
++  &__toggle {
++    background: none;
++    border: none;
++    cursor: pointer;
++    color: var(--color-gray-400);
++    display: flex;
++    align-items: center;
++    padding: 0;
++  }
++}
++
++.rec-erro {
++  font-size: 12px;
++  color: #dc2626;
++  margin-top: -8px;
++}
++
++.rec-link {
++  background: none;
++  border: none;
++  cursor: pointer;
++  font-size: 13px;
++  font-weight: 600;
++  color: var(--color-primary);
++  text-align: left;
++  padding: 0;
++}
++
++.rec-actions {
++  display: flex;
++  flex-direction: column;
++  gap: 12px;
++  padding: 24px;
++}
++
++.rec-btn {
++  width: 100%;
++  padding: 16px;
++  border-radius: 50px;
++  font-size: 14px;
++  font-weight: 700;
++  letter-spacing: 0.5px;
++  cursor: pointer;
++  transition: opacity 0.2s;
++
++  &:active {
++    opacity: 0.85;
++  }
++
++  &:disabled {
++    opacity: 0.6;
++    cursor: default;
++  }
++
++  &--primary {
++    background: var(--color-primary);
++    color: var(--color-white);
++    border: none;
++  }
++
++  &--outline {
++    background: transparent;
++    color: var(--color-primary);
++    border: 2px solid var(--color-primary);
++  }
++}
+diff --git a/src/app/features/auth/redefinir-senha/redefinir-senha.spec.ts b/src/app/features/auth/redefinir-senha/redefinir-senha.spec.ts
+new file mode 100644
+index 0000000..6598bc7
+--- /dev/null
++++ b/src/app/features/auth/redefinir-senha/redefinir-senha.spec.ts
+@@ -0,0 +1,26 @@
++import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
++
++import { RedefinirSenhaComponent } from './redefinir-senha';
++
++describe('RedefinirSenhaComponent', () => {
++  let component: RedefinirSenhaComponent;
++  let fixture: ComponentFixture<RedefinirSenhaComponent>;
++
++  beforeEach(async () => {
++    await TestBed.configureTestingModule({
++      imports: [RedefinirSenhaComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
++    }).compileComponents();
++
++    fixture = TestBed.createComponent(RedefinirSenhaComponent);
++    component = fixture.componentInstance;
++    await fixture.whenStable();
++  });
++
++  it('should create', () => {
++    expect(component).toBeTruthy();
++  });
++});
+diff --git a/src/app/features/auth/redefinir-senha/redefinir-senha.ts b/src/app/features/auth/redefinir-senha/redefinir-senha.ts
+new file mode 100644
+index 0000000..559b3aa
+--- /dev/null
++++ b/src/app/features/auth/redefinir-senha/redefinir-senha.ts
+@@ -0,0 +1,70 @@
++import { Component, inject } from '@angular/core';
++import { Router } from '@angular/router';
++import { CommonModule } from '@angular/common';
++import { FormsModule } from '@angular/forms';
++import { AuthService } from '../../../core/services/auth';
++import { ApiError } from '../../../core/models/common';
++
++/** Redefine a senha a partir do código recebido por email — `POST /no-auth/reset`. */
++@Component({
++  selector: 'app-redefinir-senha',
++  imports: [CommonModule, FormsModule],
++  templateUrl: './redefinir-senha.html',
++  styleUrl: './redefinir-senha.scss',
++})
++export class RedefinirSenhaComponent {
++  private readonly router = inject(Router);
++  private readonly auth = inject(AuthService);
++
++  codigo = '';
++  senha = '';
++  confirmarSenha = '';
++  senhaVisivel = false;
++  confirmarSenhaVisivel = false;
++  erro = '';
++  carregando = false;
++
++  toggleSenha() {
++    this.senhaVisivel = !this.senhaVisivel;
++  }
++
++  toggleConfirmarSenha() {
++    this.confirmarSenhaVisivel = !this.confirmarSenhaVisivel;
++  }
++
++  redefinir() {
++    this.erro = '';
++    const code = this.codigo.trim();
++    if (code.length !== 4) {
++      this.erro = 'Informe o código de 4 dígitos.';
++      return;
++    }
++    if (this.senha.length < 8) {
++      this.erro = 'A senha deve ter no mínimo 8 caracteres.';
++      return;
++    }
++    if (this.senha.length > 32) {
++      this.erro = 'A senha deve ter no máximo 32 caracteres.';
++      return;
++    }
++    if (this.senha !== this.confirmarSenha) {
++      this.erro = 'As senhas não conferem.';
++      return;
++    }
++    this.carregando = true;
++    this.auth.reset({ code, password: this.senha, confirmPassword: this.confirmarSenha }).subscribe({
++      next: () => {
++        this.carregando = false;
++        this.router.navigate(['/login']);
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = err?.message?.trim() ? err.message : 'Não foi possível redefinir a senha. Verifique o código.';
++      },
++    });
++  }
++
++  reenviarCodigo() {
++    this.router.navigate(['/esqueci-senha']);
++  }
++}

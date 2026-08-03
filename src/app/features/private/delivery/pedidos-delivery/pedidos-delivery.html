@@ -1,0 +1,40 @@
+<div class="pedidos-container">
+
+  <div class="pedidos-header">
+    <button class="pedidos-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="pedidos-header__titulo">MEUS PEDIDOS</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="pedidos-content">
+
+    @if (carregando) {
+      <p class="pedidos-vazio">Carregando pedidos…</p>
+    } @else if (erro) {
+      <p class="pedidos-vazio">{{ erro }}</p>
+    } @else if (pedidos.length === 0) {
+      <p class="pedidos-vazio">Você ainda não fez nenhum pedido.</p>
+    } @else {
+      @for (pedido of pedidos; track pedido.id) {
+        <div class="pedido-card" (click)="abrir(pedido)">
+          <div class="pedido-card__topo">
+            <span class="pedido-card__restaurante">{{ pedido.restaurant.name }}</span>
+            <span class="pedido-card__status" [class.pedido-card__status--cancelado]="pedido.status === 'Cancelled'">
+              {{ statusLabel(pedido.status) }}
+            </span>
+          </div>
+          <div class="pedido-card__base">
+            <span class="pedido-card__data">{{ pedido.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+            <span class="pedido-card__total">{{ fmt(pedido.totalValue) }}</span>
+          </div>
+        </div>
+      }
+    }
+
+  </div>
+
+</div>

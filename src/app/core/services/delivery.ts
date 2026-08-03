@@ -1,16 +1,33 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { Observable, map, tap } from 'rxjs';
+import { ApiService } from './api';
+import {
+  ResponseFindAllRestaurantDto,
+  ResponseMenuCategoryDto,
+  ResponseMenuItemDto,
+  ResponseRestaurantCategoryDto,
+  ResponseRestaurantDto,
+} from '../models/restaurant';
+import {
+  CreateFoodOrderDto,
+  CreateFoodOrderResponseDto,
+  ResponseFindAllFoodOrderDto,
+  ResponseFoodOrderDto,
+} from '../models/food-order';
+import { FoodOrderStatus } from '../models/food-order';
+import { PaymentMethod } from '../models/enums';
 
-// ─── Interfaces (prontas para integração com API) ───────────────────────────
+// ─── View-models do Front (pt) — populados a partir dos DTOs da API ─────────
 
 export interface Adicional {
-  id: number;
+  id: number; // = menuItemAddition.id (additionId)
   nome: string;
   preco: number;
   selecionado?: boolean;
 }
 
 export interface ItemCardapio {
-  id: number;
+  id: number; // = menuItem.id (menuItemId)
   nome: string;
   descricao: string;
   preco: number;
@@ -19,7 +36,7 @@ export interface ItemCardapio {
 }
 
 export interface CategoriaCardapio {
-  id: number;
+  id: number; // = menuCategory.id
   nome: string;
   itens: ItemCardapio[];
 }
@@ -27,12 +44,12 @@ export interface CategoriaCardapio {
 export interface Restaurante {
   id: number;
   nome: string;
-  avaliacao: number;
-  tempo: string;
-  taxaEntrega: number;
+  avaliacao: number; // (BE-D1) 0 até o back retornar
+  tempo: string; // (BE-D1)
+  taxaEntrega: number; // (BE-D1)
   descricao: string;
   imagem: string;
-  logo: string;
+  logo: string; // (BE-D1)
   categorias: CategoriaCardapio[];
 }
 
@@ -48,7 +65,7 @@ export interface OpcaoEntrega {
   preco: number;
 }
 
-export type FormaPagamento = 'credito' | 'debito' | 'pix' | 'dinheiro';
+export type FormaPagamento = 'credito' | 'pix';
 
 export type StatusPedido = 'recebido' | 'preparo' | 'caminho' | 'entregue';
 
@@ -65,143 +82,51 @@ export interface Pedido {
   status: StatusPedido;
 }
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
-
-const ADICIONAIS_MOCK: Adicional[] = [
-  { id: 1, nome: 'Azeitona', preco: 2.00 },
-  { id: 2, nome: 'Cebola extra', preco: 2.00 },
-  { id: 3, nome: 'Pimenta', preco: 2.00 },
-  { id: 4, nome: 'Orégano extra', preco: 2.00 },
-];
-
-const RESTAURANTES_MOCK: Restaurante[] = [
-  {
-    id: 1,
-    nome: 'Pizzaria Bella Itália',
-    avaliacao: 4.7,
-    tempo: '35-45 min',
-    taxaEntrega: 4.99,
-    descricao: 'Pizzas artesanais feitas no forno a lenha com massa crocante',
-    imagem: '',
-    logo: '',
-    categorias: [
-      {
-        id: 1,
-        nome: 'Destaques',
-        itens: [
-          {
-            id: 1,
-            nome: 'BACON',
-            descricao: 'Molho de tomate, bacon, mussarela, alho, cebola e salsinha.',
-            preco: 42.90,
-            imagem: '',
-            adicionais: ADICIONAIS_MOCK
-          },
-          {
-            id: 2,
-            nome: 'FRANGO COM CATUPIRY',
-            descricao: 'Molho de tomate, frango desfiado, catupiry e orégano.',
-            preco: 45.90,
-            imagem: '',
-            adicionais: ADICIONAIS_MOCK
-          },
-          {
-            id: 3,
-            nome: 'PORTUGUESA',
-            descricao: 'Molho de tomate, presunto, ovo, cebola, pimentão e azeitona.',
-            preco: 44.90,
-            imagem: '',
-            adicionais: ADICIONAIS_MOCK
-          },
-        ]
-      },
-      {
-        id: 2,
-        nome: 'Pizza Salgada',
-        itens: [
-          {
-            id: 4,
-            nome: 'CALABRESA',
-            descricao: 'Molho de tomate, calabresa fatiada, cebola e orégano.',
-            preco: 39.90,
-            imagem: '',
-            adicionais: ADICIONAIS_MOCK
-          },
-        ]
-      },
-      {
-        id: 3,
-        nome: 'Pizza Doce',
-        itens: [
-          {
-            id: 5,
-            nome: 'CHOCOLATE',
-            descricao: 'Chocolate ao leite, morango e granulado.',
-            preco: 38.90,
-            imagem: '',
-            adicionais: []
-          },
-        ]
-      },
-    ]
-  },
-  {
-    id: 2,
-    nome: 'Pizzaria Bella Itália',
-    avaliacao: 4.7,
-    tempo: '35-45 min',
-    taxaEntrega: 4.99,
-    descricao: 'Pizzas artesanais feitas no forno a lenha com massa crocante',
-    imagem: '',
-    logo: '',
-    categorias: []
-  },
-  {
-    id: 3,
-    nome: 'Pizzaria Bella Itália',
-    avaliacao: 4.7,
-    tempo: '35-45 min',
-    taxaEntrega: 4.99,
-    descricao: 'Pizzas artesanais feitas no forno a lenha com massa crocante',
-    imagem: '',
-    logo: '',
-    categorias: []
-  },
-];
-
 export const OPCOES_ENTREGA: OpcaoEntrega[] = [
   { id: 'padrao', nome: 'Padrão', preco: 0 },
-  { id: 'express', nome: 'Express', preco: 20.00 },
+  { id: 'express', nome: 'Express', preco: 20.0 },
 ];
 
 // ─── Service ─────────────────────────────────────────────────────────────────
 
+/**
+ * Delivery Cliente. Catálogo integrado à API (DC-1); carrinho em memória.
+ * Checkout (`POST /food-orders`) e acompanhamento entram nas fatias DC-2/DC-3.
+ */
 @Injectable({ providedIn: 'root' })
 export class DeliveryService {
+  private readonly api = inject(ApiService);
 
   // Pedido em construção (carrinho)
   private pedidoAtual: Partial<Pedido> = {};
 
-  // ── Restaurantes ──────────────────────────────────────────────────────────
+  // ── Catálogo (API) ──────────────────────────────────────────────────────
 
-  getRestaurantes(categoria?: string): Restaurante[] {
-    // Futuramente: return this.http.get<Restaurante[]>(`/api/delivery/restaurantes?categoria=${categoria}`)
-    return RESTAURANTES_MOCK;
+  /** Categorias reais — `GET /v1/restaurants/categories`. */
+  getCategorias(): Observable<ResponseRestaurantCategoryDto[]> {
+    return this.api.get<ResponseRestaurantCategoryDto[]>('/restaurants/categories');
   }
 
-  getRestaurante(id: number): Restaurante | undefined {
-    // Futuramente: return this.http.get<Restaurante>(`/api/delivery/restaurantes/${id}`)
-    return RESTAURANTES_MOCK.find(r => r.id === id);
+  /** Restaurantes ativos (filtra por categoria) — `GET /v1/restaurants`. */
+  getRestaurantes(categoryId?: number): Observable<Restaurante[]> {
+    return this.api
+      .get<ResponseFindAllRestaurantDto>('/restaurants', { categoryId: categoryId ?? null, take: 50 })
+      .pipe(map((res) => (res.restaurants ?? []).map((r) => this.mapRestaurante(r))));
   }
 
-  getItem(restauranteId: number, itemId: number): ItemCardapio | undefined {
-    const restaurante = this.getRestaurante(restauranteId);
-    return restaurante?.categorias
-      .flatMap(c => c.itens)
-      .find(i => i.id === itemId);
+  /** Restaurante + cardápio — `GET /v1/restaurants/{id}`. */
+  getRestaurante(id: number): Observable<Restaurante> {
+    return this.api.get<ResponseRestaurantDto>(`/restaurants/${id}`).pipe(map((r) => this.mapRestaurante(r)));
   }
 
-  // ── Carrinho ──────────────────────────────────────────────────────────────
+  /** Item específico dentro do cardápio do restaurante. */
+  getItem(restauranteId: number, itemId: number): Observable<ItemCardapio | undefined> {
+    return this.getRestaurante(restauranteId).pipe(
+      map((r) => r.categorias.flatMap((c) => c.itens).find((i) => i.id === itemId)),
+    );
+  }
+
+  // ── Carrinho (memória) ────────────────────────────────────────────────────
 
   setPedidoRestaurante(restaurante: Restaurante) {
     this.pedidoAtual.restaurante = restaurante;
@@ -240,21 +165,83 @@ export class DeliveryService {
     return subtotal + frete;
   }
 
-  finalizarPedido(): Pedido {
-    // Futuramente: return this.http.post<Pedido>('/api/delivery/pedidos', this.pedidoAtual)
-    const pedido: Pedido = {
-      id: Math.floor(Math.random() * 10000),
-      restaurante: this.pedidoAtual.restaurante!,
-      itens: this.pedidoAtual.itens ?? [],
-      endereco: this.pedidoAtual.endereco ?? '',
-      bairro: this.pedidoAtual.bairro ?? '',
-      opcaoEntrega: this.pedidoAtual.opcaoEntrega ?? OPCOES_ENTREGA[0],
-      formaPagamento: this.pedidoAtual.formaPagamento ?? 'credito',
-      total: this.calcularTotal(),
-      data: new Date().toLocaleDateString('pt-BR'),
-      status: 'recebido'
+  /** Cria o pedido — `POST /v1/food-orders`. Limpa o carrinho em caso de sucesso. */
+  criarPedido(): Observable<CreateFoodOrderResponseDto> {
+    return this.api
+      .post<CreateFoodOrderResponseDto>('/food-orders', this.buildCreateFoodOrderDto())
+      .pipe(tap(() => (this.pedidoAtual = {})));
+  }
+
+  private buildCreateFoodOrderDto(): CreateFoodOrderDto {
+    const itens = this.pedidoAtual.itens ?? [];
+    return {
+      restaurantId: this.pedidoAtual.restaurante?.id ?? 0,
+      paymentMethod: this.paymentMethodApi(this.pedidoAtual.formaPagamento ?? 'credito'),
+      deliveryFee: this.pedidoAtual.opcaoEntrega?.preco ?? 0,
+      items: itens.map((ip) => ({
+        menuItemId: ip.item.id,
+        quantity: ip.quantidade,
+        additionIds: ip.adicionaisSelecionados.map((a) => a.id),
+      })),
     };
-    this.pedidoAtual = {};
-    return pedido;
+  }
+
+  /** Mapeia a forma de pagamento do front para o enum da API (decisão: só Crédito/PIX). */
+  private paymentMethodApi(forma: FormaPagamento): PaymentMethod {
+    return forma === 'pix' ? 'Pix' : 'CreditCard';
+  }
+
+  // ── Acompanhamento (API) ──────────────────────────────────────────────────
+
+  /** Detalhe/rastreio de um pedido — `GET /v1/food-orders/{id}`. */
+  getPedido(id: number): Observable<ResponseFoodOrderDto> {
+    return this.api.get<ResponseFoodOrderDto>(`/food-orders/${id}`);
+  }
+
+  /** Lista os pedidos do usuário — `GET /v1/food-orders`. */
+  getMeusPedidos(status?: FoodOrderStatus): Observable<ResponseFoodOrderDto[]> {
+    return this.api
+      .get<ResponseFindAllFoodOrderDto>('/food-orders', { status: status ?? null, take: 50 })
+      .pipe(map((res) => res.foodOrders ?? []));
+  }
+
+  /** Cancela um pedido — `PATCH /v1/food-orders/{id}/cancel`. */
+  cancelarPedido(id: number, cancelReason: string): Observable<ResponseFoodOrderDto> {
+    return this.api.patch<ResponseFoodOrderDto>(`/food-orders/${id}/cancel`, { cancelReason });
+  }
+
+  // ── Mapeadores API → view-model ───────────────────────────────────────────
+
+  private mapRestaurante(r: ResponseRestaurantDto): Restaurante {
+    return {
+      id: r.id,
+      nome: r.name,
+      avaliacao: r.rating ?? 0,
+      tempo: r.estimatedTime ?? '',
+      taxaEntrega: r.deliveryFee ?? 0,
+      descricao: r.description ?? '',
+      imagem: r.imageUrl ?? '',
+      logo: r.logoUrl ?? '',
+      categorias: [...(r.menuCategories ?? [])]
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((c) => this.mapCategoria(c)),
+    };
+  }
+
+  private mapCategoria(c: ResponseMenuCategoryDto): CategoriaCardapio {
+    return { id: c.id, nome: c.name, itens: (c.items ?? []).map((i) => this.mapItem(i)) };
+  }
+
+  private mapItem(i: ResponseMenuItemDto): ItemCardapio {
+    return {
+      id: i.id,
+      nome: i.name,
+      descricao: i.description ?? '',
+      preco: Number(i.price),
+      imagem: i.imageUrl ?? '',
+      adicionais: (i.additions ?? [])
+        .filter((a) => a.isActive)
+        .map((a) => ({ id: a.id, nome: a.name, preco: Number(a.price) })),
+    };
   }
 }

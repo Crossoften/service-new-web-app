@@ -1,32 +1,80 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FornecedorService, PedidoFornecedor, FaturamentoFornecedor, StatusPedidoFornecedor } from '../../../core/services/fornecedor';
+import {
+  FornecedorService,
+  PedidoFornecedor,
+  StatusPedidoFornecedor,
+} from '../../../core/services/fornecedor';
 import { BottomNavFornecedorComponent } from '../../../shared/components/bottom-nav-fornecedor/bottom-nav-fornecedor';
+import { ResponseRestaurantDto, ResponseRestaurantPayoutDto } from '../../../core/models/restaurant';
+import { ApiError } from '../../../core/models/common';
 
 @Component({
   selector: 'app-home-fornecedor',
   imports: [CommonModule, BottomNavFornecedorComponent],
   templateUrl: './home-fornecedor.html',
-  styleUrl: './home-fornecedor.scss'
+  styleUrl: './home-fornecedor.scss',
 })
 export class HomeFornecedorComponent implements OnInit {
-  faturamento?: FaturamentoFornecedor;
-  pedidos: PedidoFornecedor[] = [];
-  statusOperacional: 'aberto' | 'fechado' = 'aberto';
+  readonly router = inject(Router);
+  private readonly fornecedorService = inject(FornecedorService);
 
-  constructor(
-    public router: Router,
-    private fornecedorService: FornecedorService
-  ) {}
+  restaurante: ResponseRestaurantDto | null = null;
+  payout?: ResponseRestaurantPayoutDto;
+  pedidos: PedidoFornecedor[] = [];
+  carregando = false;
+  erro = '';
 
   ngOnInit() {
-    this.faturamento = this.fornecedorService.getFaturamento();
-    this.pedidos = this.fornecedorService.getPedidos();
+    this.carregando = true;
+    this.fornecedorService.meuRestaurante().subscribe({
+      next: (r) => {
+        this.carregando = false;
+        this.restaurante = r;
+        if (r) {
+          this.carregarPayout();
+          this.carregarPedidos();
+        }
+      },
+      error: () => (this.carregando = false),
+    });
   }
 
-  toggleStatus() {
-    this.statusOperacional = this.statusOperacional === 'aberto' ? 'fechado' : 'aberto';
+  get semRestaurante(): boolean {
+    return !this.carregando && this.restaurante === null;
+  }
+
+  get aberto(): boolean {
+    return this.restaurante?.isOpen ?? false;
+  }
+
+  private carregarPayout() {
+    this.fornecedorService.getPayout().subscribe({ next: (p) => (this.payout = p), error: () => {} });
+  }
+
+  private carregarPedidos() {
+    this.fornecedorService.getPedidosRecebidos().subscribe({
+      next: (lista) => (this.pedidos = lista),
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar os pedidos.';
+      },
+    });
+  }
+
+  criarRestaurante() {
+    this.router.navigate(['/fornecedor/restaurante']);
+  }
+
+  setAberto(valor: boolean) {
+    if (!this.restaurante || this.restaurante.isOpen === valor) return;
+    const id = this.restaurante.id;
+    this.fornecedorService.definirAberto(id, valor).subscribe({
+      next: (r) => (this.restaurante = r),
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível atualizar o status.';
+      },
+    });
   }
 
   abrirPedido(pedido: PedidoFornecedor) {
@@ -35,10 +83,10 @@ export class HomeFornecedorComponent implements OnInit {
 
   statusLabel(status: StatusPedidoFornecedor): string {
     const labels: Record<StatusPedidoFornecedor, string> = {
-      recebido:  'Recebido',
-      preparo:   'Em preparo',
-      caminho:   'A caminho',
-      entregue:  'Entregue',
+      recebido: 'Recebido',
+      preparo: 'Em preparo',
+      caminho: 'A caminho',
+      entregue: 'Entregue',
       cancelado: 'Cancelado',
     };
     return labels[status];
@@ -46,13 +94,17 @@ export class HomeFornecedorComponent implements OnInit {
 
   statusClass(status: StatusPedidoFornecedor): string {
     const classes: Record<StatusPedidoFornecedor, string> = {
-      recebido:  'status--azul',
-      preparo:   'status--laranja',
-      caminho:   'status--roxo',
-      entregue:  'status--verde',
+      recebido: 'status--azul',
+      preparo: 'status--laranja',
+      caminho: 'status--roxo',
+      entregue: 'status--verde',
       cancelado: 'status--vermelho',
     };
     return classes[status];
+  }
+
+  fmt(valor?: string): string {
+    return Number(valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
   formatarPreco(valor: number): string {

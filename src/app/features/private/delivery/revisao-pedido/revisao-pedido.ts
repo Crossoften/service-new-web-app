@@ -1,39 +1,49 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DeliveryService, Pedido } from '../../../../core/services/delivery';
+import { ApiError } from '../../../../core/models/common';
 
 @Component({
   selector: 'app-revisao-pedido',
   imports: [CommonModule],
   templateUrl: './revisao-pedido.html',
-  styleUrl: './revisao-pedido.scss'
+  styleUrl: './revisao-pedido.scss',
 })
 export class RevisaoPedidoComponent implements OnInit {
-  pedido?: Partial<Pedido>;
+  private readonly router = inject(Router);
+  private readonly deliveryService = inject(DeliveryService);
 
-  constructor(
-    private router: Router,
-    private deliveryService: DeliveryService
-  ) {}
+  pedido?: Partial<Pedido>;
+  enviando = false;
+  erro = '';
 
   ngOnInit() {
     this.pedido = this.deliveryService.getPedidoAtual();
   }
 
   get formaPagamentoLabel(): string {
-    const formas: Record<string, string> = {
-      credito: 'Cartão de Crédito',
-      debito: 'Cartão de Débito',
-      pix: 'PIX',
-      dinheiro: 'Dinheiro na entrega'
-    };
-    return formas[this.pedido?.formaPagamento ?? ''] ?? 'Cartão de Crédito';
+    return this.pedido?.formaPagamento === 'pix' ? 'PIX' : 'Cartão de Crédito';
   }
 
   finalizarPedido() {
-    const pedido = this.deliveryService.finalizarPedido();
-    this.router.navigate(['/delivery/status', pedido.id]);
+    if (this.enviando) return;
+    if (!this.pedido?.restaurante || !this.pedido?.itens?.length) {
+      this.erro = 'Sua sacola está vazia.';
+      return;
+    }
+    this.erro = '';
+    this.enviando = true;
+    this.deliveryService.criarPedido().subscribe({
+      next: (res) => {
+        this.enviando = false;
+        this.router.navigate(['/delivery/status', res.foodOrder.id]);
+      },
+      error: (err: ApiError) => {
+        this.enviando = false;
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível finalizar o pedido.';
+      },
+    });
   }
 
   voltar() {

@@ -279,3 +279,30 @@
     border: 2px solid var(--color-primary);
   }
 }
+.pedido-f-msg {
+  text-align: center;
+  color: var(--color-gray-600);
+  font-size: 14px;
+  margin-top: 32px;
+}
+
+.pedido-f-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pedido-f-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.pedido-f-erro {
+  display: block;
+  font-size: 12px;
+  color: #dc2626;
+  margin-top: 8px;
+}

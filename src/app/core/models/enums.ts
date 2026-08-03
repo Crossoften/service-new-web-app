@@ -4,7 +4,7 @@
  */
 
 // ── Usuário ──────────────────────────────────────────────────────────────────
-export type UserProfileType = 'Client' | 'Supplier' | 'Partner' | 'Delivery' | 'Influencer';
+export type UserProfileType = 'Client' | 'Supplier' | 'Delivery' | 'Influencer';
 export type UserRole = 'Master' | 'Admin' | 'User';
 export type UserStatus = 'Active' | 'Pending' | 'Inactive';
 export type BillingType = 'None' | 'Subscription' | 'Commission';

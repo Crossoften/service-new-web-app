@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth-guard';
+import { profileGuard } from './core/guards/profile-guard';
 import { SplashComponent } from './features/private/splash/splash';
 import { HomeComponent } from './features/private/home/home';
 import { CategoriaDeliveryComponent } from './features/private/categoria-delivery/categoria-delivery';
@@ -12,6 +14,9 @@ import { LoginComponent } from './features/auth/login/login';
 import { SelecionarPerfilComponent } from './features/auth/selecionar-perfil/selecionar-perfil';
 import { CadastroComponent } from './features/auth/cadastro/cadastro';
 import { CadastroSucessoComponent } from './features/auth/cadastro-sucesso/cadastro-sucesso';
+import { PerfilComponent } from './features/private/perfil/perfil';
+import { EsqueciSenhaComponent } from './features/auth/esqueci-senha/esqueci-senha';
+import { RedefinirSenhaComponent } from './features/auth/redefinir-senha/redefinir-senha';
 import { ListagemDeliveryComponent } from './features/private/delivery/listagem-delivery/listagem-delivery';
 import { RestauranteComponent } from './features/private/delivery/restaurante/restaurante';
 import { CardapioItemComponent } from './features/private/delivery/cardapio-item/cardapio-item';
@@ -19,6 +24,7 @@ import { SacolaComponent } from './features/private/delivery/sacola/sacola';
 import { EnderecoEntregaComponent } from './features/private/delivery/endereco-entrega/endereco-entrega';
 import { RevisaoPedidoComponent } from './features/private/delivery/revisao-pedido/revisao-pedido';
 import { StatusPedidoComponent } from './features/private/delivery/status-pedido/status-pedido';
+import { PedidosDeliveryComponent } from './features/private/delivery/pedidos-delivery/pedidos-delivery';
 import { ListagemServicosComponent } from './features/private/servicos/listagem-servicos/listagem-servicos';
 import { RequisitosServicoComponent } from './features/private/servicos/requisitos-servico/requisitos-servico';
 import { DetalhesPrestadorComponent } from './features/private/servicos/detalhes-prestador/detalhes-prestador';
@@ -35,6 +41,7 @@ import { MaisParceiroComponent } from './features/parceiro/mais-parceiro/mais-pa
 import { SaldoComponent } from './features/parceiro/saldo/saldo';
 import { NovoBancoComponent } from './features/parceiro/novo-banco/novo-banco';
 import { HomeFornecedorComponent } from './features/fornecedor/home-fornecedor/home-fornecedor';
+import { RestauranteFornecedorComponent } from './features/fornecedor/restaurante-fornecedor/restaurante-fornecedor';
 import { GerenciarCardapioComponent } from './features/fornecedor/gerenciar-cardapio/gerenciar-cardapio';
 import { AddCardapioComponent } from './features/fornecedor/add-cardapio/add-cardapio';
 import { DetalhesPedidoFornecedorComponent } from './features/fornecedor/detalhes-pedido-fornecedor/detalhes-pedido-fornecedor';
@@ -52,59 +59,67 @@ import { StatusEntregaComponent } from './features/entregador/status-entrega/sta
 //import { DetalheVendaComponent } from './features/fornecedor/compra-venda/detalhe-venda/detalhe-venda';
 
 export const routes: Routes = [
+  // Públicas (sem sessão)
   { path: '', redirectTo: 'splash', pathMatch: 'full' },
   { path: 'splash', component: SplashComponent },
   { path: 'login', component: LoginComponent },
   { path: 'selecionar-perfil', component: SelecionarPerfilComponent },
+  { path: 'esqueci-senha', component: EsqueciSenhaComponent },
+  { path: 'redefinir-senha', component: RedefinirSenhaComponent },
   { path: 'cadastro/sucesso', component: CadastroSucessoComponent },
   { path: 'cadastro/:perfil', component: CadastroComponent },
-  { path: 'home', component: HomeComponent },
+
+  // Cliente / área geral (exige sessão)
+  { path: 'home', component: HomeComponent, canActivate: [authGuard] },
+  { path: 'perfil', component: PerfilComponent, canActivate: [authGuard] },
 
   // Delivery Cliente
-  { path: 'delivery', component: CategoriaDeliveryComponent },
-  { path: 'delivery/listagem/:categoria', component: ListagemDeliveryComponent },
-  { path: 'delivery/restaurante/:id', component: RestauranteComponent },
-  { path: 'delivery/item/:id', component: CardapioItemComponent },
-  { path: 'delivery/sacola', component: SacolaComponent },
-  { path: 'delivery/endereco', component: EnderecoEntregaComponent },
-  { path: 'delivery/revisao', component: RevisaoPedidoComponent },
-  { path: 'delivery/status/:id', component: StatusPedidoComponent },
+  { path: 'delivery', component: CategoriaDeliveryComponent, canActivate: [authGuard] },
+  { path: 'delivery/pedidos', component: PedidosDeliveryComponent, canActivate: [authGuard] },
+  { path: 'delivery/listagem/:categoria', component: ListagemDeliveryComponent, canActivate: [authGuard] },
+  { path: 'delivery/restaurante/:id', component: RestauranteComponent, canActivate: [authGuard] },
+  { path: 'delivery/item/:id', component: CardapioItemComponent, canActivate: [authGuard] },
+  { path: 'delivery/sacola', component: SacolaComponent, canActivate: [authGuard] },
+  { path: 'delivery/endereco', component: EnderecoEntregaComponent, canActivate: [authGuard] },
+  { path: 'delivery/revisao', component: RevisaoPedidoComponent, canActivate: [authGuard] },
+  { path: 'delivery/status/:id', component: StatusPedidoComponent, canActivate: [authGuard] },
 
   // Serviços Cliente
-  { path: 'servicos', component: CategoriaServicosComponent },
-  { path: 'servicos/listagem/:categoria', component: ListagemServicosComponent },
-  { path: 'servicos/requisitos', component: RequisitosServicoComponent },
-  { path: 'servicos/prestador/:id', component: DetalhesPrestadorComponent },
-  { path: 'servicos/orcamentos', component: OrcamentosComponent },
-  { path: 'servicos/orcamento/:id', component: AprovarOrcamentoComponent },
-  { path: 'servicos/solicitacoes', component: SolicitacoesComponent },
-  { path: 'servicos/chat/:id', component: ChatPrestadorComponent },
-  { path: 'servicos/solicitacao/:id', component: DetalhesSolicitacaoComponent },
-  { path: 'servicos/pagamento/:id', component: PagamentoServicoComponent },
+  { path: 'servicos', component: CategoriaServicosComponent, canActivate: [authGuard] },
+  { path: 'servicos/listagem/:categoria', component: ListagemServicosComponent, canActivate: [authGuard] },
+  { path: 'servicos/requisitos', component: RequisitosServicoComponent, canActivate: [authGuard] },
+  { path: 'servicos/prestador/:id', component: DetalhesPrestadorComponent, canActivate: [authGuard] },
+  { path: 'servicos/orcamentos', component: OrcamentosComponent, canActivate: [authGuard] },
+  { path: 'servicos/orcamento/:id', component: AprovarOrcamentoComponent, canActivate: [authGuard] },
+  { path: 'servicos/solicitacoes', component: SolicitacoesComponent, canActivate: [authGuard] },
+  { path: 'servicos/chat/:id', component: ChatPrestadorComponent, canActivate: [authGuard] },
+  { path: 'servicos/solicitacao/:id', component: DetalhesSolicitacaoComponent, canActivate: [authGuard] },
+  { path: 'servicos/pagamento/:id', component: PagamentoServicoComponent, canActivate: [authGuard] },
 
-  // Parceiro
-  { path: 'parceiro/home', component: HomeParceiroComponent },
-  { path: 'parceiro/codigo', component: MeuCodigoComponent },
-  { path: 'parceiro/indicacoes', component: IndicacoesComponent },
-  { path: 'parceiro/mais', component: MaisParceiroComponent },
-  { path: 'parceiro/saldo', component: SaldoComponent },
-  { path: 'parceiro/banco/novo', component: NovoBancoComponent },
+  // Parceiro (Influencer)
+  { path: 'parceiro/home', component: HomeParceiroComponent, canActivate: [authGuard, profileGuard('Influencer')] },
+  { path: 'parceiro/codigo', component: MeuCodigoComponent, canActivate: [authGuard, profileGuard('Influencer')] },
+  { path: 'parceiro/indicacoes', component: IndicacoesComponent, canActivate: [authGuard, profileGuard('Influencer')] },
+  { path: 'parceiro/mais', component: MaisParceiroComponent, canActivate: [authGuard, profileGuard('Influencer')] },
+  { path: 'parceiro/saldo', component: SaldoComponent, canActivate: [authGuard, profileGuard('Influencer')] },
+  { path: 'parceiro/banco/novo', component: NovoBancoComponent, canActivate: [authGuard, profileGuard('Influencer')] },
 
-  // Fornecedor Delivery
-  { path: 'fornecedor/home', component: HomeFornecedorComponent },
-  { path: 'fornecedor/cardapio', component: GerenciarCardapioComponent },
-  { path: 'fornecedor/cardapio/novo', component: AddCardapioComponent },
-  { path: 'fornecedor/cardapio/editar/:id', component: AddCardapioComponent },
-  { path: 'fornecedor/pedido/:id', component: DetalhesPedidoFornecedorComponent },
+  // Fornecedor Delivery (Supplier)
+  { path: 'fornecedor/home', component: HomeFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/restaurante', component: RestauranteFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/cardapio', component: GerenciarCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/cardapio/novo', component: AddCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/cardapio/editar/:id', component: AddCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/pedido/:id', component: DetalhesPedidoFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
 
-  // Fornecedor Serviços
-  { path: 'fornecedor/servicos', component: ListagemServicosFornecedorComponent },
-  { path: 'fornecedor/servicos/categoria', component: CategoriaServicosComponent },
-  { path: 'fornecedor/servicos/criar', component: CriarServicoComponent },
-  { path: 'fornecedor/servicos/orcamentos', component: OrcamentosFornecedorComponent },
-  { path: 'fornecedor/servicos/orcamento/:id', component: FazerOrcamentoComponent },
-  { path: 'fornecedor/servicos/trabalhos', component: TrabalhosFornecedorComponent },
-  { path: 'fornecedor/servicos/trabalho/:id', component: DetalhesTrabalhoComponent },
+  // Fornecedor Serviços (Supplier)
+  { path: 'fornecedor/servicos', component: ListagemServicosFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/servicos/categoria', component: CategoriaServicosComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/servicos/criar', component: CriarServicoComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/servicos/orcamentos', component: OrcamentosFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/servicos/orcamento/:id', component: FazerOrcamentoComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/servicos/trabalhos', component: TrabalhosFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/servicos/trabalho/:id', component: DetalhesTrabalhoComponent, canActivate: [authGuard, profileGuard('Supplier')] },
 
   // Fornecedor Compra e Venda
   //{ path: 'fornecedor/compra-venda/produtos', component: ListagemProdutosComponent },
@@ -113,16 +128,16 @@ export const routes: Routes = [
   //{ path: 'fornecedor/compra-venda/produto/editar/:id', component: CriarProdutoComponent },
   //{ path: 'fornecedor/compra-venda/venda/:id', component: DetalheVendaComponent },
 
-  // Entregador
-  { path: 'entregador/home', component: HomeEntregadorComponent },
-  { path: 'entregador/trabalhos', component: TrabalhosEntregadorComponent },
-  { path: 'entregador/entrega/:id', component: StatusEntregaComponent },
+  // Entregador (Delivery)
+  { path: 'entregador/home', component: HomeEntregadorComponent, canActivate: [authGuard, profileGuard('Delivery')] },
+  { path: 'entregador/trabalhos', component: TrabalhosEntregadorComponent, canActivate: [authGuard, profileGuard('Delivery')] },
+  { path: 'entregador/entrega/:id', component: StatusEntregaComponent, canActivate: [authGuard, profileGuard('Delivery')] },
 
-  // Outras categorias
-  { path: 'compra-vender', component: CategoriaCompraVenderComponent },
-  { path: 'aluguel', component: CategoriaAluguelComponent },
-  { path: 'transporte', component: CategoriaTransporteComponent },
-  { path: 'empregos', component: CategoriaEmpregosComponent },
-  { path: 'listagem/:tipo', component: ListagemGenericaComponent },
+  // Outras categorias (exige sessão)
+  { path: 'compra-vender', component: CategoriaCompraVenderComponent, canActivate: [authGuard] },
+  { path: 'aluguel', component: CategoriaAluguelComponent, canActivate: [authGuard] },
+  { path: 'transporte', component: CategoriaTransporteComponent, canActivate: [authGuard] },
+  { path: 'empregos', component: CategoriaEmpregosComponent, canActivate: [authGuard] },
+  { path: 'listagem/:tipo', component: ListagemGenericaComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'splash' }
 ];

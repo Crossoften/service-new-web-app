@@ -14,6 +14,7 @@ import {
   RegisterUserResponseDto,
   ResetPasswordDto,
   ResponseLoginDto,
+  VerifyCodeDto,
 } from '../models/auth';
 
 /** Rota inicial por perfil após o login (usa o `profileType` do ResponseLoginDto). */
@@ -22,7 +23,6 @@ const PROFILE_HOME_ROUTES: Record<UserProfileType, string> = {
   Supplier: '/fornecedor/home',
   Delivery: '/entregador/home',
   Influencer: '/parceiro/home',
-  Partner: '/parceiro/home',
 };
 
 /** Camada de autenticação: login, cadastro e recuperação de senha, integrada à sessão. */
@@ -41,6 +41,11 @@ export class AuthService {
   /** Cadastro por perfil (cliente/fornecedor/parceiro/entregador → rota `register/*`). */
   register(perfil: Perfil, dto: RegisterBaseDto): Observable<RegisterUserResponseDto> {
     return this.api.post<RegisterUserResponseDto>(`/no-auth/register/${REGISTER_PATHS[perfil]}`, dto);
+  }
+
+  /** Confirma a conta com o código enviado por email — `POST /v1/no-auth/verify-code`. */
+  verifyCode(dto: VerifyCodeDto): Observable<ApiMessage> {
+    return this.api.post<ApiMessage>('/no-auth/verify-code', dto);
   }
 
   /** Envia o código de redefinição ao email. */

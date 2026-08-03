@@ -1,14 +1,49 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { Observable, catchError, map, of } from 'rxjs';
+import { ApiService } from './api';
+import {
+  CreateMenuCategoryDto,
+  CreateMenuItemDto,
+  CreateRestaurantDto,
+  CreateRestaurantResponseDto,
+  ResponseMenuCategoryDto,
+  ResponseRestaurantDto,
+  ResponseRestaurantPayoutDto,
+  UpdateMenuItemDto,
+  UpdateRestaurantDto,
+} from '../models/restaurant';
+import {
+  FoodOrderStatus,
+  ResponseFindAllFoodOrderDto,
+  ResponseFoodOrderDto,
+} from '../models/food-order';
+import { PaymentMethod } from '../models/enums';
 
-// ─── Interfaces (prontas para integração com API) ───────────────────────────
+// ─── View-models do Front (pt) ──────────────────────────────────────────────
 
 export interface ItemCardapioFornecedor {
-  id: number;
+  id: number; // = menuItem.id
   nome: string;
   descricao: string;
   valor: number;
-  categoria: string;
+  categoria: string; // nome da categoria (exibição)
+  categoriaId?: number; // = menuCategory.id (para editar/criar)
   imagem: string;
+}
+
+export interface CategoriaCardapioFornecedor {
+  id: number;
+  nome: string;
+}
+
+/** Payload de gravação de item vindo da tela. */
+export interface SalvarItemInput {
+  id?: number;
+  nome: string;
+  descricao: string;
+  valor: number;
+  categoriaId: number;
+  imagem?: string;
 }
 
 export type StatusPedidoFornecedor = 'recebido' | 'preparo' | 'caminho' | 'entregue' | 'cancelado';
@@ -27,180 +62,171 @@ export interface PedidoFornecedor {
   adicionais: { nome: string; valor: number }[];
 }
 
-export interface FaturamentoFornecedor {
-  dia: number;
-  semana: number;
-  mes: number;
-}
-
-// ─── Mock Data ───────────────────────────────────────────────────────────────
-
-const CARDAPIO_MOCK: ItemCardapioFornecedor[] = [
-  {
-    id: 1,
-    nome: 'BACON',
-    descricao: 'Molho de tomate, bacon, mussarela, alho, cebola e salsinha.',
-    valor: 42.90,
-    categoria: 'Destaques',
-    imagem: ''
-  },
-  {
-    id: 2,
-    nome: 'FRANGO COM CATUPIRY',
-    descricao: 'Molho de tomate, frango desfiado, catupiry e orégano.',
-    valor: 45.90,
-    categoria: 'Destaques',
-    imagem: ''
-  },
-  {
-    id: 3,
-    nome: 'PORTUGUESA',
-    descricao: 'Molho de tomate, presunto, ovo, cebola, pimentão e azeitona.',
-    valor: 44.90,
-    categoria: 'Pizza Salgada',
-    imagem: ''
-  },
-  {
-    id: 4,
-    nome: 'CALABRESA',
-    descricao: 'Molho de tomate, calabresa fatiada, cebola e orégano.',
-    valor: 39.90,
-    categoria: 'Pizza Salgada',
-    imagem: ''
-  },
-  {
-    id: 5,
-    nome: 'CHOCOLATE',
-    descricao: 'Chocolate ao leite, morango e granulado.',
-    valor: 38.90,
-    categoria: 'Pizza Doce',
-    imagem: ''
-  },
-];
-
-const PEDIDOS_MOCK: PedidoFornecedor[] = [
-  {
-    id: 1,
-    numero: '4210',
-    cliente: 'João Silva',
-    item: 'Pizza de Bacon + Azeitona',
-    descricaoItem: 'Molho de tomate, bacon, mussarela, alho, cebola e salsinha.',
-    pagamento: 'Pix',
-    endereco: 'Rua das Palmeiras, 102',
-    bairro: 'Centro',
-    total: 48.90,
-    status: 'preparo',
-    adicionais: [
-      { nome: 'Azeitona', valor: 2.00 },
-      { nome: 'Azeitona', valor: 2.00 },
-    ]
-  },
-  {
-    id: 2,
-    numero: '4211',
-    cliente: 'Maria Santos',
-    item: 'Pizza de Frango',
-    descricaoItem: 'Molho de tomate, frango desfiado, catupiry e orégano.',
-    pagamento: 'Cartão de Crédito',
-    endereco: 'Rua das Flores, 55',
-    bairro: 'Jardim',
-    total: 45.90,
-    status: 'recebido',
-    adicionais: []
-  },
-  {
-    id: 3,
-    numero: '4212',
-    cliente: 'Carlos Oliveira',
-    item: 'Pizza Portuguesa',
-    descricaoItem: 'Molho de tomate, presunto, ovo, cebola, pimentão e azeitona.',
-    pagamento: 'Dinheiro',
-    endereco: 'Av. Brasil, 200',
-    bairro: 'Centro',
-    total: 44.90,
-    status: 'caminho',
-    adicionais: []
-  },
-];
-
-const FATURAMENTO_MOCK: FaturamentoFornecedor = {
-  dia: 1250.00,
-  semana: 8640.00,
-  mes: 31780.00,
-};
-
-const CATEGORIAS_MOCK = ['Destaques', 'Pizza Salgada', 'Pizza Doce', 'Bebidas'];
-
 // ─── Service ─────────────────────────────────────────────────────────────────
 
+/**
+ * Delivery Fornecedor. Restaurante + cardápio integrados à API (DF-1).
+ * Pedidos e faturamento seguem mock até o DF-2.
+ */
 @Injectable({ providedIn: 'root' })
 export class FornecedorService {
+  private readonly api = inject(ApiService);
 
-  private cardapio: ItemCardapioFornecedor[] = [...CARDAPIO_MOCK];
-  private pedidos: PedidoFornecedor[] = [...PEDIDOS_MOCK];
+  // ── Restaurante (API) ─────────────────────────────────────────────────────
 
-  // ── Faturamento ───────────────────────────────────────────────────────────
-
-  getFaturamento(): FaturamentoFornecedor {
-    // Futuramente: return this.http.get<FaturamentoFornecedor>('/api/fornecedor/faturamento')
-    return FATURAMENTO_MOCK;
+  /** Restaurante do fornecedor — `GET /v1/restaurants/me` (null se ainda não existir). */
+  meuRestaurante(): Observable<ResponseRestaurantDto | null> {
+    return this.api.get<ResponseRestaurantDto>('/restaurants/me').pipe(catchError(() => of(null)));
   }
 
-  // ── Cardápio ──────────────────────────────────────────────────────────────
-
-  getCardapio(): ItemCardapioFornecedor[] {
-    // Futuramente: return this.http.get<ItemCardapioFornecedor[]>('/api/fornecedor/cardapio')
-    return this.cardapio;
+  /** Cria o restaurante — `POST /v1/restaurants`. */
+  criarRestaurante(dto: CreateRestaurantDto): Observable<CreateRestaurantResponseDto> {
+    return this.api.post<CreateRestaurantResponseDto>('/restaurants', dto);
   }
 
-  getItem(id: number): ItemCardapioFornecedor | undefined {
-    return this.cardapio.find(i => i.id === id);
+  /** Atualiza o restaurante — `PATCH /v1/restaurants/{id}`. */
+  atualizarRestaurante(id: number, dto: UpdateRestaurantDto): Observable<ResponseRestaurantDto> {
+    return this.api.patch<ResponseRestaurantDto>(`/restaurants/${id}`, dto);
   }
 
-  getCategorias(): string[] {
-    // Futuramente: return this.http.get<string[]>('/api/fornecedor/categorias')
-    return CATEGORIAS_MOCK;
+  /** Abre/fecha a loja — `PATCH /v1/restaurants/{id}` `{isOpen}`. */
+  definirAberto(id: number, isOpen: boolean): Observable<ResponseRestaurantDto> {
+    return this.atualizarRestaurante(id, { isOpen });
   }
 
-  salvarItem(item: Partial<ItemCardapioFornecedor>): void {
-    // Futuramente: return this.http.post('/api/fornecedor/cardapio', item)
-    if (item.id) {
-      const index = this.cardapio.findIndex(i => i.id === item.id);
-      if (index >= 0) this.cardapio[index] = { ...this.cardapio[index], ...item };
-    } else {
-      const novoItem: ItemCardapioFornecedor = {
-        id: this.cardapio.length + 1,
-        nome: item.nome ?? '',
-        descricao: item.descricao ?? '',
-        valor: item.valor ?? 0,
-        categoria: item.categoria ?? '',
-        imagem: item.imagem ?? '',
+  // ── Cardápio (API) ────────────────────────────────────────────────────────
+
+  /** Itens do cardápio (achatados a partir do restaurante). */
+  getCardapio(): Observable<ItemCardapioFornecedor[]> {
+    return this.meuRestaurante().pipe(map((r) => (r ? this.itensDe(r) : [])));
+  }
+
+  /** Categorias do cardápio do restaurante. */
+  getCategorias(): Observable<CategoriaCardapioFornecedor[]> {
+    return this.meuRestaurante().pipe(
+      map((r) => (r?.menuCategories ?? []).map((c) => ({ id: c.id, nome: c.name }))),
+    );
+  }
+
+  getItem(id: number): Observable<ItemCardapioFornecedor | undefined> {
+    return this.getCardapio().pipe(map((lista) => lista.find((i) => i.id === id)));
+  }
+
+  /** Cria uma categoria de cardápio — `POST /v1/restaurants/menu-categories`. */
+  criarCategoria(dto: CreateMenuCategoryDto): Observable<ResponseMenuCategoryDto> {
+    return this.api.post<ResponseMenuCategoryDto>('/restaurants/menu-categories', dto);
+  }
+
+  /** Cria/edita um item — `POST`/`PATCH /v1/restaurants/menu-items`. */
+  salvarItem(input: SalvarItemInput): Observable<unknown> {
+    if (input.id) {
+      const dto: UpdateMenuItemDto = {
+        name: input.nome,
+        description: input.descricao,
+        price: input.valor,
+        menuCategoryId: input.categoriaId,
+        imageUrl: input.imagem || undefined,
       };
-      this.cardapio.push(novoItem);
+      return this.api.patch(`/restaurants/menu-items/${input.id}`, dto);
+    }
+    const dto: CreateMenuItemDto = {
+      name: input.nome,
+      description: input.descricao,
+      price: input.valor,
+      menuCategoryId: input.categoriaId,
+      imageUrl: input.imagem || undefined,
+    };
+    return this.api.post('/restaurants/menu-items', dto);
+  }
+
+  /** Desativa um item (soft-delete) — `PATCH /v1/restaurants/menu-items/{id}` `{isActive:false}`. */
+  desativarItem(id: number): Observable<unknown> {
+    return this.api.patch(`/restaurants/menu-items/${id}`, { isActive: false });
+  }
+
+  /** Achata `menuCategories→items` (ativos) do restaurante em view-models. */
+  itensDe(r: ResponseRestaurantDto): ItemCardapioFornecedor[] {
+    return (r.menuCategories ?? []).flatMap((c) =>
+      (c.items ?? [])
+        .filter((i) => i.isActive)
+        .map((i) => ({
+          id: i.id,
+          nome: i.name,
+          descricao: i.description ?? '',
+          valor: Number(i.price),
+          categoria: c.name,
+          categoriaId: c.id,
+          imagem: i.imageUrl ?? '',
+        })),
+    );
+  }
+
+  // ── Pedidos recebidos (API) ─────────────────────────────────────────────────
+
+  /** Payout/repasse do restaurante — `GET /v1/restaurants/me/payouts`. */
+  getPayout(): Observable<ResponseRestaurantPayoutDto> {
+    return this.api.get<ResponseRestaurantPayoutDto>('/restaurants/me/payouts');
+  }
+
+  /** Pedidos recebidos pelo restaurante — `GET /v1/food-orders` (view-model). */
+  getPedidosRecebidos(status?: FoodOrderStatus): Observable<PedidoFornecedor[]> {
+    return this.api
+      .get<ResponseFindAllFoodOrderDto>('/food-orders', { status: status ?? null, take: 50 })
+      .pipe(map((res) => (res.foodOrders ?? []).map((o) => this.mapPedido(o))));
+  }
+
+  /** Detalhe do pedido — `GET /v1/food-orders/{id}`. */
+  getPedidoRecebido(id: number): Observable<ResponseFoodOrderDto> {
+    return this.api.get<ResponseFoodOrderDto>(`/food-orders/${id}`);
+  }
+
+  /** Aceita ou recusa um pedido — `PATCH /v1/food-orders/{id}/respond`. */
+  responderPedido(id: number, status: 'Accepted' | 'Cancelled'): Observable<ResponseFoodOrderDto> {
+    return this.api.patch<ResponseFoodOrderDto>(`/food-orders/${id}/respond`, { status });
+  }
+
+  /** Marca o pedido como em preparo — `PATCH /v1/food-orders/{id}/preparing`. */
+  marcarPreparo(id: number): Observable<ResponseFoodOrderDto> {
+    return this.api.patch<ResponseFoodOrderDto>(`/food-orders/${id}/preparing`, {});
+  }
+
+  private mapPedido(o: ResponseFoodOrderDto): PedidoFornecedor {
+    const primeiro = o.items?.[0];
+    const extras = (o.items?.length ?? 0) - 1;
+    return {
+      id: o.id,
+      numero: String(o.id),
+      cliente: o.customer?.name ?? '',
+      item: primeiro ? `${primeiro.name}${extras > 0 ? ` +${extras}` : ''}` : '',
+      descricaoItem: primeiro?.notes ?? '',
+      pagamento: this.pagamentoLabel(o.paymentMethod),
+      endereco: '',
+      bairro: '',
+      total: Number(o.totalValue),
+      status: this.statusPt(o.status),
+      adicionais: [],
+    };
+  }
+
+  private statusPt(status: FoodOrderStatus): StatusPedidoFornecedor {
+    switch (status) {
+      case 'Preparing':
+        return 'preparo';
+      case 'OnTheWay':
+        return 'caminho';
+      case 'Delivered':
+        return 'entregue';
+      case 'Cancelled':
+        return 'cancelado';
+      default:
+        return 'recebido'; // Received / Accepted
     }
   }
 
-  removerItem(id: number): void {
-    // Futuramente: return this.http.delete(`/api/fornecedor/cardapio/${id}`)
-    this.cardapio = this.cardapio.filter(i => i.id !== id);
-  }
-
-  // ── Pedidos ───────────────────────────────────────────────────────────────
-
-  getPedidos(): PedidoFornecedor[] {
-    // Futuramente: return this.http.get<PedidoFornecedor[]>('/api/fornecedor/pedidos')
-    return this.pedidos;
-  }
-
-  getPedido(id: number): PedidoFornecedor | undefined {
-    // Futuramente: return this.http.get<PedidoFornecedor>(`/api/fornecedor/pedidos/${id}`)
-    return this.pedidos.find(p => p.id === id);
-  }
-
-  atualizarStatus(id: number, status: StatusPedidoFornecedor): void {
-    // Futuramente: return this.http.patch(`/api/fornecedor/pedidos/${id}`, { status })
-    const pedido = this.pedidos.find(p => p.id === id);
-    if (pedido) pedido.status = status;
+  private pagamentoLabel(metodo: PaymentMethod): string {
+    if (metodo === 'Pix') return 'PIX';
+    if (metodo === 'BankSlip') return 'Boleto';
+    return 'Cartão de Crédito';
   }
 
   formatarPreco(valor: number): string {

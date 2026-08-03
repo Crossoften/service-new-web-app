@@ -1,114 +1,91 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../../core/services/auth';
+import { SocialNetwork } from '../../../core/models/enums';
+import { CreateUserSocialMediaDto, Perfil, RegisterBaseDto } from '../../../core/models/auth';
+import { ApiError } from '../../../core/models/common';
 
-export type Perfil = 'cliente' | 'fornecedor' | 'parceiro' | 'entregador';
-
+/**
+ * Fluxo de cadastro por perfil, integrado à API.
+ * Todos os perfis: Dados → Senha → register → Sucesso → Login.
+ *
+ * A assinatura do fornecedor (planos/`subscriptions`) foi movida para um passo
+ * **pós-login** (onboarding), evitando login automático frágil no cadastro.
+ * (A etapa de SMS não existe no web — o verify-code é exclusivo do mobile.)
+ */
 @Component({
   selector: 'app-cadastro',
   imports: [CommonModule, FormsModule],
   templateUrl: './cadastro.html',
-  styleUrl: './cadastro.scss'
+  styleUrl: './cadastro.scss',
 })
 export class CadastroComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
+
   perfil: Perfil = 'cliente';
-  step: number = 1;
+  step = 1;
 
-  // Step 1 - Dados
-  nome: string = '';
-  telefone: string = '';
-  codigo: string = '';
-  termosAceitos: boolean = false;
+  // Step 1 — Dados
+  nome = '';
+  email = '';
+  telefone = '';
+  codigo = ''; // → inviteCode (opcional)
+  termosAceitos = false;
 
-  // Step 1 - Parceiro (redes sociais)
-  instagram: string = '';
-  facebook: string = '';
-  youtube: string = '';
-  twitter: string = '';
-  site: string = '';
+  // Step 1 — Parceiro (redes sociais)
+  instagram = '';
+  facebook = '';
+  youtube = '';
+  twitter = '';
+  site = '';
 
-  // Step 2 - SMS
-  sms: string[] = ['', '', '', ''];
+  // Step 2 — Senha
+  senha = '';
+  confirmarSenha = '';
+  senhaVisivel = false;
+  confirmarSenhaVisivel = false;
 
-  // Step 3 - Senha
-  senha: string = '';
-  confirmarSenha: string = '';
-  senhaVisivel: boolean = false;
-  confirmarSenhaVisivel: boolean = false;
+  // Step 3 — Código de verificação (verify-code, enviado por email)
+  codigoVerificacao = '';
 
-  // Step 4 - Planos (fornecedor)
-  planoSelecionado: string = 'mensal';
-  planos = [
-    { id: 'mensal',     label: 'Plano mensal',    preco: 'R$ 39,90/Mês' },
-    { id: 'trimestral', label: 'Plano trimestral', preco: 'R$ 99,90' },
-    { id: 'anual',      label: 'Plano anual',      preco: 'R$ 112,50' },
-  ];
-  beneficios = ['Benefício 1', 'Benefício 2', 'Benefício 3', 'Benefício 4'];
-
-  // Step 6 - Cartão (fornecedor)
-  nomeCartao: string = '';
-  numeroCartao: string = '';
-  validadeCartao: string = '';
-  ccv: string = '';
-
-  erro: string = '';
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router
-  ) {}
+  erro = '';
+  carregando = false;
 
   ngOnInit() {
     this.perfil = (this.route.snapshot.paramMap.get('perfil') ?? 'cliente') as Perfil;
   }
 
   get tituloPasso(): string {
-    const titulos: Record<number, string> = {
-      1: 'CADASTRO',
-      2: 'CADASTRO',
-      3: 'CADASTRO',
-      4: 'PLANOS',
-      5: 'PLANOS',
-      6: 'PLANOS',
-    };
-    return titulos[this.step] ?? 'CADASTRO';
+    return 'CADASTRO';
   }
 
   formatarTelefone(event: Event) {
     let valor = (event.target as HTMLInputElement).value.replace(/\D/g, '');
     if (valor.length > 11) valor = valor.slice(0, 11);
     if (valor.length > 6) {
-      valor = `(${valor.slice(0,2)}) ${valor.slice(2,7)}-${valor.slice(7)}`;
+      valor = `(${valor.slice(0, 2)}) ${valor.slice(2, 7)}-${valor.slice(7)}`;
     } else if (valor.length > 2) {
-      valor = `(${valor.slice(0,2)}) ${valor.slice(2)}`;
+      valor = `(${valor.slice(0, 2)}) ${valor.slice(2)}`;
     } else if (valor.length > 0) {
       valor = `(${valor}`;
     }
     this.telefone = valor;
   }
 
-  onSmsInput(event: Event, index: number) {
-    const valor = (event.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 1);
-    this.sms[index] = valor;
-    if (valor && index < 3) {
-      const next = document.getElementById(`sms-${index + 1}`);
-      next?.focus();
-    }
+  toggleSenha() {
+    this.senhaVisivel = !this.senhaVisivel;
   }
 
-  toggleSenha() { this.senhaVisivel = !this.senhaVisivel; }
-  toggleConfirmarSenha() { this.confirmarSenhaVisivel = !this.confirmarSenhaVisivel; }
-
-  adicionarCartao() {
-    this.step = 6;
+  toggleConfirmarSenha() {
+    this.confirmarSenhaVisivel = !this.confirmarSenhaVisivel;
   }
 
   voltar() {
-    if (this.step === 6) {
-      this.step = 5;
-      return;
-    }
+    if (this.carregando) return;
     if (this.step > 1) {
       this.step--;
     } else {
@@ -117,45 +94,120 @@ export class CadastroComponent implements OnInit {
   }
 
   continuar() {
+    if (this.carregando) return;
     this.erro = '';
 
     if (this.step === 1) {
-      if (!this.nome.trim()) { this.erro = 'Informe seu nome.'; return; }
-      if (this.telefone.replace(/\D/g, '').length < 10) { this.erro = 'Informe um telefone válido.'; return; }
-      if (!this.termosAceitos) { this.erro = 'Aceite os termos para continuar.'; return; }
+      if (!this.nome.trim()) {
+        this.erro = 'Informe seu nome.';
+        return;
+      }
+      if (!this.email.trim().includes('@')) {
+        this.erro = 'Informe um email válido.';
+        return;
+      }
+      const phone = this.telefone.replace(/\D/g, '');
+      if (phone.length < 10 || phone.length > 11) {
+        this.erro = 'Informe um telefone válido no formato brasileiro.';
+        return;
+      }
+      if (!this.termosAceitos) {
+        this.erro = 'Aceite os termos para continuar.';
+        return;
+      }
       this.step = 2;
       return;
     }
 
     if (this.step === 2) {
-      if (this.sms.some(d => !d)) { this.erro = 'Informe o código completo.'; return; }
-      this.step = 3;
+      if (this.senha.length < 8) {
+        this.erro = 'A senha deve ter no mínimo 8 caracteres.';
+        return;
+      }
+      if (this.senha !== this.confirmarSenha) {
+        this.erro = 'As senhas não conferem.';
+        return;
+      }
+      this.submitCadastro();
       return;
     }
 
     if (this.step === 3) {
-      if (this.senha.length < 6) { this.erro = 'A senha deve ter no mínimo 6 caracteres.'; return; }
-      if (this.senha !== this.confirmarSenha) { this.erro = 'As senhas não conferem.'; return; }
-      if (this.perfil === 'fornecedor') { this.step = 4; return; }
-      this.router.navigate(['/cadastro/sucesso']);
+      this.verificarCodigo();
       return;
     }
+  }
 
-    if (this.step === 4) {
-      this.step = 5;
-      return;
-    }
+  // ── Integração ────────────────────────────────────────────────────────────
 
-    if (this.step === 5) {
-      this.router.navigate(['/cadastro/sucesso']);
-      return;
-    }
+  private submitCadastro() {
+    this.carregando = true;
+    this.auth.register(this.perfil, this.buildRegisterDto()).subscribe({
+      next: () => {
+        this.carregando = false;
+        // Conta criada (status Pending) + código enviado por email → etapa de verificação.
+        this.step = 3;
+      },
+      error: (err: ApiError) => {
+        this.carregando = false;
+        this.erro = this.msg(err, 'Não foi possível concluir o cadastro.');
+      },
+    });
+  }
 
-    if (this.step === 6) {
-      if (!this.nomeCartao.trim()) { this.erro = 'Informe o nome do titular.'; return; }
-      if (this.numeroCartao.replace(/\D/g, '').length < 16) { this.erro = 'Informe um número de cartão válido.'; return; }
-      this.step = 5;
+  /** Confirma a conta com o código recebido por email — `POST /no-auth/verify-code`. */
+  private verificarCodigo() {
+    const code = this.codigoVerificacao.trim();
+    if (!code) {
+      this.erro = 'Informe o código enviado ao seu email.';
       return;
     }
+    this.carregando = true;
+    this.auth.verifyCode({ code }).subscribe({
+      next: () => {
+        this.carregando = false;
+        this.router.navigate(['/cadastro/sucesso']);
+      },
+      error: (err: ApiError) => {
+        this.carregando = false;
+        this.erro = this.msg(err, 'Código inválido. Verifique e tente novamente.');
+      },
+    });
+  }
+
+  private buildRegisterDto(): RegisterBaseDto {
+    const dto: RegisterBaseDto = {
+      name: this.nome.trim(),
+      email: this.email.trim(),
+      password: this.senha,
+      confirmPassword: this.confirmarSenha,
+      acceptedTerms: this.termosAceitos,
+    };
+    const phone = this.telefone.replace(/\D/g, '');
+    if (phone) dto.phone = phone;
+    const invite = this.codigo.trim();
+    if (invite) dto.inviteCode = invite;
+    if (this.perfil === 'parceiro') {
+      const socialMedias = this.buildSocialMedias();
+      if (socialMedias.length) dto.socialMedias = socialMedias;
+    }
+    return dto;
+  }
+
+  private buildSocialMedias(): CreateUserSocialMediaDto[] {
+    const fontes: { url: string; network: SocialNetwork }[] = [
+      { url: this.instagram, network: 'Instagram' },
+      { url: this.facebook, network: 'Facebook' },
+      { url: this.youtube, network: 'YouTube' },
+      { url: this.twitter, network: 'X' },
+      { url: this.site, network: 'Other' },
+    ];
+    return fontes
+      .filter((f) => f.url.trim())
+      .map((f) => ({ network: f.network, url: f.url.trim() }));
+  }
+
+  private msg(err: ApiError, fallback: string): string {
+    return err?.message?.trim() ? err.message : fallback;
   }
 }

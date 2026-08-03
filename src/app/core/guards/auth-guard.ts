@@ -4,9 +4,7 @@ import { SessionService } from '../services/session';
 
 /**
  * Bloqueia rotas privadas: exige sessão autenticada, senão redireciona ao login.
- *
- * NOTA: ainda não está aplicado às rotas (app.routes.ts) — será conectado no
- * módulo de Auth, quando o login real passar a popular a SessionService.
+ * Aplicado às rotas privadas em `app.routes.ts` (Auth Slice 3).
  */
 export const authGuard: CanActivateFn = () => {
   const session = inject(SessionService);

@@ -1,77 +1,138 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { StatusPedido } from '../../../../core/services/delivery';
+import { Subject, Subscription, switchMap, takeUntil, timer } from 'rxjs';
+import { DeliveryService } from '../../../../core/services/delivery';
+import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../../core/models/food-order';
+import { ApiError } from '../../../../core/models/common';
 
 interface EtapaStatus {
-  id: StatusPedido;
+  id: string;
   label: string;
 }
+
+const POLL_MS = 8000;
+
+/** Índice da etapa (0..3) por status da API. `Cancelled` é tratado à parte. */
+const STATUS_INDEX: Record<FoodOrderStatus, number> = {
+  Received: 0,
+  Accepted: 0,
+  Preparing: 1,
+  OnTheWay: 2,
+  Delivered: 3,
+  Cancelled: 0,
+};
 
 @Component({
   selector: 'app-status-pedido',
   imports: [CommonModule],
   templateUrl: './status-pedido.html',
-  styleUrl: './status-pedido.scss'
+  styleUrl: './status-pedido.scss',
 })
 export class StatusPedidoComponent implements OnInit, OnDestroy {
-  pedidoId: number = 0;
-  statusAtual: StatusPedido = 'recebido';
-  private intervalo?: ReturnType<typeof setInterval>;
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly deliveryService = inject(DeliveryService);
+
+  private readonly destroy$ = new Subject<void>();
+  private pollSub?: Subscription;
+
+  pedidoId = 0;
+  pedido?: ResponseFoodOrderDto;
+  carregando = true;
+  erro = '';
+  cancelando = false;
 
   etapas: EtapaStatus[] = [
     { id: 'recebido', label: 'Pedido recebido' },
-    { id: 'preparo',  label: 'Em preparo' },
-    { id: 'caminho',  label: 'A caminho' },
+    { id: 'preparo', label: 'Em preparo' },
+    { id: 'caminho', label: 'A caminho' },
     { id: 'entregue', label: 'Entregue' },
   ];
 
-  endereco = 'Rua tuiucue, 122';
-  bairro = 'Jardim da Saúde';
-
-  // Mock de dados do pedido para exibição
-  restauranteNome = 'Pizzaria Bella Itália';
-  restauranteAvaliacao = 4.7;
-  restauranteTempo = '35-45 min';
-  restauranteTaxaEntrega = 4.99;
-  restauranteDescricao = 'Pizzas artesanais feitas no forno a lenha com massa crocante';
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router
-  ) {}
-
   ngOnInit() {
     this.pedidoId = Number(this.route.snapshot.paramMap.get('id'));
-    this.simularProgresso();
+    this.iniciarPolling();
   }
 
   ngOnDestroy() {
-    if (this.intervalo) clearInterval(this.intervalo);
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private iniciarPolling() {
+    this.pollSub = timer(0, POLL_MS)
+      .pipe(
+        switchMap(() => this.deliveryService.getPedido(this.pedidoId)),
+        takeUntil(this.destroy$),
+      )
+      .subscribe({
+        next: (p) => {
+          this.carregando = false;
+          this.pedido = p;
+          if (this.finalizado) {
+            this.pollSub?.unsubscribe();
+          }
+        },
+        error: (err: ApiError) => {
+          this.carregando = false;
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o pedido.';
+        },
+      });
+  }
+
+  get status(): FoodOrderStatus | undefined {
+    return this.pedido?.status;
+  }
+
+  get cancelado(): boolean {
+    return this.status === 'Cancelled';
+  }
+
+  get finalizado(): boolean {
+    return this.status === 'Delivered' || this.status === 'Cancelled';
   }
 
   get indexAtual(): number {
-    return this.etapas.findIndex(e => e.id === this.statusAtual);
+    return this.status ? STATUS_INDEX[this.status] : 0;
   }
 
   get labelAtual(): string {
-    return this.etapas.find(e => e.id === this.statusAtual)?.label ?? '';
-  }
-
-  simularProgresso() {
-    // Simula mudança de status a cada 5 segundos para demo
-    this.intervalo = setInterval(() => {
-      const index = this.indexAtual;
-      if (index < this.etapas.length - 1) {
-        this.statusAtual = this.etapas[index + 1].id;
-      } else {
-        clearInterval(this.intervalo);
-      }
-    }, 5000);
+    if (this.cancelado) return 'Pedido cancelado';
+    return this.etapas[this.indexAtual]?.label ?? '';
   }
 
   etapaAtingida(index: number): boolean {
-    return index <= this.indexAtual;
+    return !this.cancelado && index <= this.indexAtual;
+  }
+
+  get podeCancelar(): boolean {
+    return this.status === 'Received' || this.status === 'Accepted' || this.status === 'Preparing';
+  }
+
+  get rastreando(): boolean {
+    return this.status === 'OnTheWay' && !!this.pedido?.delivery?.currentLat;
+  }
+
+  cancelar() {
+    if (this.cancelando || !this.podeCancelar) return;
+    this.cancelando = true;
+    this.erro = '';
+    this.deliveryService.cancelarPedido(this.pedidoId, 'Cancelado pelo cliente').subscribe({
+      next: (p) => {
+        this.cancelando = false;
+        this.pedido = p;
+        this.pollSub?.unsubscribe();
+      },
+      error: (err: ApiError) => {
+        this.cancelando = false;
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível cancelar o pedido.';
+      },
+    });
+  }
+
+  fmt(valor?: string): string {
+    return Number(valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
   ajuda() {

@@ -1,0 +1,49 @@
+<div class="rec-container">
+
+  <div class="rec-header">
+    <button class="rec-header__voltar" (click)="voltarLogin()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="rec-header__titulo">RECUPERAR SENHA</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="rec-content">
+
+    <h2 class="rec-titulo">Esqueceu a senha?</h2>
+    <p class="rec-descricao">Informe seu email e enviaremos um código para você redefinir a sua senha.</p>
+
+    <div class="rec-form">
+      <div class="rec-field">
+        <label>Email</label>
+        <div class="rec-field__input-wrapper">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="m22 7-10 6L2 7"/>
+          </svg>
+          <input
+            type="email"
+            placeholder="seu@email.com"
+            [(ngModel)]="email"
+            autocomplete="email"
+            inputmode="email"
+          />
+        </div>
+      </div>
+
+      @if (erro) {
+        <span class="rec-erro">{{ erro }}</span>
+      }
+    </div>
+
+  </div>
+
+  <div class="rec-actions">
+    <button class="rec-btn rec-btn--primary" (click)="enviar()" [disabled]="carregando">
+      {{ carregando ? 'ENVIANDO…' : 'ENVIAR CÓDIGO' }}
+    </button>
+  </div>
+
+</div>

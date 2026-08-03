@@ -127,7 +127,12 @@
 
   <!-- BOTÃO -->
   <div class="revisao-actions">
-    <button class="revisao-btn" (click)="finalizarPedido()">FINALIZAR PEDIDO</button>
+    @if (erro) {
+      <span class="revisao-erro">{{ erro }}</span>
+    }
+    <button class="revisao-btn" (click)="finalizarPedido()" [disabled]="enviando">
+      {{ enviando ? 'FINALIZANDO…' : 'FINALIZAR PEDIDO' }}
+    </button>
   </div>
 
 </div>

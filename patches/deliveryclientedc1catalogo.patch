@@ -1,0 +1,902 @@
+diff --git a/src/app/core/models/restaurant.ts b/src/app/core/models/restaurant.ts
+new file mode 100644
+index 0000000..354b2bc
+--- /dev/null
++++ b/src/app/core/models/restaurant.ts
+@@ -0,0 +1,66 @@
++/**
++ * DTOs de restaurante/cardápio (domínio Delivery), espelhando o Swagger.
++ * Observação: valores monetários (`price`) chegam como **string**.
++ *
++ * Campos marcados como (BE-D1) ainda **não** são retornados pela API — foram
++ * declarados opcionais para "ligar" automaticamente quando o back-end os incluir
++ * (avaliação, tempo estimado, logo e taxa fixa do restaurante).
++ */
++
++export interface ResponseRestaurantCategoryDto {
++  id: number;
++  name: string;
++  slug: string;
++  iconUrl?: string;
++}
++
++export interface ResponseMenuItemAdditionDto {
++  id: number;
++  name: string;
++  price: string;
++  isActive: boolean;
++}
++
++export interface ResponseMenuItemDto {
++  id: number;
++  name: string;
++  description?: string;
++  price: string;
++  imageUrl?: string;
++  isActive: boolean;
++  menuCategoryId: number;
++  additions?: ResponseMenuItemAdditionDto[];
++}
++
++export interface ResponseMenuCategoryDto {
++  id: number;
++  name: string;
++  sortOrder: number;
++  items?: ResponseMenuItemDto[];
++}
++
++export interface ResponseRestaurantDto {
++  id: number;
++  name: string;
++  description?: string;
++  imageUrl?: string;
++  isActive: boolean;
++  isOpen: boolean;
++  category: ResponseRestaurantCategoryDto;
++  userId: number;
++  menuCategories?: ResponseMenuCategoryDto[];
++  createdAt: string;
++  updatedAt: string;
++  // (BE-D1) ainda não retornados pela API:
++  rating?: number;
++  estimatedTime?: string;
++  logoUrl?: string;
++  deliveryFee?: number;
++}
++
++export interface ResponseFindAllRestaurantDto {
++  restaurants: ResponseRestaurantDto[];
++  currentPage: number;
++  totalPages: number;
++  totalRecords: number;
++}
+diff --git a/src/app/core/services/delivery.ts b/src/app/core/services/delivery.ts
+index cf17a05..21c75e8 100644
+--- a/src/app/core/services/delivery.ts
++++ b/src/app/core/services/delivery.ts
+@@ -1,16 +1,25 @@
+-import { Injectable } from '@angular/core';
+-
+-// ─── Interfaces (prontas para integração com API) ───────────────────────────
++import { Injectable, inject } from '@angular/core';
++import { Observable, map } from 'rxjs';
++import { ApiService } from './api';
++import {
++  ResponseFindAllRestaurantDto,
++  ResponseMenuCategoryDto,
++  ResponseMenuItemDto,
++  ResponseRestaurantCategoryDto,
++  ResponseRestaurantDto,
++} from '../models/restaurant';
++
++// ─── View-models do Front (pt) — populados a partir dos DTOs da API ─────────
+ 
+ export interface Adicional {
+-  id: number;
++  id: number; // = menuItemAddition.id (additionId)
+   nome: string;
+   preco: number;
+   selecionado?: boolean;
+ }
+ 
+ export interface ItemCardapio {
+-  id: number;
++  id: number; // = menuItem.id (menuItemId)
+   nome: string;
+   descricao: string;
+   preco: number;
+@@ -19,7 +28,7 @@ export interface ItemCardapio {
+ }
+ 
+ export interface CategoriaCardapio {
+-  id: number;
++  id: number; // = menuCategory.id
+   nome: string;
+   itens: ItemCardapio[];
+ }
+@@ -27,12 +36,12 @@ export interface CategoriaCardapio {
+ export interface Restaurante {
+   id: number;
+   nome: string;
+-  avaliacao: number;
+-  tempo: string;
+-  taxaEntrega: number;
++  avaliacao: number; // (BE-D1) 0 até o back retornar
++  tempo: string; // (BE-D1)
++  taxaEntrega: number; // (BE-D1)
+   descricao: string;
+   imagem: string;
+-  logo: string;
++  logo: string; // (BE-D1)
+   categorias: CategoriaCardapio[];
+ }
+ 
+@@ -48,7 +57,7 @@ export interface OpcaoEntrega {
+   preco: number;
+ }
+ 
+-export type FormaPagamento = 'credito' | 'debito' | 'pix' | 'dinheiro';
++export type FormaPagamento = 'credito' | 'pix';
+ 
+ export type StatusPedido = 'recebido' | 'preparo' | 'caminho' | 'entregue';
+ 
+@@ -65,143 +74,51 @@ export interface Pedido {
+   status: StatusPedido;
+ }
+ 
+-// ─── Mock Data ───────────────────────────────────────────────────────────────
+-
+-const ADICIONAIS_MOCK: Adicional[] = [
+-  { id: 1, nome: 'Azeitona', preco: 2.00 },
+-  { id: 2, nome: 'Cebola extra', preco: 2.00 },
+-  { id: 3, nome: 'Pimenta', preco: 2.00 },
+-  { id: 4, nome: 'Orégano extra', preco: 2.00 },
+-];
+-
+-const RESTAURANTES_MOCK: Restaurante[] = [
+-  {
+-    id: 1,
+-    nome: 'Pizzaria Bella Itália',
+-    avaliacao: 4.7,
+-    tempo: '35-45 min',
+-    taxaEntrega: 4.99,
+-    descricao: 'Pizzas artesanais feitas no forno a lenha com massa crocante',
+-    imagem: '',
+-    logo: '',
+-    categorias: [
+-      {
+-        id: 1,
+-        nome: 'Destaques',
+-        itens: [
+-          {
+-            id: 1,
+-            nome: 'BACON',
+-            descricao: 'Molho de tomate, bacon, mussarela, alho, cebola e salsinha.',
+-            preco: 42.90,
+-            imagem: '',
+-            adicionais: ADICIONAIS_MOCK
+-          },
+-          {
+-            id: 2,
+-            nome: 'FRANGO COM CATUPIRY',
+-            descricao: 'Molho de tomate, frango desfiado, catupiry e orégano.',
+-            preco: 45.90,
+-            imagem: '',
+-            adicionais: ADICIONAIS_MOCK
+-          },
+-          {
+-            id: 3,
+-            nome: 'PORTUGUESA',
+-            descricao: 'Molho de tomate, presunto, ovo, cebola, pimentão e azeitona.',
+-            preco: 44.90,
+-            imagem: '',
+-            adicionais: ADICIONAIS_MOCK
+-          },
+-        ]
+-      },
+-      {
+-        id: 2,
+-        nome: 'Pizza Salgada',
+-        itens: [
+-          {
+-            id: 4,
+-            nome: 'CALABRESA',
+-            descricao: 'Molho de tomate, calabresa fatiada, cebola e orégano.',
+-            preco: 39.90,
+-            imagem: '',
+-            adicionais: ADICIONAIS_MOCK
+-          },
+-        ]
+-      },
+-      {
+-        id: 3,
+-        nome: 'Pizza Doce',
+-        itens: [
+-          {
+-            id: 5,
+-            nome: 'CHOCOLATE',
+-            descricao: 'Chocolate ao leite, morango e granulado.',
+-            preco: 38.90,
+-            imagem: '',
+-            adicionais: []
+-          },
+-        ]
+-      },
+-    ]
+-  },
+-  {
+-    id: 2,
+-    nome: 'Pizzaria Bella Itália',
+-    avaliacao: 4.7,
+-    tempo: '35-45 min',
+-    taxaEntrega: 4.99,
+-    descricao: 'Pizzas artesanais feitas no forno a lenha com massa crocante',
+-    imagem: '',
+-    logo: '',
+-    categorias: []
+-  },
+-  {
+-    id: 3,
+-    nome: 'Pizzaria Bella Itália',
+-    avaliacao: 4.7,
+-    tempo: '35-45 min',
+-    taxaEntrega: 4.99,
+-    descricao: 'Pizzas artesanais feitas no forno a lenha com massa crocante',
+-    imagem: '',
+-    logo: '',
+-    categorias: []
+-  },
+-];
+-
+ export const OPCOES_ENTREGA: OpcaoEntrega[] = [
+   { id: 'padrao', nome: 'Padrão', preco: 0 },
+-  { id: 'express', nome: 'Express', preco: 20.00 },
++  { id: 'express', nome: 'Express', preco: 20.0 },
+ ];
+ 
+ // ─── Service ─────────────────────────────────────────────────────────────────
+ 
++/**
++ * Delivery Cliente. Catálogo integrado à API (DC-1); carrinho em memória.
++ * Checkout (`POST /food-orders`) e acompanhamento entram nas fatias DC-2/DC-3.
++ */
+ @Injectable({ providedIn: 'root' })
+ export class DeliveryService {
++  private readonly api = inject(ApiService);
+ 
+   // Pedido em construção (carrinho)
+   private pedidoAtual: Partial<Pedido> = {};
+ 
+-  // ── Restaurantes ──────────────────────────────────────────────────────────
++  // ── Catálogo (API) ──────────────────────────────────────────────────────
++
++  /** Categorias reais — `GET /v1/restaurants/categories`. */
++  getCategorias(): Observable<ResponseRestaurantCategoryDto[]> {
++    return this.api.get<ResponseRestaurantCategoryDto[]>('/restaurants/categories');
++  }
+ 
+-  getRestaurantes(categoria?: string): Restaurante[] {
+-    // Futuramente: return this.http.get<Restaurante[]>(`/api/delivery/restaurantes?categoria=${categoria}`)
+-    return RESTAURANTES_MOCK;
++  /** Restaurantes ativos (filtra por categoria) — `GET /v1/restaurants`. */
++  getRestaurantes(categoryId?: number): Observable<Restaurante[]> {
++    return this.api
++      .get<ResponseFindAllRestaurantDto>('/restaurants', { categoryId: categoryId ?? null, take: 50 })
++      .pipe(map((res) => (res.restaurants ?? []).map((r) => this.mapRestaurante(r))));
+   }
+ 
+-  getRestaurante(id: number): Restaurante | undefined {
+-    // Futuramente: return this.http.get<Restaurante>(`/api/delivery/restaurantes/${id}`)
+-    return RESTAURANTES_MOCK.find(r => r.id === id);
++  /** Restaurante + cardápio — `GET /v1/restaurants/{id}`. */
++  getRestaurante(id: number): Observable<Restaurante> {
++    return this.api.get<ResponseRestaurantDto>(`/restaurants/${id}`).pipe(map((r) => this.mapRestaurante(r)));
+   }
+ 
+-  getItem(restauranteId: number, itemId: number): ItemCardapio | undefined {
+-    const restaurante = this.getRestaurante(restauranteId);
+-    return restaurante?.categorias
+-      .flatMap(c => c.itens)
+-      .find(i => i.id === itemId);
++  /** Item específico dentro do cardápio do restaurante. */
++  getItem(restauranteId: number, itemId: number): Observable<ItemCardapio | undefined> {
++    return this.getRestaurante(restauranteId).pipe(
++      map((r) => r.categorias.flatMap((c) => c.itens).find((i) => i.id === itemId)),
++    );
+   }
+ 
+-  // ── Carrinho ──────────────────────────────────────────────────────────────
++  // ── Carrinho (memória) ────────────────────────────────────────────────────
+ 
+   setPedidoRestaurante(restaurante: Restaurante) {
+     this.pedidoAtual.restaurante = restaurante;
+@@ -240,10 +157,10 @@ export class DeliveryService {
+     return subtotal + frete;
+   }
+ 
++  /** DC-2 substitui por `POST /v1/food-orders`. Provisório (mock) para o fluxo não quebrar. */
+   finalizarPedido(): Pedido {
+-    // Futuramente: return this.http.post<Pedido>('/api/delivery/pedidos', this.pedidoAtual)
+     const pedido: Pedido = {
+-      id: Math.floor(Math.random() * 10000),
++      id: this.pedidoAtual.restaurante?.id ?? 0,
+       restaurante: this.pedidoAtual.restaurante!,
+       itens: this.pedidoAtual.itens ?? [],
+       endereco: this.pedidoAtual.endereco ?? '',
+@@ -251,10 +168,45 @@ export class DeliveryService {
+       opcaoEntrega: this.pedidoAtual.opcaoEntrega ?? OPCOES_ENTREGA[0],
+       formaPagamento: this.pedidoAtual.formaPagamento ?? 'credito',
+       total: this.calcularTotal(),
+-      data: new Date().toLocaleDateString('pt-BR'),
+-      status: 'recebido'
++      data: '',
++      status: 'recebido',
+     };
+     this.pedidoAtual = {};
+     return pedido;
+   }
+-}
+\ No newline at end of file
++
++  // ── Mapeadores API → view-model ───────────────────────────────────────────
++
++  private mapRestaurante(r: ResponseRestaurantDto): Restaurante {
++    return {
++      id: r.id,
++      nome: r.name,
++      avaliacao: r.rating ?? 0,
++      tempo: r.estimatedTime ?? '',
++      taxaEntrega: r.deliveryFee ?? 0,
++      descricao: r.description ?? '',
++      imagem: r.imageUrl ?? '',
++      logo: r.logoUrl ?? '',
++      categorias: [...(r.menuCategories ?? [])]
++        .sort((a, b) => a.sortOrder - b.sortOrder)
++        .map((c) => this.mapCategoria(c)),
++    };
++  }
++
++  private mapCategoria(c: ResponseMenuCategoryDto): CategoriaCardapio {
++    return { id: c.id, nome: c.name, itens: (c.items ?? []).map((i) => this.mapItem(i)) };
++  }
++
++  private mapItem(i: ResponseMenuItemDto): ItemCardapio {
++    return {
++      id: i.id,
++      nome: i.name,
++      descricao: i.description ?? '',
++      preco: Number(i.price),
++      imagem: i.imageUrl ?? '',
++      adicionais: (i.additions ?? [])
++        .filter((a) => a.isActive)
++        .map((a) => ({ id: a.id, nome: a.name, preco: Number(a.price) })),
++    };
++  }
++}
+diff --git a/src/app/features/private/categoria-delivery/categoria-delivery.spec.ts b/src/app/features/private/categoria-delivery/categoria-delivery.spec.ts
+index 1420df2..ff7d540 100644
+--- a/src/app/features/private/categoria-delivery/categoria-delivery.spec.ts
++++ b/src/app/features/private/categoria-delivery/categoria-delivery.spec.ts
+@@ -1,17 +1,21 @@
+ import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
+ 
+-import { CategoriaDelivery } from './categoria-delivery';
++import { CategoriaDeliveryComponent } from './categoria-delivery';
+ 
+-describe('CategoriaDelivery', () => {
+-  let component: CategoriaDelivery;
+-  let fixture: ComponentFixture<CategoriaDelivery>;
++describe('CategoriaDeliveryComponent', () => {
++  let component: CategoriaDeliveryComponent;
++  let fixture: ComponentFixture<CategoriaDeliveryComponent>;
+ 
+   beforeEach(async () => {
+     await TestBed.configureTestingModule({
+-      imports: [CategoriaDelivery],
++      imports: [CategoriaDeliveryComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+     }).compileComponents();
+ 
+-    fixture = TestBed.createComponent(CategoriaDelivery);
++    fixture = TestBed.createComponent(CategoriaDeliveryComponent);
+     component = fixture.componentInstance;
+     await fixture.whenStable();
+   });
+diff --git a/src/app/features/private/categoria-delivery/categoria-delivery.ts b/src/app/features/private/categoria-delivery/categoria-delivery.ts
+index 4bd31fa..e5b0fe2 100644
+--- a/src/app/features/private/categoria-delivery/categoria-delivery.ts
++++ b/src/app/features/private/categoria-delivery/categoria-delivery.ts
+@@ -1,40 +1,45 @@
+-import { Component } from '@angular/core';
++import { Component, OnInit, inject } from '@angular/core';
+ import { Router } from '@angular/router';
+ import { HeaderBuscaComponent } from '../../../shared/components/header-busca/header-busca';
+ import { CategoriaGridComponent, CategoriaItem } from '../../../shared/components/categoria-grid/categoria-grid';
++import { DeliveryService } from '../../../core/services/delivery';
++import { ResponseRestaurantCategoryDto } from '../../../core/models/restaurant';
++import { ApiError } from '../../../core/models/common';
+ 
+ @Component({
+   selector: 'app-categoria-delivery',
+   imports: [HeaderBuscaComponent, CategoriaGridComponent],
+   templateUrl: './categoria-delivery.html',
+-  styleUrl: './categoria-delivery.scss'
++  styleUrl: './categoria-delivery.scss',
+ })
+-export class CategoriaDeliveryComponent {
++export class CategoriaDeliveryComponent implements OnInit {
++  private readonly router = inject(Router);
++  private readonly deliveryService = inject(DeliveryService);
+ 
+-  items: CategoriaItem[] = [
+-    { label: 'Lanches',        icon: 'assets/categorias/delivery/lanches.png' },
+-    { label: 'Pizzas',         icon: 'assets/categorias/delivery/pizzas.png' },
+-    { label: 'Japonesa',       icon: 'assets/categorias/delivery/japonesa.png' },
+-    { label: 'Chinesa',        icon: 'assets/categorias/delivery/chinesa.png' },
+-    { label: 'Brasileira',     icon: 'assets/categorias/delivery/brasileira.png' },
+-    { label: 'Marmitas',       icon: 'assets/categorias/delivery/marmitas.png' },
+-    { label: 'Saudável / Fit', icon: 'assets/categorias/delivery/saudavel.png' },
+-    { label: 'Vegetariana',    icon: 'assets/categorias/delivery/vegetariana.png' },
+-    { label: 'Massas',         icon: 'assets/categorias/delivery/massas.png' },
+-    { label: 'Sobremesas',     icon: 'assets/categorias/delivery/sobremesas.png' },
+-    { label: 'Cafeterias',     icon: 'assets/categorias/delivery/cafeterias.png' },
+-    { label: 'Padarias',       icon: 'assets/categorias/delivery/padarias.png' },
+-    { label: 'Churrasco',      icon: 'assets/categorias/delivery/churrasco.png' },
+-    { label: 'Frutos do Mar',  icon: 'assets/categorias/delivery/frutos-do-mar.png' },
+-    { label: 'Mexicana',       icon: 'assets/categorias/delivery/mexicana.png' },
+-    { label: 'Árabe',          icon: 'assets/categorias/delivery/arabe.png' },
+-    { label: 'Doces e Bolos',  icon: 'assets/categorias/delivery/doces-e-bolos.png' },
+-    { label: 'Bebida e Suco',  icon: 'assets/categorias/delivery/bebida-e-suco.png' },
+-  ];
++  categorias: ResponseRestaurantCategoryDto[] = [];
++  items: CategoriaItem[] = [];
++  carregando = false;
++  erro = '';
+ 
+-  constructor(private router: Router) {}
++  ngOnInit() {
++    this.carregando = true;
++    this.deliveryService.getCategorias().subscribe({
++      next: (cats) => {
++        this.carregando = false;
++        this.categorias = cats ?? [];
++        this.items = this.categorias.map((c) => ({ label: c.name, icon: c.iconUrl ?? '' }));
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar as categorias.';
++      },
++    });
++  }
+ 
+   onItemSelecionado(item: CategoriaItem) {
+-    this.router.navigate(['/delivery/listagem', item.label.toLowerCase()]);
++    const cat = this.categorias.find((c) => c.name === item.label);
++    if (cat) {
++      this.router.navigate(['/delivery/listagem', cat.id]);
++    }
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/app/features/private/delivery/cardapio-item/cardapio-item.spec.ts b/src/app/features/private/delivery/cardapio-item/cardapio-item.spec.ts
+index 107f7eb..5e8bf18 100644
+--- a/src/app/features/private/delivery/cardapio-item/cardapio-item.spec.ts
++++ b/src/app/features/private/delivery/cardapio-item/cardapio-item.spec.ts
+@@ -1,17 +1,21 @@
+ import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
+ 
+-import { CardapioItem } from './cardapio-item';
++import { CardapioItemComponent } from './cardapio-item';
+ 
+-describe('CardapioItem', () => {
+-  let component: CardapioItem;
+-  let fixture: ComponentFixture<CardapioItem>;
++describe('CardapioItemComponent', () => {
++  let component: CardapioItemComponent;
++  let fixture: ComponentFixture<CardapioItemComponent>;
+ 
+   beforeEach(async () => {
+     await TestBed.configureTestingModule({
+-      imports: [CardapioItem],
++      imports: [CardapioItemComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+     }).compileComponents();
+ 
+-    fixture = TestBed.createComponent(CardapioItem);
++    fixture = TestBed.createComponent(CardapioItemComponent);
+     component = fixture.componentInstance;
+     await fixture.whenStable();
+   });
+diff --git a/src/app/features/private/delivery/cardapio-item/cardapio-item.ts b/src/app/features/private/delivery/cardapio-item/cardapio-item.ts
+index ace60ad..9c60980 100644
+--- a/src/app/features/private/delivery/cardapio-item/cardapio-item.ts
++++ b/src/app/features/private/delivery/cardapio-item/cardapio-item.ts
+@@ -1,31 +1,42 @@
+-import { Component, OnInit } from '@angular/core';
++import { Component, OnInit, inject } from '@angular/core';
+ import { ActivatedRoute, Router } from '@angular/router';
+ import { CommonModule } from '@angular/common';
+ import { DeliveryService, ItemCardapio, Adicional } from '../../../../core/services/delivery';
++import { ApiError } from '../../../../core/models/common';
+ 
+ @Component({
+   selector: 'app-cardapio-item',
+   imports: [CommonModule],
+   templateUrl: './cardapio-item.html',
+-  styleUrl: './cardapio-item.scss'
++  styleUrl: './cardapio-item.scss',
+ })
+ export class CardapioItemComponent implements OnInit {
++  private readonly route = inject(ActivatedRoute);
++  private readonly router = inject(Router);
++  private readonly deliveryService = inject(DeliveryService);
++
+   item?: ItemCardapio;
+-  restauranteId?: number;
+-  quantidade: number = 1;
++  restauranteId = 0;
++  quantidade = 1;
+   adicionais: Adicional[] = [];
+-
+-  constructor(
+-    private route: ActivatedRoute,
+-    private router: Router,
+-    private deliveryService: DeliveryService
+-  ) {}
++  carregando = false;
++  erro = '';
+ 
+   ngOnInit() {
+     const itemId = Number(this.route.snapshot.paramMap.get('id'));
+     this.restauranteId = Number(this.route.snapshot.queryParamMap.get('restauranteId'));
+-    this.item = this.deliveryService.getItem(this.restauranteId, itemId);
+-    this.adicionais = this.item?.adicionais.map(a => ({ ...a, selecionado: false })) ?? [];
++    this.carregando = true;
++    this.deliveryService.getItem(this.restauranteId, itemId).subscribe({
++      next: (item) => {
++        this.carregando = false;
++        this.item = item;
++        this.adicionais = item?.adicionais.map((a) => ({ ...a, selecionado: false })) ?? [];
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o item.';
++      },
++    });
+   }
+ 
+   toggleAdicional(adicional: Adicional) {
+@@ -41,15 +52,14 @@ export class CardapioItemComponent implements OnInit {
+   }
+ 
+   get totalPreco(): number {
+-    const extras = this.adicionais
+-      .filter(a => a.selecionado)
+-      .reduce((acc, a) => acc + a.preco, 0);
++    const extras = this.adicionais.filter((a) => a.selecionado).reduce((acc, a) => acc + a.preco, 0);
+     return ((this.item?.preco ?? 0) + extras) * this.quantidade;
+   }
+ 
+   adicionar() {
+-    const selecionados = this.adicionais.filter(a => a.selecionado);
+-    this.deliveryService.addItem(this.item!, this.quantidade, selecionados);
++    if (!this.item) return;
++    const selecionados = this.adicionais.filter((a) => a.selecionado);
++    this.deliveryService.addItem(this.item, this.quantidade, selecionados);
+     this.router.navigate(['/delivery/sacola']);
+   }
+ 
+@@ -64,4 +74,4 @@ export class CardapioItemComponent implements OnInit {
+   formatarPreco(valor: number): string {
+     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/app/features/private/delivery/listagem-delivery/listagem-delivery.html b/src/app/features/private/delivery/listagem-delivery/listagem-delivery.html
+index c7a3cf4..cc3d8ac 100644
+--- a/src/app/features/private/delivery/listagem-delivery/listagem-delivery.html
++++ b/src/app/features/private/delivery/listagem-delivery/listagem-delivery.html
+@@ -10,6 +10,12 @@
+   <div class="page-content">
+     <div class="listagem-delivery">
+ 
++      @if (carregando) {
++        <div class="listagem-delivery__vazio"><p>Carregando restaurantes…</p></div>
++      } @else if (erro) {
++        <div class="listagem-delivery__vazio"><p>{{ erro }}</p></div>
++      }
++
+       @for (restaurante of restaurantesFiltrados; track restaurante.id) {
+         <div class="restaurante-card" (click)="abrirRestaurante(restaurante)">
+ 
+@@ -44,7 +50,7 @@
+         </div>
+       }
+ 
+-      @if (restaurantesFiltrados.length === 0) {
++      @if (!carregando && !erro && restaurantesFiltrados.length === 0) {
+         <div class="listagem-delivery__vazio">
+           <p>Nenhum restaurante encontrado.</p>
+         </div>
+diff --git a/src/app/features/private/delivery/listagem-delivery/listagem-delivery.spec.ts b/src/app/features/private/delivery/listagem-delivery/listagem-delivery.spec.ts
+index 5a6fc9d..6357c29 100644
+--- a/src/app/features/private/delivery/listagem-delivery/listagem-delivery.spec.ts
++++ b/src/app/features/private/delivery/listagem-delivery/listagem-delivery.spec.ts
+@@ -1,17 +1,21 @@
+ import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
+ 
+-import { ListagemDelivery } from './listagem-delivery';
++import { ListagemDeliveryComponent } from './listagem-delivery';
+ 
+-describe('ListagemDelivery', () => {
+-  let component: ListagemDelivery;
+-  let fixture: ComponentFixture<ListagemDelivery>;
++describe('ListagemDeliveryComponent', () => {
++  let component: ListagemDeliveryComponent;
++  let fixture: ComponentFixture<ListagemDeliveryComponent>;
+ 
+   beforeEach(async () => {
+     await TestBed.configureTestingModule({
+-      imports: [ListagemDelivery],
++      imports: [ListagemDeliveryComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+     }).compileComponents();
+ 
+-    fixture = TestBed.createComponent(ListagemDelivery);
++    fixture = TestBed.createComponent(ListagemDeliveryComponent);
+     component = fixture.componentInstance;
+     await fixture.whenStable();
+   });
+diff --git a/src/app/features/private/delivery/listagem-delivery/listagem-delivery.ts b/src/app/features/private/delivery/listagem-delivery/listagem-delivery.ts
+index e965eec..ae92863 100644
+--- a/src/app/features/private/delivery/listagem-delivery/listagem-delivery.ts
++++ b/src/app/features/private/delivery/listagem-delivery/listagem-delivery.ts
+@@ -1,37 +1,52 @@
+-import { Component, OnInit } from '@angular/core';
++import { Component, OnInit, inject } from '@angular/core';
+ import { ActivatedRoute, Router } from '@angular/router';
+ import { CommonModule } from '@angular/common';
+ import { FormsModule } from '@angular/forms';
+ import { DeliveryService, Restaurante } from '../../../../core/services/delivery';
+ import { HeaderBuscaComponent } from '../../../../shared/components/header-busca/header-busca';
++import { ApiError } from '../../../../core/models/common';
+ 
+ @Component({
+   selector: 'app-listagem-delivery',
+   imports: [CommonModule, FormsModule, HeaderBuscaComponent],
+   templateUrl: './listagem-delivery.html',
+-  styleUrl: './listagem-delivery.scss'
++  styleUrl: './listagem-delivery.scss',
+ })
+ export class ListagemDeliveryComponent implements OnInit {
+-  categoria: string = '';
+-  restaurantes: Restaurante[] = [];
+-  busca: string = '';
++  private readonly route = inject(ActivatedRoute);
++  private readonly router = inject(Router);
++  private readonly deliveryService = inject(DeliveryService);
+ 
+-  constructor(
+-    private route: ActivatedRoute,
+-    private router: Router,
+-    private deliveryService: DeliveryService
+-  ) {}
++  categoryId: number | null = null;
++  restaurantes: Restaurante[] = [];
++  busca = '';
++  carregando = false;
++  erro = '';
+ 
+   ngOnInit() {
+-    this.categoria = this.route.snapshot.paramMap.get('categoria') ?? '';
+-    this.restaurantes = this.deliveryService.getRestaurantes(this.categoria);
++    const id = Number(this.route.snapshot.paramMap.get('categoria'));
++    this.categoryId = Number.isFinite(id) && id > 0 ? id : null;
++    this.carregar();
++  }
++
++  carregar() {
++    this.carregando = true;
++    this.erro = '';
++    this.deliveryService.getRestaurantes(this.categoryId ?? undefined).subscribe({
++      next: (lista) => {
++        this.carregando = false;
++        this.restaurantes = lista;
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar os restaurantes.';
++      },
++    });
+   }
+ 
+   get restaurantesFiltrados(): Restaurante[] {
+     if (!this.busca.trim()) return this.restaurantes;
+-    return this.restaurantes.filter(r =>
+-      r.nome.toLowerCase().includes(this.busca.toLowerCase())
+-    );
++    return this.restaurantes.filter((r) => r.nome.toLowerCase().includes(this.busca.toLowerCase()));
+   }
+ 
+   onBuscar(valor: string) {
+@@ -46,4 +61,4 @@ export class ListagemDeliveryComponent implements OnInit {
+   formatarPreco(valor: number): string {
+     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/app/features/private/delivery/restaurante/restaurante.spec.ts b/src/app/features/private/delivery/restaurante/restaurante.spec.ts
+index b97f975..e977693 100644
+--- a/src/app/features/private/delivery/restaurante/restaurante.spec.ts
++++ b/src/app/features/private/delivery/restaurante/restaurante.spec.ts
+@@ -1,17 +1,21 @@
+ import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
+ 
+-import { Restaurante } from './restaurante';
++import { RestauranteComponent } from './restaurante';
+ 
+-describe('Restaurante', () => {
+-  let component: Restaurante;
+-  let fixture: ComponentFixture<Restaurante>;
++describe('RestauranteComponent', () => {
++  let component: RestauranteComponent;
++  let fixture: ComponentFixture<RestauranteComponent>;
+ 
+   beforeEach(async () => {
+     await TestBed.configureTestingModule({
+-      imports: [Restaurante],
++      imports: [RestauranteComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+     }).compileComponents();
+ 
+-    fixture = TestBed.createComponent(Restaurante);
++    fixture = TestBed.createComponent(RestauranteComponent);
+     component = fixture.componentInstance;
+     await fixture.whenStable();
+   });
+diff --git a/src/app/features/private/delivery/restaurante/restaurante.ts b/src/app/features/private/delivery/restaurante/restaurante.ts
+index 215b6cd..fde924d 100644
+--- a/src/app/features/private/delivery/restaurante/restaurante.ts
++++ b/src/app/features/private/delivery/restaurante/restaurante.ts
+@@ -1,35 +1,45 @@
+-import { Component, OnInit } from '@angular/core';
++import { Component, OnInit, inject } from '@angular/core';
+ import { ActivatedRoute, Router } from '@angular/router';
+ import { CommonModule } from '@angular/common';
+-import { DeliveryService, Restaurante, CategoriaCardapio, ItemCardapio } from '../../../../core/services/delivery';
++import { DeliveryService, Restaurante, ItemCardapio } from '../../../../core/services/delivery';
++import { ApiError } from '../../../../core/models/common';
+ 
+ @Component({
+   selector: 'app-restaurante',
+   imports: [CommonModule],
+   templateUrl: './restaurante.html',
+-  styleUrl: './restaurante.scss'
++  styleUrl: './restaurante.scss',
+ })
+ export class RestauranteComponent implements OnInit {
+-  restaurante?: Restaurante;
+-  categoriaAtiva: number = 0;
++  private readonly route = inject(ActivatedRoute);
++  private readonly router = inject(Router);
++  private readonly deliveryService = inject(DeliveryService);
+ 
+-  constructor(
+-    private route: ActivatedRoute,
+-    private router: Router,
+-    private deliveryService: DeliveryService
+-  ) {}
++  restaurante?: Restaurante;
++  categoriaAtiva = 0;
++  carregando = false;
++  erro = '';
+ 
+   ngOnInit() {
+     const id = Number(this.route.snapshot.paramMap.get('id'));
+-    this.restaurante = this.deliveryService.getRestaurante(id);
+-    if (this.restaurante?.categorias.length) {
+-      this.categoriaAtiva = this.restaurante.categorias[0].id;
+-    }
++    this.carregando = true;
++    this.deliveryService.getRestaurante(id).subscribe({
++      next: (r) => {
++        this.carregando = false;
++        this.restaurante = r;
++        if (r.categorias.length) {
++          this.categoriaAtiva = r.categorias[0].id;
++        }
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o restaurante.';
++      },
++    });
+   }
+ 
+   get categoriaAtivaItens(): ItemCardapio[] {
+-    return this.restaurante?.categorias
+-      .find(c => c.id === this.categoriaAtiva)?.itens ?? [];
++    return this.restaurante?.categorias.find((c) => c.id === this.categoriaAtiva)?.itens ?? [];
+   }
+ 
+   selecionarCategoria(id: number) {
+@@ -38,7 +48,7 @@ export class RestauranteComponent implements OnInit {
+ 
+   abrirItem(item: ItemCardapio) {
+     this.router.navigate(['/delivery/item', item.id], {
+-      queryParams: { restauranteId: this.restaurante?.id }
++      queryParams: { restauranteId: this.restaurante?.id },
+     });
+   }
+ 
+@@ -53,4 +63,4 @@ export class RestauranteComponent implements OnInit {
+   formatarPreco(valor: number): string {
+     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/app/features/private/delivery/sacola/sacola.spec.ts b/src/app/features/private/delivery/sacola/sacola.spec.ts
+index 1be991d..3c623d5 100644
+--- a/src/app/features/private/delivery/sacola/sacola.spec.ts
++++ b/src/app/features/private/delivery/sacola/sacola.spec.ts
+@@ -1,17 +1,21 @@
+ import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
+ 
+-import { Sacola } from './sacola';
++import { SacolaComponent } from './sacola';
+ 
+-describe('Sacola', () => {
+-  let component: Sacola;
+-  let fixture: ComponentFixture<Sacola>;
++describe('SacolaComponent', () => {
++  let component: SacolaComponent;
++  let fixture: ComponentFixture<SacolaComponent>;
+ 
+   beforeEach(async () => {
+     await TestBed.configureTestingModule({
+-      imports: [Sacola],
++      imports: [SacolaComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+     }).compileComponents();
+ 
+-    fixture = TestBed.createComponent(Sacola);
++    fixture = TestBed.createComponent(SacolaComponent);
+     component = fixture.componentInstance;
+     await fixture.whenStable();
+   });
+diff --git a/src/app/features/private/delivery/sacola/sacola.ts b/src/app/features/private/delivery/sacola/sacola.ts
+index 296654a..fc4d271 100644
+--- a/src/app/features/private/delivery/sacola/sacola.ts
++++ b/src/app/features/private/delivery/sacola/sacola.ts
+@@ -15,10 +15,8 @@ export class SacolaComponent implements OnInit {
+   formaSelecionada: FormaPagamento = 'credito';
+ 
+   formasPagamento: { id: FormaPagamento; label: string; icone: string }[] = [
+-    { id: 'credito',  label: 'Cartão de Crédito',  icone: 'card' },
+-    { id: 'debito',   label: 'Cartão de Débito',   icone: 'card' },
+-    { id: 'pix',      label: 'PIX',                icone: 'pix' },
+-    { id: 'dinheiro', label: 'Dinheiro na entrega', icone: 'cash' },
++    { id: 'credito', label: 'Cartão de Crédito', icone: 'card' },
++    { id: 'pix',     label: 'PIX',               icone: 'pix' },
+   ];
+ 
+   constructor(

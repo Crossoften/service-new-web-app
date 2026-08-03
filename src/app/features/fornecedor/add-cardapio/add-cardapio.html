@@ -14,8 +14,7 @@
         </svg>
       </div>
       <div class="add-header__info">
-        <span class="add-header__nome">Pizzaria Bella Itália</span>
-        <span class="add-header__avaliacao">⭐ 4.7</span>
+        <span class="add-header__nome">{{ modoEdicao ? 'Editar item' : 'Novo item' }}</span>
       </div>
     </div>
     <button class="add-header__sino">
@@ -51,7 +50,7 @@
       <div class="add-field">
         <label>Categoria</label>
         <div class="add-field__select" (click)="toggleCategoria()">
-          <span>{{ categoriaSelecionada }}</span>
+          <span>{{ categoriaSelecionadaLabel }}</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             [style.transform]="categoriaAberta ? 'rotate(180deg)' : 'rotate(0)'">
             <polyline points="6 9 12 15 18 9"/>
@@ -59,20 +58,26 @@
         </div>
         @if (categoriaAberta) {
           <div class="add-field__opcoes">
-            @for (cat of categorias; track cat) {
+            @for (cat of categorias; track cat.id) {
               <div class="add-field__opcao"
-                [class.add-field__opcao--ativo]="categoriaSelecionada === cat"
+                [class.add-field__opcao--ativo]="categoriaSelecionadaId === cat.id"
                 (click)="selecionarCategoria(cat)">
-                {{ cat }}
+                {{ cat.nome }}
               </div>
             }
           </div>
         }
       </div>
 
-      <!-- ARQUIVO -->
+      <!-- NOVA CATEGORIA -->
       <div class="add-field">
-        <label>Categoria</label>
+        <label>Nova categoria <span style="font-weight:400;color:var(--color-gray-400)">(opcional)</span></label>
+        <input type="text" placeholder="Criar uma nova categoria" [(ngModel)]="novaCategoria" />
+      </div>
+
+      <!-- IMAGEM -->
+      <div class="add-field">
+        <label>Imagem</label>
         <div class="add-field__arquivo" (click)="selecionarArquivo()">
           <span>{{ arquivo || 'Arquivo' }}</span>
           <button class="add-field__arquivo-btn">
@@ -94,8 +99,10 @@
 
   <!-- BOTÕES -->
   <div class="add-actions">
-    <button class="add-btn add-btn--outline" (click)="cancelar()">CANCELAR</button>
-    <button class="add-btn add-btn--primary" (click)="salvar()">SALVAR</button>
+    <button class="add-btn add-btn--outline" (click)="cancelar()" [disabled]="salvando">CANCELAR</button>
+    <button class="add-btn add-btn--primary" (click)="salvar()" [disabled]="salvando">
+      {{ salvando ? 'SALVANDO…' : 'SALVAR' }}
+    </button>
   </div>
 
 </div>

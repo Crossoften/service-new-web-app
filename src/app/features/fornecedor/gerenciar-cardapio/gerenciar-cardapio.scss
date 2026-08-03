@@ -148,3 +148,36 @@
     flex-shrink: 0;
   }
 }
+.cardapio-msg {
+  text-align: center;
+  color: var(--color-gray-600);
+  font-size: 14px;
+  margin: 24px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.cardapio-erro {
+  display: block;
+  font-size: 12px;
+  color: #dc2626;
+  margin: 4px 0 8px;
+}
+
+.cardapio-item__acoes {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cardapio-item__remover {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+}

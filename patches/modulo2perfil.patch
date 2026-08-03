@@ -1,0 +1,869 @@
+diff --git a/src/app/app.routes.ts b/src/app/app.routes.ts
+index 23db159..9a4a9c9 100644
+--- a/src/app/app.routes.ts
++++ b/src/app/app.routes.ts
+@@ -14,6 +14,7 @@ import { LoginComponent } from './features/auth/login/login';
+ import { SelecionarPerfilComponent } from './features/auth/selecionar-perfil/selecionar-perfil';
+ import { CadastroComponent } from './features/auth/cadastro/cadastro';
+ import { CadastroSucessoComponent } from './features/auth/cadastro-sucesso/cadastro-sucesso';
++import { PerfilComponent } from './features/private/perfil/perfil';
+ import { EsqueciSenhaComponent } from './features/auth/esqueci-senha/esqueci-senha';
+ import { RedefinirSenhaComponent } from './features/auth/redefinir-senha/redefinir-senha';
+ import { ListagemDeliveryComponent } from './features/private/delivery/listagem-delivery/listagem-delivery';
+@@ -68,6 +69,7 @@ export const routes: Routes = [
+ 
+   // Cliente / área geral (exige sessão)
+   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
++  { path: 'perfil', component: PerfilComponent, canActivate: [authGuard] },
+ 
+   // Delivery Cliente
+   { path: 'delivery', component: CategoriaDeliveryComponent, canActivate: [authGuard] },
+diff --git a/src/app/core/models/profile.ts b/src/app/core/models/profile.ts
+new file mode 100644
+index 0000000..af8d590
+--- /dev/null
++++ b/src/app/core/models/profile.ts
+@@ -0,0 +1,89 @@
++import { BillingType, SocialNetwork, UserProfileType, UserRole, UserStatus } from './enums';
++
++/** Rede social vinculada ao perfil (ResponseProfileSocialMediaDto). */
++export interface ResponseProfileSocialMediaDto {
++  id: number;
++  network: SocialNetwork;
++  url: string;
++  followers: number;
++  createdAt: string;
++  updatedAt: string;
++}
++
++/** Endereço do perfil (ResponseAddressDto). */
++export interface ResponseAddressDto {
++  id: number;
++  street?: string;
++  number?: string;
++  neighborhood?: string;
++  city?: string;
++  state?: string;
++  zipCode?: string;
++  createdAt: string;
++  updatedAt: string;
++}
++
++/** Perfil completo do usuário logado — `GET /v1/profile/me` (ResponseProfileDto). */
++export interface ResponseProfileDto {
++  id: number;
++  name: string;
++  email: string;
++  document?: string;
++  phone?: string;
++  biography?: string;
++  role: UserRole;
++  profileType: UserProfileType;
++  status: UserStatus;
++  fileUrl?: string;
++  fileKey?: string;
++  referralCode?: string;
++  birthDate?: string;
++  commissionRate?: number;
++  socialMedias: ResponseProfileSocialMediaDto[];
++  createdAt: string;
++  updatedAt: string;
++  address?: ResponseAddressDto;
++  billingType?: BillingType;
++}
++
++/** Corpo de `PATCH /v1/profile/me` (UpdateProfileDto). Todos os campos são opcionais. */
++export interface UpdateProfileDto {
++  name?: string;
++  document?: string;
++  email?: string;
++  phone?: string;
++  biography?: string;
++  fileUrl?: string;
++  fileKey?: string;
++}
++
++/** Corpo de `PATCH /v1/profile/me/address` (UpdateAddressDto). */
++export interface UpdateAddressDto {
++  street?: string;
++  number?: string;
++  neighborhood?: string;
++  city?: string;
++  state?: string;
++  zipCode?: string;
++}
++
++/** Corpo de `PATCH /v1/profile/me/billing-type` (UpdateBillingTypeDto). */
++export interface UpdateBillingTypeDto {
++  billingType: BillingType;
++}
++
++/** Dados de conta do usuário logado — `GET /v1/my-self` (ResponseAllUserDto). */
++export interface ResponseAllUserDto {
++  id: number;
++  name: string;
++  email: string;
++  phone: string;
++  code: string;
++  role: UserRole;
++  profileType: UserProfileType;
++  status: UserStatus;
++  fileUrl: string;
++  fileKey: string;
++  createdAt: string;
++  updatedAt: string;
++}
+diff --git a/src/app/core/services/profile.spec.ts b/src/app/core/services/profile.spec.ts
+new file mode 100644
+index 0000000..d6fa704
+--- /dev/null
++++ b/src/app/core/services/profile.spec.ts
+@@ -0,0 +1,20 @@
++import { TestBed } from '@angular/core/testing';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
++
++import { ProfileService } from './profile';
++
++describe('ProfileService', () => {
++  let service: ProfileService;
++
++  beforeEach(() => {
++    TestBed.configureTestingModule({
++      providers: [provideHttpClient(), provideHttpClientTesting()],
++    });
++    service = TestBed.inject(ProfileService);
++  });
++
++  it('should be created', () => {
++    expect(service).toBeTruthy();
++  });
++});
+diff --git a/src/app/core/services/profile.ts b/src/app/core/services/profile.ts
+new file mode 100644
+index 0000000..a97b8ba
+--- /dev/null
++++ b/src/app/core/services/profile.ts
+@@ -0,0 +1,53 @@
++import { Injectable, inject } from '@angular/core';
++import { Observable } from 'rxjs';
++import { ApiService } from './api';
++import { ApiMessage, UploadedFile } from '../models/common';
++import {
++  ResponseAddressDto,
++  ResponseAllUserDto,
++  ResponseProfileDto,
++  UpdateAddressDto,
++  UpdateBillingTypeDto,
++  UpdateProfileDto,
++} from '../models/profile';
++
++/** Perfil do usuário logado: leitura e edição de dados, endereço, foto e cobrança. */
++@Injectable({ providedIn: 'root' })
++export class ProfileService {
++  private readonly api = inject(ApiService);
++
++  /** Perfil completo — `GET /v1/profile/me`. */
++  me(): Observable<ResponseProfileDto> {
++    return this.api.get<ResponseProfileDto>('/profile/me');
++  }
++
++  /** Dados de conta — `GET /v1/my-self`. */
++  mySelf(): Observable<ResponseAllUserDto> {
++    return this.api.get<ResponseAllUserDto>('/my-self');
++  }
++
++  /** Atualiza dados do perfil — `PATCH /v1/profile/me`. */
++  update(dto: UpdateProfileDto): Observable<ResponseProfileDto> {
++    return this.api.patch<ResponseProfileDto>('/profile/me', dto);
++  }
++
++  /** Atualiza o endereço — `PATCH /v1/profile/me/address`. */
++  updateAddress(dto: UpdateAddressDto): Observable<ResponseAddressDto> {
++    return this.api.patch<ResponseAddressDto>('/profile/me/address', dto);
++  }
++
++  /** Atualiza o modelo de cobrança (fornecedor) — `PATCH /v1/profile/me/billing-type`. */
++  updateBillingType(dto: UpdateBillingTypeDto): Observable<ResponseProfileDto> {
++    return this.api.patch<ResponseProfileDto>('/profile/me/billing-type', dto);
++  }
++
++  /** Faz upload de uma nova foto de perfil — `POST /v1/upload/one-file`. */
++  uploadPhoto(file: File): Observable<UploadedFile> {
++    return this.api.uploadOne(file);
++  }
++
++  /** Remove a foto de perfil — `DELETE /v1/profile-photo`. */
++  deletePhoto(): Observable<ApiMessage> {
++    return this.api.delete<ApiMessage>('/profile-photo');
++  }
++}
+diff --git a/src/app/features/private/perfil/perfil.html b/src/app/features/private/perfil/perfil.html
+index 774f52c..a0ecb89 100644
+--- a/src/app/features/private/perfil/perfil.html
++++ b/src/app/features/private/perfil/perfil.html
+@@ -1 +1,155 @@
+-<p>perfil works!</p>
++<div class="perfil-container">
++
++  <div class="perfil-header">
++    <button class="perfil-header__voltar" (click)="voltar()">
++      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
++        <polyline points="15 18 9 12 15 6"/>
++      </svg>
++    </button>
++    <span class="perfil-header__titulo">MEU PERFIL</span>
++    <button class="perfil-header__sair" (click)="sair()" title="Sair">
++      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
++        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
++        <polyline points="16 17 21 12 16 7"/>
++        <line x1="21" y1="12" x2="9" y2="12"/>
++      </svg>
++    </button>
++  </div>
++
++  <div class="perfil-content">
++
++    @if (carregando) {
++      <p class="perfil-loading">Carregando perfil…</p>
++    } @else {
++
++      <!-- AVATAR -->
++      <div class="perfil-avatar-wrap">
++        <div class="perfil-avatar">
++          @if (fileUrl) {
++            <img [src]="fileUrl" alt="Foto de perfil" />
++          } @else {
++            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
++              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
++              <circle cx="12" cy="7" r="4"/>
++            </svg>
++          }
++          <label class="perfil-avatar__edit">
++            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
++              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>
++            </svg>
++            <input type="file" accept="image/*" (change)="onFotoSelecionada($event)" hidden />
++          </label>
++        </div>
++        @if (fileUrl) {
++          <button class="perfil-link" (click)="removerFoto()">Remover foto</button>
++        }
++      </div>
++
++      @if (erro) { <span class="perfil-erro">{{ erro }}</span> }
++      @if (aviso) { <span class="perfil-aviso">{{ aviso }}</span> }
++
++      <!-- DADOS -->
++      <div class="perfil-secao">
++        <span class="perfil-secao__titulo">Dados</span>
++
++        <div class="perfil-field">
++          <label>Nome</label>
++          <input type="text" [(ngModel)]="nome" placeholder="Seu nome" />
++        </div>
++
++        <div class="perfil-field">
++          <label>Email</label>
++          <input type="email" [value]="email" disabled />
++        </div>
++
++        <div class="perfil-field">
++          <label>Telefone</label>
++          <input type="tel" [(ngModel)]="telefone" placeholder="(00) 00000-0000" />
++        </div>
++
++        <div class="perfil-field">
++          <label>Documento</label>
++          <input type="text" [(ngModel)]="documento" placeholder="CPF/CNPJ" />
++        </div>
++
++        <div class="perfil-field">
++          <label>Biografia</label>
++          <textarea rows="3" [(ngModel)]="biografia" placeholder="Fale um pouco sobre você"></textarea>
++        </div>
++
++        <button class="perfil-btn perfil-btn--primary" (click)="salvarDados()" [disabled]="salvandoDados">
++          {{ salvandoDados ? 'SALVANDO…' : 'SALVAR DADOS' }}
++        </button>
++      </div>
++
++      <!-- ENDEREÇO -->
++      <div class="perfil-secao">
++        <span class="perfil-secao__titulo">Endereço</span>
++
++        <div class="perfil-field">
++          <label>CEP</label>
++          <input type="tel" [(ngModel)]="cep" placeholder="00000-000" />
++        </div>
++
++        <div class="perfil-field">
++          <label>Rua</label>
++          <input type="text" [(ngModel)]="rua" placeholder="Rua / Avenida" />
++        </div>
++
++        <div class="perfil-form__row">
++          <div class="perfil-field">
++            <label>Número</label>
++            <input type="text" [(ngModel)]="numero" placeholder="Nº" />
++          </div>
++          <div class="perfil-field">
++            <label>Bairro</label>
++            <input type="text" [(ngModel)]="bairro" placeholder="Bairro" />
++          </div>
++        </div>
++
++        <div class="perfil-form__row">
++          <div class="perfil-field">
++            <label>Cidade</label>
++            <input type="text" [(ngModel)]="cidade" placeholder="Cidade" />
++          </div>
++          <div class="perfil-field perfil-field--uf">
++            <label>UF</label>
++            <input type="text" [(ngModel)]="estado" placeholder="UF" maxlength="2" />
++          </div>
++        </div>
++
++        <button class="perfil-btn perfil-btn--outline" (click)="salvarEndereco()" [disabled]="salvandoEndereco">
++          {{ salvandoEndereco ? 'SALVANDO…' : 'SALVAR ENDEREÇO' }}
++        </button>
++      </div>
++
++      <!-- COBRANÇA (fornecedor) -->
++      @if (isSupplier) {
++        <div class="perfil-secao">
++          <span class="perfil-secao__titulo">Modelo de cobrança</span>
++          <p class="perfil-secao__hint">Como você prefere ser cobrado nas suas operações.</p>
++
++          <div class="perfil-billing">
++            <button
++              class="perfil-billing__opt"
++              [class.perfil-billing__opt--ativo]="billingType === 'Subscription'"
++              (click)="selecionarCobranca('Subscription')"
++              [disabled]="salvandoCobranca">
++              Assinatura
++            </button>
++            <button
++              class="perfil-billing__opt"
++              [class.perfil-billing__opt--ativo]="billingType === 'Commission'"
++              (click)="selecionarCobranca('Commission')"
++              [disabled]="salvandoCobranca">
++              Comissão
++            </button>
++          </div>
++        </div>
++      }
++
++    }
++
++  </div>
++
++</div>
+diff --git a/src/app/features/private/perfil/perfil.scss b/src/app/features/private/perfil/perfil.scss
+index e69de29..a0b15ac 100644
+--- a/src/app/features/private/perfil/perfil.scss
++++ b/src/app/features/private/perfil/perfil.scss
+@@ -0,0 +1,233 @@
++.perfil-container {
++  display: flex;
++  flex-direction: column;
++  min-height: 100vh;
++  min-height: 100dvh;
++  padding-top: var(--safe-top);
++  padding-bottom: var(--safe-bottom);
++  background: var(--color-white);
++}
++
++.perfil-header {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  padding: 16px 20px;
++
++  &__voltar,
++  &__sair {
++    background: none;
++    border: none;
++    cursor: pointer;
++    color: var(--color-text);
++    display: flex;
++    align-items: center;
++    padding: 0;
++  }
++
++  &__titulo {
++    font-size: 16px;
++    font-weight: 700;
++    color: var(--color-text);
++    letter-spacing: 0.3px;
++  }
++}
++
++.perfil-content {
++  flex: 1;
++  display: flex;
++  flex-direction: column;
++  gap: 20px;
++  padding: 8px 24px 32px;
++  overflow-y: auto;
++}
++
++.perfil-loading {
++  text-align: center;
++  color: var(--color-gray-600);
++  font-size: 14px;
++  margin-top: 32px;
++}
++
++.perfil-avatar-wrap {
++  display: flex;
++  flex-direction: column;
++  align-items: center;
++  gap: 8px;
++}
++
++.perfil-avatar {
++  position: relative;
++  width: 96px;
++  height: 96px;
++  border-radius: 50%;
++  background: var(--color-gray-100);
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  color: var(--color-gray-400);
++
++  img {
++    width: 100%;
++    height: 100%;
++    object-fit: cover;
++    border-radius: 50%;
++  }
++
++  &__edit {
++    position: absolute;
++    right: -2px;
++    bottom: -2px;
++    width: 30px;
++    height: 30px;
++    border-radius: 50%;
++    background: var(--color-primary);
++    color: var(--color-white);
++    display: flex;
++    align-items: center;
++    justify-content: center;
++    cursor: pointer;
++    border: 2px solid var(--color-white);
++  }
++}
++
++.perfil-secao {
++  display: flex;
++  flex-direction: column;
++  gap: 12px;
++
++  &__titulo {
++    font-size: 15px;
++    font-weight: 700;
++    color: var(--color-text);
++  }
++
++  &__hint {
++    font-size: 12px;
++    color: var(--color-gray-600);
++    margin: -6px 0 0;
++  }
++}
++
++.perfil-form__row {
++  display: flex;
++  gap: 12px;
++
++  .perfil-field {
++    flex: 1;
++  }
++
++  .perfil-field--uf {
++    max-width: 80px;
++  }
++}
++
++.perfil-field {
++  display: flex;
++  flex-direction: column;
++  gap: 6px;
++
++  label {
++    font-size: 13px;
++    font-weight: 500;
++    color: var(--color-gray-600);
++  }
++
++  input,
++  textarea {
++    width: 100%;
++    padding: 12px 14px;
++    border: none;
++    border-radius: 10px;
++    background: var(--color-gray-100);
++    font-size: 14px;
++    color: var(--color-text);
++    outline: none;
++    resize: vertical;
++    font-family: inherit;
++
++    &::placeholder {
++      color: var(--color-gray-400);
++    }
++
++    &:disabled {
++      color: var(--color-gray-400);
++    }
++  }
++}
++
++.perfil-erro {
++  font-size: 12px;
++  color: #dc2626;
++}
++
++.perfil-aviso {
++  font-size: 12px;
++  color: #16a34a;
++}
++
++.perfil-link {
++  background: none;
++  border: none;
++  cursor: pointer;
++  font-size: 13px;
++  font-weight: 600;
++  color: var(--color-primary);
++  padding: 0;
++}
++
++.perfil-billing {
++  display: flex;
++  gap: 12px;
++
++  &__opt {
++    flex: 1;
++    padding: 14px;
++    border-radius: 12px;
++    border: 2px solid var(--color-gray-100);
++    background: var(--color-gray-100);
++    font-size: 14px;
++    font-weight: 600;
++    color: var(--color-text);
++    cursor: pointer;
++
++    &--ativo {
++      border-color: var(--color-primary);
++      color: var(--color-primary);
++      background: transparent;
++    }
++  }
++}
++
++.perfil-btn {
++  width: 100%;
++  padding: 15px;
++  border-radius: 50px;
++  font-size: 14px;
++  font-weight: 700;
++  letter-spacing: 0.5px;
++  cursor: pointer;
++  transition: opacity 0.2s;
++  margin-top: 4px;
++
++  &:active {
++    opacity: 0.85;
++  }
++
++  &:disabled {
++    opacity: 0.6;
++    cursor: default;
++  }
++
++  &--primary {
++    background: var(--color-primary);
++    color: var(--color-white);
++    border: none;
++  }
++
++  &--outline {
++    background: transparent;
++    color: var(--color-primary);
++    border: 2px solid var(--color-primary);
++  }
++}
+diff --git a/src/app/features/private/perfil/perfil.spec.ts b/src/app/features/private/perfil/perfil.spec.ts
+index 3ba7619..331a9a7 100644
+--- a/src/app/features/private/perfil/perfil.spec.ts
++++ b/src/app/features/private/perfil/perfil.spec.ts
+@@ -1,17 +1,21 @@
+ import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
+ 
+-import { Perfil } from './perfil';
++import { PerfilComponent } from './perfil';
+ 
+-describe('Perfil', () => {
+-  let component: Perfil;
+-  let fixture: ComponentFixture<Perfil>;
++describe('PerfilComponent', () => {
++  let component: PerfilComponent;
++  let fixture: ComponentFixture<PerfilComponent>;
+ 
+   beforeEach(async () => {
+     await TestBed.configureTestingModule({
+-      imports: [Perfil],
++      imports: [PerfilComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+     }).compileComponents();
+ 
+-    fixture = TestBed.createComponent(Perfil);
++    fixture = TestBed.createComponent(PerfilComponent);
+     component = fixture.componentInstance;
+     await fixture.whenStable();
+   });
+diff --git a/src/app/features/private/perfil/perfil.ts b/src/app/features/private/perfil/perfil.ts
+index 4bf27ef..698a6a8 100644
+--- a/src/app/features/private/perfil/perfil.ts
++++ b/src/app/features/private/perfil/perfil.ts
+@@ -1,9 +1,230 @@
+-import { Component } from '@angular/core';
++import { Component, OnInit, inject } from '@angular/core';
++import { Router } from '@angular/router';
++import { CommonModule } from '@angular/common';
++import { FormsModule } from '@angular/forms';
++import { ProfileService } from '../../../core/services/profile';
++import { AuthService } from '../../../core/services/auth';
++import { SessionService } from '../../../core/services/session';
++import { ApiError } from '../../../core/models/common';
++import { BillingType } from '../../../core/models/enums';
++import { ResponseProfileDto } from '../../../core/models/profile';
+ 
++/**
++ * Tela "Meu perfil": carrega `GET /profile/me`, edita dados/foto (`PATCH /profile/me`),
++ * endereço (`PATCH /profile/me/address`) e — para fornecedor — o modelo de cobrança
++ * (`PATCH /profile/me/billing-type`). Inclui logout.
++ */
+ @Component({
+   selector: 'app-perfil',
+-  imports: [],
++  imports: [CommonModule, FormsModule],
+   templateUrl: './perfil.html',
+   styleUrl: './perfil.scss',
+ })
+-export class Perfil {}
++export class PerfilComponent implements OnInit {
++  private readonly router = inject(Router);
++  private readonly profileService = inject(ProfileService);
++  private readonly auth = inject(AuthService);
++  private readonly session = inject(SessionService);
++
++  perfil: ResponseProfileDto | null = null;
++
++  // Dados
++  nome = '';
++  email = '';
++  telefone = '';
++  documento = '';
++  biografia = '';
++  fileUrl?: string;
++  fileKey?: string;
++
++  // Endereço
++  rua = '';
++  numero = '';
++  bairro = '';
++  cidade = '';
++  estado = '';
++  cep = '';
++
++  // Cobrança (fornecedor)
++  billingType: BillingType = 'None';
++
++  carregando = false;
++  salvandoDados = false;
++  salvandoEndereco = false;
++  salvandoCobranca = false;
++  erro = '';
++  aviso = '';
++
++  ngOnInit() {
++    this.carregar();
++  }
++
++  get isSupplier(): boolean {
++    return this.session.profileType() === 'Supplier';
++  }
++
++  carregar() {
++    this.carregando = true;
++    this.erro = '';
++    this.profileService.me().subscribe({
++      next: (p) => {
++        this.carregando = false;
++        this.aplicar(p);
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = this.msg(err, 'Não foi possível carregar o perfil.');
++      },
++    });
++  }
++
++  private aplicar(p: ResponseProfileDto) {
++    this.perfil = p;
++    this.nome = p.name ?? '';
++    this.email = p.email ?? '';
++    this.telefone = p.phone ?? '';
++    this.documento = p.document ?? '';
++    this.biografia = p.biography ?? '';
++    this.fileUrl = p.fileUrl;
++    this.fileKey = p.fileKey;
++    this.rua = p.address?.street ?? '';
++    this.numero = p.address?.number ?? '';
++    this.bairro = p.address?.neighborhood ?? '';
++    this.cidade = p.address?.city ?? '';
++    this.estado = p.address?.state ?? '';
++    this.cep = p.address?.zipCode ?? '';
++    this.billingType = p.billingType ?? 'None';
++  }
++
++  salvarDados() {
++    if (!this.nome.trim()) {
++      this.erro = 'Informe seu nome.';
++      return;
++    }
++    this.erro = '';
++    this.aviso = '';
++    this.salvandoDados = true;
++    this.profileService
++      .update({
++        name: this.nome.trim(),
++        phone: this.telefone.trim() || undefined,
++        document: this.documento.trim() || undefined,
++        biography: this.biografia.trim() || undefined,
++      })
++      .subscribe({
++        next: (p) => {
++          this.salvandoDados = false;
++          this.aplicar(p);
++          this.aviso = 'Dados atualizados.';
++        },
++        error: (err: ApiError) => {
++          this.salvandoDados = false;
++          this.erro = this.msg(err, 'Não foi possível salvar os dados.');
++        },
++      });
++  }
++
++  salvarEndereco() {
++    this.erro = '';
++    this.aviso = '';
++    this.salvandoEndereco = true;
++    this.profileService
++      .updateAddress({
++        street: this.rua.trim() || undefined,
++        number: this.numero.trim() || undefined,
++        neighborhood: this.bairro.trim() || undefined,
++        city: this.cidade.trim() || undefined,
++        state: this.estado.trim() || undefined,
++        zipCode: this.cep.trim() || undefined,
++      })
++      .subscribe({
++        next: () => {
++          this.salvandoEndereco = false;
++          this.aviso = 'Endereço atualizado.';
++        },
++        error: (err: ApiError) => {
++          this.salvandoEndereco = false;
++          this.erro = this.msg(err, 'Não foi possível salvar o endereço.');
++        },
++      });
++  }
++
++  selecionarCobranca(tipo: BillingType) {
++    if (this.billingType === tipo || this.salvandoCobranca) return;
++    this.erro = '';
++    this.aviso = '';
++    this.salvandoCobranca = true;
++    this.profileService.updateBillingType({ billingType: tipo }).subscribe({
++      next: (p) => {
++        this.salvandoCobranca = false;
++        this.aplicar(p);
++        this.aviso = 'Modelo de cobrança atualizado.';
++      },
++      error: (err: ApiError) => {
++        this.salvandoCobranca = false;
++        this.erro = this.msg(err, 'Não foi possível atualizar a cobrança.');
++      },
++    });
++  }
++
++  onFotoSelecionada(event: Event) {
++    const input = event.target as HTMLInputElement;
++    const file = input.files?.[0];
++    if (!file) return;
++    this.erro = '';
++    this.aviso = '';
++    this.salvandoDados = true;
++    this.profileService.uploadPhoto(file).subscribe({
++      next: (up) => {
++        this.profileService.update({ fileUrl: up.fileUrl, fileKey: up.fileKey }).subscribe({
++          next: (p) => {
++            this.salvandoDados = false;
++            this.aplicar(p);
++            this.aviso = 'Foto atualizada.';
++          },
++          error: (err: ApiError) => {
++            this.salvandoDados = false;
++            this.erro = this.msg(err, 'Não foi possível salvar a foto.');
++          },
++        });
++      },
++      error: (err: ApiError) => {
++        this.salvandoDados = false;
++        this.erro = this.msg(err, 'Não foi possível enviar a foto.');
++      },
++    });
++    input.value = '';
++  }
++
++  removerFoto() {
++    if (!this.fileUrl || this.salvandoDados) return;
++    this.erro = '';
++    this.aviso = '';
++    this.salvandoDados = true;
++    this.profileService.deletePhoto().subscribe({
++      next: () => {
++        this.salvandoDados = false;
++        this.fileUrl = undefined;
++        this.fileKey = undefined;
++        this.aviso = 'Foto removida.';
++      },
++      error: (err: ApiError) => {
++        this.salvandoDados = false;
++        this.erro = this.msg(err, 'Não foi possível remover a foto.');
++      },
++    });
++  }
++
++  sair() {
++    this.auth.logout();
++    this.router.navigate(['/login']);
++  }
++
++  voltar() {
++    history.back();
++  }
++
++  private msg(err: ApiError, fallback: string): string {
++    return err?.message?.trim() ? err.message : fallback;
++  }
++}

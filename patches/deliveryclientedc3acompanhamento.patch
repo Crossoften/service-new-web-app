@@ -1,0 +1,779 @@
+diff --git a/src/app/app.routes.ts b/src/app/app.routes.ts
+index 9a4a9c9..9a6ddd0 100644
+--- a/src/app/app.routes.ts
++++ b/src/app/app.routes.ts
+@@ -24,6 +24,7 @@ import { SacolaComponent } from './features/private/delivery/sacola/sacola';
+ import { EnderecoEntregaComponent } from './features/private/delivery/endereco-entrega/endereco-entrega';
+ import { RevisaoPedidoComponent } from './features/private/delivery/revisao-pedido/revisao-pedido';
+ import { StatusPedidoComponent } from './features/private/delivery/status-pedido/status-pedido';
++import { PedidosDeliveryComponent } from './features/private/delivery/pedidos-delivery/pedidos-delivery';
+ import { ListagemServicosComponent } from './features/private/servicos/listagem-servicos/listagem-servicos';
+ import { RequisitosServicoComponent } from './features/private/servicos/requisitos-servico/requisitos-servico';
+ import { DetalhesPrestadorComponent } from './features/private/servicos/detalhes-prestador/detalhes-prestador';
+@@ -73,6 +74,7 @@ export const routes: Routes = [
+ 
+   // Delivery Cliente
+   { path: 'delivery', component: CategoriaDeliveryComponent, canActivate: [authGuard] },
++  { path: 'delivery/pedidos', component: PedidosDeliveryComponent, canActivate: [authGuard] },
+   { path: 'delivery/listagem/:categoria', component: ListagemDeliveryComponent, canActivate: [authGuard] },
+   { path: 'delivery/restaurante/:id', component: RestauranteComponent, canActivate: [authGuard] },
+   { path: 'delivery/item/:id', component: CardapioItemComponent, canActivate: [authGuard] },
+diff --git a/src/app/core/services/delivery.ts b/src/app/core/services/delivery.ts
+index a27737f..0f12184 100644
+--- a/src/app/core/services/delivery.ts
++++ b/src/app/core/services/delivery.ts
+@@ -8,7 +8,13 @@ import {
+   ResponseRestaurantCategoryDto,
+   ResponseRestaurantDto,
+ } from '../models/restaurant';
+-import { CreateFoodOrderDto, CreateFoodOrderResponseDto } from '../models/food-order';
++import {
++  CreateFoodOrderDto,
++  CreateFoodOrderResponseDto,
++  ResponseFindAllFoodOrderDto,
++  ResponseFoodOrderDto,
++} from '../models/food-order';
++import { FoodOrderStatus } from '../models/food-order';
+ import { PaymentMethod } from '../models/enums';
+ 
+ // ─── View-models do Front (pt) — populados a partir dos DTOs da API ─────────
+@@ -185,6 +191,25 @@ export class DeliveryService {
+     return forma === 'pix' ? 'Pix' : 'CreditCard';
+   }
+ 
++  // ── Acompanhamento (API) ──────────────────────────────────────────────────
++
++  /** Detalhe/rastreio de um pedido — `GET /v1/food-orders/{id}`. */
++  getPedido(id: number): Observable<ResponseFoodOrderDto> {
++    return this.api.get<ResponseFoodOrderDto>(`/food-orders/${id}`);
++  }
++
++  /** Lista os pedidos do usuário — `GET /v1/food-orders`. */
++  getMeusPedidos(status?: FoodOrderStatus): Observable<ResponseFoodOrderDto[]> {
++    return this.api
++      .get<ResponseFindAllFoodOrderDto>('/food-orders', { status: status ?? null, take: 50 })
++      .pipe(map((res) => res.foodOrders ?? []));
++  }
++
++  /** Cancela um pedido — `PATCH /v1/food-orders/{id}/cancel`. */
++  cancelarPedido(id: number, cancelReason: string): Observable<ResponseFoodOrderDto> {
++    return this.api.patch<ResponseFoodOrderDto>(`/food-orders/${id}/cancel`, { cancelReason });
++  }
++
+   // ── Mapeadores API → view-model ───────────────────────────────────────────
+ 
+   private mapRestaurante(r: ResponseRestaurantDto): Restaurante {
+diff --git a/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.html b/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.html
+new file mode 100644
+index 0000000..ecae8b2
+--- /dev/null
++++ b/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.html
+@@ -0,0 +1,40 @@
++<div class="pedidos-container">
++
++  <div class="pedidos-header">
++    <button class="pedidos-header__voltar" (click)="voltar()">
++      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
++        <polyline points="15 18 9 12 15 6"/>
++      </svg>
++    </button>
++    <span class="pedidos-header__titulo">MEUS PEDIDOS</span>
++    <div style="width: 30px"></div>
++  </div>
++
++  <div class="pedidos-content">
++
++    @if (carregando) {
++      <p class="pedidos-vazio">Carregando pedidos…</p>
++    } @else if (erro) {
++      <p class="pedidos-vazio">{{ erro }}</p>
++    } @else if (pedidos.length === 0) {
++      <p class="pedidos-vazio">Você ainda não fez nenhum pedido.</p>
++    } @else {
++      @for (pedido of pedidos; track pedido.id) {
++        <div class="pedido-card" (click)="abrir(pedido)">
++          <div class="pedido-card__topo">
++            <span class="pedido-card__restaurante">{{ pedido.restaurant.name }}</span>
++            <span class="pedido-card__status" [class.pedido-card__status--cancelado]="pedido.status === 'Cancelled'">
++              {{ statusLabel(pedido.status) }}
++            </span>
++          </div>
++          <div class="pedido-card__base">
++            <span class="pedido-card__data">{{ pedido.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
++            <span class="pedido-card__total">{{ fmt(pedido.totalValue) }}</span>
++          </div>
++        </div>
++      }
++    }
++
++  </div>
++
++</div>
+diff --git a/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.scss b/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.scss
+new file mode 100644
+index 0000000..c161da8
+--- /dev/null
++++ b/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.scss
+@@ -0,0 +1,96 @@
++.pedidos-container {
++  display: flex;
++  flex-direction: column;
++  min-height: 100vh;
++  min-height: 100dvh;
++  padding-top: var(--safe-top);
++  padding-bottom: var(--safe-bottom);
++  background: var(--color-white);
++}
++
++.pedidos-header {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  padding: 16px 20px;
++
++  &__voltar {
++    background: none;
++    border: none;
++    cursor: pointer;
++    color: var(--color-text);
++    display: flex;
++    align-items: center;
++    padding: 0;
++  }
++
++  &__titulo {
++    font-size: 16px;
++    font-weight: 700;
++    color: var(--color-text);
++    letter-spacing: 0.3px;
++  }
++}
++
++.pedidos-content {
++  flex: 1;
++  display: flex;
++  flex-direction: column;
++  gap: 12px;
++  padding: 8px 20px 24px;
++  overflow-y: auto;
++}
++
++.pedidos-vazio {
++  text-align: center;
++  color: var(--color-gray-600);
++  font-size: 14px;
++  margin-top: 32px;
++}
++
++.pedido-card {
++  border: 1px solid var(--color-gray-100);
++  border-radius: 12px;
++  padding: 14px 16px;
++  cursor: pointer;
++  display: flex;
++  flex-direction: column;
++  gap: 8px;
++
++  &__topo {
++    display: flex;
++    align-items: center;
++    justify-content: space-between;
++    gap: 8px;
++  }
++
++  &__restaurante {
++    font-size: 15px;
++    font-weight: 600;
++    color: var(--color-text);
++  }
++
++  &__status {
++    font-size: 12px;
++    font-weight: 600;
++    color: var(--color-primary);
++    white-space: nowrap;
++
++    &--cancelado {
++      color: #dc2626;
++    }
++  }
++
++  &__base {
++    display: flex;
++    align-items: center;
++    justify-content: space-between;
++    font-size: 13px;
++    color: var(--color-gray-600);
++  }
++
++  &__total {
++    font-weight: 700;
++    color: var(--color-text);
++  }
++}
+diff --git a/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.spec.ts b/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.spec.ts
+new file mode 100644
+index 0000000..b61c025
+--- /dev/null
++++ b/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.spec.ts
+@@ -0,0 +1,26 @@
++import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
++
++import { PedidosDeliveryComponent } from './pedidos-delivery';
++
++describe('PedidosDeliveryComponent', () => {
++  let component: PedidosDeliveryComponent;
++  let fixture: ComponentFixture<PedidosDeliveryComponent>;
++
++  beforeEach(async () => {
++    await TestBed.configureTestingModule({
++      imports: [PedidosDeliveryComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
++    }).compileComponents();
++
++    fixture = TestBed.createComponent(PedidosDeliveryComponent);
++    component = fixture.componentInstance;
++    await fixture.whenStable();
++  });
++
++  it('should create', () => {
++    expect(component).toBeTruthy();
++  });
++});
+diff --git a/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.ts b/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.ts
+new file mode 100644
+index 0000000..ec511fa
+--- /dev/null
++++ b/src/app/features/private/delivery/pedidos-delivery/pedidos-delivery.ts
+@@ -0,0 +1,61 @@
++import { Component, OnInit, inject } from '@angular/core';
++import { Router } from '@angular/router';
++import { CommonModule } from '@angular/common';
++import { DeliveryService } from '../../../../core/services/delivery';
++import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../../core/models/food-order';
++import { ApiError } from '../../../../core/models/common';
++
++const STATUS_LABEL: Record<FoodOrderStatus, string> = {
++  Received: 'Recebido',
++  Accepted: 'Confirmado',
++  Preparing: 'Em preparo',
++  OnTheWay: 'A caminho',
++  Delivered: 'Entregue',
++  Cancelled: 'Cancelado',
++};
++
++/** Lista os pedidos de delivery do usuário — `GET /v1/food-orders`. */
++@Component({
++  selector: 'app-pedidos-delivery',
++  imports: [CommonModule],
++  templateUrl: './pedidos-delivery.html',
++  styleUrl: './pedidos-delivery.scss',
++})
++export class PedidosDeliveryComponent implements OnInit {
++  private readonly router = inject(Router);
++  private readonly deliveryService = inject(DeliveryService);
++
++  pedidos: ResponseFoodOrderDto[] = [];
++  carregando = false;
++  erro = '';
++
++  ngOnInit() {
++    this.carregando = true;
++    this.deliveryService.getMeusPedidos().subscribe({
++      next: (lista) => {
++        this.carregando = false;
++        this.pedidos = lista;
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar seus pedidos.';
++      },
++    });
++  }
++
++  statusLabel(status: FoodOrderStatus): string {
++    return STATUS_LABEL[status] ?? status;
++  }
++
++  abrir(pedido: ResponseFoodOrderDto) {
++    this.router.navigate(['/delivery/status', pedido.id]);
++  }
++
++  fmt(valor?: string): string {
++    return Number(valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
++  }
++
++  voltar() {
++    history.back();
++  }
++}
+diff --git a/src/app/features/private/delivery/status-pedido/status-pedido.html b/src/app/features/private/delivery/status-pedido/status-pedido.html
+index 4f48ba6..c060352 100644
+--- a/src/app/features/private/delivery/status-pedido/status-pedido.html
++++ b/src/app/features/private/delivery/status-pedido/status-pedido.html
+@@ -7,104 +7,114 @@
+         <polyline points="15 18 9 12 15 6"/>
+       </svg>
+     </button>
+-    <div class="status-header__acoes">
+-      <button class="status-header__btn">
+-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+-          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+-          <line x1="3" y1="6" x2="21" y2="6"/>
+-          <path d="M16 10a4 4 0 0 1-8 0"/>
+-        </svg>
+-      </button>
+-      <button class="status-header__btn">
+-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+-        </svg>
+-      </button>
+-    </div>
+   </div>
+ 
+-  <!-- MAPA PLACEHOLDER -->
++  <!-- MAPA / RASTREIO -->
+   <div class="status-mapa">
+     <div class="status-mapa__placeholder">
+       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+         <circle cx="12" cy="10" r="3"/>
+       </svg>
+-      <span>Mapa disponível em breve</span>
++      @if (rastreando) {
++        <span>Entregador a caminho</span>
++        <small>lat {{ pedido?.delivery?.currentLat }} · lng {{ pedido?.delivery?.currentLng }}</small>
++      } @else {
++        <span>Mapa disponível em breve</span>
++      }
+     </div>
+   </div>
+ 
+   <div class="page-content">
+ 
+-    <!-- CARD RESTAURANTE -->
+-    <div class="status-restaurante">
+-      <div class="status-restaurante__logo">
+-        <div class="status-restaurante__logo-placeholder">
+-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+-            <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+-          </svg>
++    @if (carregando) {
++      <p class="status-loading">Carregando pedido…</p>
++    } @else if (erro) {
++      <p class="status-erro">{{ erro }}</p>
++    } @else if (pedido) {
++
++      <!-- CARD RESTAURANTE -->
++      <div class="status-restaurante">
++        <div class="status-restaurante__logo">
++          @if (pedido.restaurant.imageUrl) {
++            <img [src]="pedido.restaurant.imageUrl" [alt]="pedido.restaurant.name" />
++          } @else {
++            <div class="status-restaurante__logo-placeholder">
++              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
++                <path d="M3 11l19-9-9 19-2-8-8-2z"/>
++              </svg>
++            </div>
++          }
+         </div>
+-      </div>
+-      <div class="status-restaurante__info">
+-        <span class="status-restaurante__nome">{{ restauranteNome }}</span>
+-        <div class="status-restaurante__meta">
+-          <span>⭐ {{ restauranteAvaliacao }}</span>
+-          <span>•</span>
+-          <span>🕐 {{ restauranteTempo }}</span>
+-          <span>•</span>
+-          <span class="status-restaurante__entrega">🛵 <strong>Entrega R$ {{ restauranteTaxaEntrega.toFixed(2) }}</strong></span>
++        <div class="status-restaurante__info">
++          <span class="status-restaurante__nome">{{ pedido.restaurant.name }}</span>
++          <span class="status-restaurante__descricao">Pedido #{{ pedido.id }}</span>
+         </div>
+-        <span class="status-restaurante__descricao">{{ restauranteDescricao }}</span>
+       </div>
+-    </div>
+ 
+-    <!-- BARRA DE PROGRESSO -->
+-    <div class="status-progresso">
+-      <div class="status-progresso__barra">
+-        @for (etapa of etapas; track etapa.id; let i = $index) {
+-          <div class="status-progresso__ponto"
+-            [class.status-progresso__ponto--ativo]="etapaAtingida(i)">
++      <!-- BANNER CANCELADO -->
++      @if (cancelado) {
++        <div class="status-cancelado">
++          <strong>Pedido cancelado</strong>
++          @if (pedido.cancelReason) { <span>{{ pedido.cancelReason }}</span> }
++        </div>
++      } @else {
++        <!-- BARRA DE PROGRESSO -->
++        <div class="status-progresso">
++          <div class="status-progresso__barra">
++            @for (etapa of etapas; track etapa.id; let i = $index) {
++              <div class="status-progresso__ponto"
++                [class.status-progresso__ponto--ativo]="etapaAtingida(i)">
++              </div>
++              @if (i < etapas.length - 1) {
++                <div class="status-progresso__linha"
++                  [class.status-progresso__linha--ativa]="etapaAtingida(i + 1)">
++                </div>
++              }
++            }
+           </div>
+-          @if (i < etapas.length - 1) {
+-            <div class="status-progresso__linha"
+-              [class.status-progresso__linha--ativa]="etapaAtingida(i + 1)">
+-            </div>
+-          }
+-        }
+-      </div>
+-      <div class="status-progresso__label">
+-        <span>{{ labelAtual }}</span>
++          <div class="status-progresso__label">
++            <span>{{ labelAtual }}</span>
++          </div>
++        </div>
++      }
++
++      <!-- DETALHES -->
++      <div class="status-detalhes">
++        <div class="status-detalhes__linha">
++          <span>Realizado em</span>
++          <span>{{ pedido.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
++        </div>
++        <div class="status-detalhes__linha">
++          <span>Itens</span>
++          <span>{{ fmt(pedido.itemsValue) }}</span>
++        </div>
++        <div class="status-detalhes__linha">
++          <span>Entrega</span>
++          <span>{{ fmt(pedido.deliveryFee) }}</span>
++        </div>
++        <div class="status-detalhes__linha status-detalhes__linha--total">
++          <span>Total</span>
++          <span>{{ fmt(pedido.totalValue) }}</span>
++        </div>
+       </div>
+-    </div>
+ 
+-    <!-- ENDEREÇO -->
+-    <div class="status-endereco">
+-      <span class="status-endereco__rua">{{ endereco }}</span>
+-      <span class="status-endereco__bairro">{{ bairro }}</span>
+-    </div>
++      @if (erro) {
++        <p class="status-erro">{{ erro }}</p>
++      }
+ 
+-    <!-- DETALHES -->
+-    <div class="status-detalhes">
+-      <div class="status-detalhes__linha">
+-        <span>Realizado em</span>
+-        <span>00/00/0000</span>
+-      </div>
+-      <div class="status-detalhes__linha">
+-        <span>Valor serviço</span>
+-        <span>R$ 00,00</span>
+-      </div>
+-      <div class="status-detalhes__linha">
+-        <span>Total</span>
+-        <span>R$ 00,00</span>
+-      </div>
+-    </div>
++    }
+ 
+   </div>
+ 
+-  <!-- BOTÃO -->
++  <!-- AÇÕES -->
+   <div class="status-actions">
++    @if (podeCancelar) {
++      <button class="status-btn status-btn--cancel" (click)="cancelar()" [disabled]="cancelando">
++        {{ cancelando ? 'CANCELANDO…' : 'CANCELAR PEDIDO' }}
++      </button>
++    }
+     <button class="status-btn" (click)="ajuda()">AJUDA</button>
+   </div>
+ 
+-</div>
+\ No newline at end of file
++</div>
+diff --git a/src/app/features/private/delivery/status-pedido/status-pedido.scss b/src/app/features/private/delivery/status-pedido/status-pedido.scss
+index c6147f6..a511a5e 100644
+--- a/src/app/features/private/delivery/status-pedido/status-pedido.scss
++++ b/src/app/features/private/delivery/status-pedido/status-pedido.scss
+@@ -227,4 +227,46 @@
+   transition: opacity 0.2s;
+ 
+   &:active { opacity: 0.85; }
++
++  &:disabled { opacity: 0.6; cursor: default; }
++
++  &--cancel {
++    background: transparent;
++    color: #dc2626;
++    border: 2px solid #dc2626;
++    margin-bottom: 10px;
++  }
++}
++
++.status-loading,
++.status-erro {
++  text-align: center;
++  color: var(--color-gray-600);
++  font-size: 14px;
++  margin-top: 24px;
++}
++
++.status-erro { color: #dc2626; }
++
++.status-cancelado {
++  display: flex;
++  flex-direction: column;
++  gap: 4px;
++  background: #fef2f2;
++  border: 1px solid #fecaca;
++  color: #b91c1c;
++  border-radius: 12px;
++  padding: 14px 16px;
++  font-size: 13px;
++  margin-bottom: 8px;
++}
++
++.status-detalhes__linha--total {
++  font-weight: 700;
++  color: var(--color-text);
++}
++
++.status-mapa__placeholder small {
++  font-size: 11px;
++  opacity: 0.7;
+ }
+\ No newline at end of file
+diff --git a/src/app/features/private/delivery/status-pedido/status-pedido.spec.ts b/src/app/features/private/delivery/status-pedido/status-pedido.spec.ts
+index 207f52b..dce21d5 100644
+--- a/src/app/features/private/delivery/status-pedido/status-pedido.spec.ts
++++ b/src/app/features/private/delivery/status-pedido/status-pedido.spec.ts
+@@ -1,17 +1,21 @@
+ import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
+ 
+-import { StatusPedido } from './status-pedido';
++import { StatusPedidoComponent } from './status-pedido';
+ 
+-describe('StatusPedido', () => {
+-  let component: StatusPedido;
+-  let fixture: ComponentFixture<StatusPedido>;
++describe('StatusPedidoComponent', () => {
++  let component: StatusPedidoComponent;
++  let fixture: ComponentFixture<StatusPedidoComponent>;
+ 
+   beforeEach(async () => {
+     await TestBed.configureTestingModule({
+-      imports: [StatusPedido],
++      imports: [StatusPedidoComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+     }).compileComponents();
+ 
+-    fixture = TestBed.createComponent(StatusPedido);
++    fixture = TestBed.createComponent(StatusPedidoComponent);
+     component = fixture.componentInstance;
+     await fixture.whenStable();
+   });
+diff --git a/src/app/features/private/delivery/status-pedido/status-pedido.ts b/src/app/features/private/delivery/status-pedido/status-pedido.ts
+index b694535..d70013a 100644
+--- a/src/app/features/private/delivery/status-pedido/status-pedido.ts
++++ b/src/app/features/private/delivery/status-pedido/status-pedido.ts
+@@ -1,77 +1,138 @@
+-import { Component, OnInit, OnDestroy } from '@angular/core';
++import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+ import { ActivatedRoute, Router } from '@angular/router';
+ import { CommonModule } from '@angular/common';
+-import { StatusPedido } from '../../../../core/services/delivery';
++import { Subject, Subscription, switchMap, takeUntil, timer } from 'rxjs';
++import { DeliveryService } from '../../../../core/services/delivery';
++import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../../core/models/food-order';
++import { ApiError } from '../../../../core/models/common';
+ 
+ interface EtapaStatus {
+-  id: StatusPedido;
++  id: string;
+   label: string;
+ }
+ 
++const POLL_MS = 8000;
++
++/** Índice da etapa (0..3) por status da API. `Cancelled` é tratado à parte. */
++const STATUS_INDEX: Record<FoodOrderStatus, number> = {
++  Received: 0,
++  Accepted: 0,
++  Preparing: 1,
++  OnTheWay: 2,
++  Delivered: 3,
++  Cancelled: 0,
++};
++
+ @Component({
+   selector: 'app-status-pedido',
+   imports: [CommonModule],
+   templateUrl: './status-pedido.html',
+-  styleUrl: './status-pedido.scss'
++  styleUrl: './status-pedido.scss',
+ })
+ export class StatusPedidoComponent implements OnInit, OnDestroy {
+-  pedidoId: number = 0;
+-  statusAtual: StatusPedido = 'recebido';
+-  private intervalo?: ReturnType<typeof setInterval>;
++  private readonly route = inject(ActivatedRoute);
++  private readonly router = inject(Router);
++  private readonly deliveryService = inject(DeliveryService);
++
++  private readonly destroy$ = new Subject<void>();
++  private pollSub?: Subscription;
++
++  pedidoId = 0;
++  pedido?: ResponseFoodOrderDto;
++  carregando = true;
++  erro = '';
++  cancelando = false;
+ 
+   etapas: EtapaStatus[] = [
+     { id: 'recebido', label: 'Pedido recebido' },
+-    { id: 'preparo',  label: 'Em preparo' },
+-    { id: 'caminho',  label: 'A caminho' },
++    { id: 'preparo', label: 'Em preparo' },
++    { id: 'caminho', label: 'A caminho' },
+     { id: 'entregue', label: 'Entregue' },
+   ];
+ 
+-  endereco = 'Rua tuiucue, 122';
+-  bairro = 'Jardim da Saúde';
+-
+-  // Mock de dados do pedido para exibição
+-  restauranteNome = 'Pizzaria Bella Itália';
+-  restauranteAvaliacao = 4.7;
+-  restauranteTempo = '35-45 min';
+-  restauranteTaxaEntrega = 4.99;
+-  restauranteDescricao = 'Pizzas artesanais feitas no forno a lenha com massa crocante';
+-
+-  constructor(
+-    private route: ActivatedRoute,
+-    private router: Router
+-  ) {}
+-
+   ngOnInit() {
+     this.pedidoId = Number(this.route.snapshot.paramMap.get('id'));
+-    this.simularProgresso();
++    this.iniciarPolling();
+   }
+ 
+   ngOnDestroy() {
+-    if (this.intervalo) clearInterval(this.intervalo);
++    this.destroy$.next();
++    this.destroy$.complete();
++  }
++
++  private iniciarPolling() {
++    this.pollSub = timer(0, POLL_MS)
++      .pipe(
++        switchMap(() => this.deliveryService.getPedido(this.pedidoId)),
++        takeUntil(this.destroy$),
++      )
++      .subscribe({
++        next: (p) => {
++          this.carregando = false;
++          this.pedido = p;
++          if (this.finalizado) {
++            this.pollSub?.unsubscribe();
++          }
++        },
++        error: (err: ApiError) => {
++          this.carregando = false;
++          this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o pedido.';
++        },
++      });
++  }
++
++  get status(): FoodOrderStatus | undefined {
++    return this.pedido?.status;
++  }
++
++  get cancelado(): boolean {
++    return this.status === 'Cancelled';
++  }
++
++  get finalizado(): boolean {
++    return this.status === 'Delivered' || this.status === 'Cancelled';
+   }
+ 
+   get indexAtual(): number {
+-    return this.etapas.findIndex(e => e.id === this.statusAtual);
++    return this.status ? STATUS_INDEX[this.status] : 0;
+   }
+ 
+   get labelAtual(): string {
+-    return this.etapas.find(e => e.id === this.statusAtual)?.label ?? '';
++    if (this.cancelado) return 'Pedido cancelado';
++    return this.etapas[this.indexAtual]?.label ?? '';
+   }
+ 
+-  simularProgresso() {
+-    // Simula mudança de status a cada 5 segundos para demo
+-    this.intervalo = setInterval(() => {
+-      const index = this.indexAtual;
+-      if (index < this.etapas.length - 1) {
+-        this.statusAtual = this.etapas[index + 1].id;
+-      } else {
+-        clearInterval(this.intervalo);
+-      }
+-    }, 5000);
++  etapaAtingida(index: number): boolean {
++    return !this.cancelado && index <= this.indexAtual;
+   }
+ 
+-  etapaAtingida(index: number): boolean {
+-    return index <= this.indexAtual;
++  get podeCancelar(): boolean {
++    return this.status === 'Received' || this.status === 'Accepted' || this.status === 'Preparing';
++  }
++
++  get rastreando(): boolean {
++    return this.status === 'OnTheWay' && !!this.pedido?.delivery?.currentLat;
++  }
++
++  cancelar() {
++    if (this.cancelando || !this.podeCancelar) return;
++    this.cancelando = true;
++    this.erro = '';
++    this.deliveryService.cancelarPedido(this.pedidoId, 'Cancelado pelo cliente').subscribe({
++      next: (p) => {
++        this.cancelando = false;
++        this.pedido = p;
++        this.pollSub?.unsubscribe();
++      },
++      error: (err: ApiError) => {
++        this.cancelando = false;
++        this.erro = err?.message?.trim() ? err.message : 'Não foi possível cancelar o pedido.';
++      },
++    });
++  }
++
++  fmt(valor?: string): string {
++    return Number(valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+   }
+ 
+   ajuda() {
+@@ -81,4 +142,4 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
+   voltar() {
+     this.router.navigate(['/home']);
+   }
+-}
+\ No newline at end of file
++}

@@ -1,0 +1,464 @@
+diff --git a/src/app/core/models/food-order.ts b/src/app/core/models/food-order.ts
+new file mode 100644
+index 0000000..7715eac
+--- /dev/null
++++ b/src/app/core/models/food-order.ts
+@@ -0,0 +1,105 @@
++import { PaymentMethod } from './enums';
++
++/** Estados de um pedido de delivery (ResponseFoodOrderDto.status). */
++export type FoodOrderStatus =
++  | 'Received'
++  | 'Accepted'
++  | 'Preparing'
++  | 'OnTheWay'
++  | 'Delivered'
++  | 'Cancelled';
++
++// ── Criação de pedido ────────────────────────────────────────────────────────
++
++export interface CreateFoodOrderItemDto {
++  menuItemId: number;
++  quantity: number;
++  notes?: string;
++  additionIds?: number[];
++}
++
++/** Corpo de `POST /v1/food-orders` (CreateFoodOrderDto). */
++export interface CreateFoodOrderDto {
++  restaurantId: number;
++  paymentMethod: PaymentMethod;
++  deliveryFee?: number;
++  notes?: string;
++  items: CreateFoodOrderItemDto[];
++}
++
++// ── Resposta / detalhe ───────────────────────────────────────────────────────
++
++export interface ResponseFoodOrderRestaurantDto {
++  id: number;
++  name: string;
++  imageUrl?: string;
++  userId: number;
++}
++
++export interface ResponseFoodOrderUserDto {
++  id: number;
++  name: string;
++  fileUrl?: string;
++}
++
++export interface ResponseFoodOrderItemDto {
++  id: number;
++  menuItemId: number;
++  name: string;
++  quantity: number;
++  unitPrice: string;
++  notes?: string;
++  additions: unknown[];
++}
++
++/** Rastreio do entregador (polling de lat/lng). */
++export interface ResponseFoodOrderDeliveryDto {
++  id: number;
++  status: string;
++  courierId?: number;
++  currentLat?: string;
++  currentLng?: string;
++  locationUpdatedAt?: string;
++}
++
++export interface ResponseFoodOrderDto {
++  id: number;
++  status: FoodOrderStatus;
++  itemsValue: string;
++  deliveryFee: string;
++  totalValue: string;
++  platformFeeRate?: string;
++  commissionAmount?: string;
++  paymentMethod: PaymentMethod;
++  notes?: string;
++  cancelReason?: string;
++  chatRoomId: number;
++  restaurant: ResponseFoodOrderRestaurantDto;
++  customer: ResponseFoodOrderUserDto;
++  items: ResponseFoodOrderItemDto[];
++  delivery?: ResponseFoodOrderDeliveryDto;
++  acceptedAt?: string;
++  cancelledAt?: string;
++  deliveredAt?: string;
++  createdAt: string;
++  updatedAt: string;
++}
++
++/** Retorno de `POST /v1/food-orders`. */
++export interface CreateFoodOrderResponseDto {
++  message: string;
++  foodOrder: ResponseFoodOrderDto;
++}
++
++/** Retorno paginado de `GET /v1/food-orders`. */
++export interface ResponseFindAllFoodOrderDto {
++  foodOrders: ResponseFoodOrderDto[];
++  currentPage: number;
++  totalPages: number;
++  totalRecords: number;
++}
++
++/** Corpo de `PATCH /v1/food-orders/{id}/cancel`. */
++export interface CancelFoodOrderDto {
++  cancelReason: string;
++}
+diff --git a/src/app/core/services/delivery.ts b/src/app/core/services/delivery.ts
+index 21c75e8..a27737f 100644
+--- a/src/app/core/services/delivery.ts
++++ b/src/app/core/services/delivery.ts
+@@ -1,5 +1,5 @@
+ import { Injectable, inject } from '@angular/core';
+-import { Observable, map } from 'rxjs';
++import { Observable, map, tap } from 'rxjs';
+ import { ApiService } from './api';
+ import {
+   ResponseFindAllRestaurantDto,
+@@ -8,6 +8,8 @@ import {
+   ResponseRestaurantCategoryDto,
+   ResponseRestaurantDto,
+ } from '../models/restaurant';
++import { CreateFoodOrderDto, CreateFoodOrderResponseDto } from '../models/food-order';
++import { PaymentMethod } from '../models/enums';
+ 
+ // ─── View-models do Front (pt) — populados a partir dos DTOs da API ─────────
+ 
+@@ -157,22 +159,30 @@ export class DeliveryService {
+     return subtotal + frete;
+   }
+ 
+-  /** DC-2 substitui por `POST /v1/food-orders`. Provisório (mock) para o fluxo não quebrar. */
+-  finalizarPedido(): Pedido {
+-    const pedido: Pedido = {
+-      id: this.pedidoAtual.restaurante?.id ?? 0,
+-      restaurante: this.pedidoAtual.restaurante!,
+-      itens: this.pedidoAtual.itens ?? [],
+-      endereco: this.pedidoAtual.endereco ?? '',
+-      bairro: this.pedidoAtual.bairro ?? '',
+-      opcaoEntrega: this.pedidoAtual.opcaoEntrega ?? OPCOES_ENTREGA[0],
+-      formaPagamento: this.pedidoAtual.formaPagamento ?? 'credito',
+-      total: this.calcularTotal(),
+-      data: '',
+-      status: 'recebido',
++  /** Cria o pedido — `POST /v1/food-orders`. Limpa o carrinho em caso de sucesso. */
++  criarPedido(): Observable<CreateFoodOrderResponseDto> {
++    return this.api
++      .post<CreateFoodOrderResponseDto>('/food-orders', this.buildCreateFoodOrderDto())
++      .pipe(tap(() => (this.pedidoAtual = {})));
++  }
++
++  private buildCreateFoodOrderDto(): CreateFoodOrderDto {
++    const itens = this.pedidoAtual.itens ?? [];
++    return {
++      restaurantId: this.pedidoAtual.restaurante?.id ?? 0,
++      paymentMethod: this.paymentMethodApi(this.pedidoAtual.formaPagamento ?? 'credito'),
++      deliveryFee: this.pedidoAtual.opcaoEntrega?.preco ?? 0,
++      items: itens.map((ip) => ({
++        menuItemId: ip.item.id,
++        quantity: ip.quantidade,
++        additionIds: ip.adicionaisSelecionados.map((a) => a.id),
++      })),
+     };
+-    this.pedidoAtual = {};
+-    return pedido;
++  }
++
++  /** Mapeia a forma de pagamento do front para o enum da API (decisão: só Crédito/PIX). */
++  private paymentMethodApi(forma: FormaPagamento): PaymentMethod {
++    return forma === 'pix' ? 'Pix' : 'CreditCard';
+   }
+ 
+   // ── Mapeadores API → view-model ───────────────────────────────────────────
+diff --git a/src/app/features/private/delivery/endereco-entrega/endereco-entrega.html b/src/app/features/private/delivery/endereco-entrega/endereco-entrega.html
+index 14c045a..ddf9b38 100644
+--- a/src/app/features/private/delivery/endereco-entrega/endereco-entrega.html
++++ b/src/app/features/private/delivery/endereco-entrega/endereco-entrega.html
+@@ -49,13 +49,21 @@
+       </div>
+     }
+ 
+-    <!-- ENDEREÇO -->
++    <!-- ENDEREÇO (do perfil) -->
+     <div class="endereco-card">
+-      <div class="endereco-card__info">
+-        <span class="endereco-card__rua">{{ endereco }}</span>
+-        <span class="endereco-card__bairro">{{ bairro }}</span>
+-      </div>
+-      <button class="endereco-card__trocar">Trocar endereço</button>
++      @if (semEndereco) {
++        <div class="endereco-card__info">
++          <span class="endereco-card__rua">Nenhum endereço cadastrado</span>
++          <span class="endereco-card__bairro">Cadastre um endereço no seu perfil para continuar.</span>
++        </div>
++        <button class="endereco-card__trocar" (click)="irParaPerfil()">Cadastrar</button>
++      } @else {
++        <div class="endereco-card__info">
++          <span class="endereco-card__rua">{{ endereco }}</span>
++          <span class="endereco-card__bairro">{{ bairro }}</span>
++        </div>
++        <button class="endereco-card__trocar" (click)="irParaPerfil()">Trocar endereço</button>
++      }
+     </div>
+ 
+     <!-- OPÇÕES DE ENTREGA -->
+diff --git a/src/app/features/private/delivery/endereco-entrega/endereco-entrega.spec.ts b/src/app/features/private/delivery/endereco-entrega/endereco-entrega.spec.ts
+index f86ccd7..b219929 100644
+--- a/src/app/features/private/delivery/endereco-entrega/endereco-entrega.spec.ts
++++ b/src/app/features/private/delivery/endereco-entrega/endereco-entrega.spec.ts
+@@ -1,17 +1,21 @@
+ import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
+ 
+-import { EnderecoEntrega } from './endereco-entrega';
++import { EnderecoEntregaComponent } from './endereco-entrega';
+ 
+-describe('EnderecoEntrega', () => {
+-  let component: EnderecoEntrega;
+-  let fixture: ComponentFixture<EnderecoEntrega>;
++describe('EnderecoEntregaComponent', () => {
++  let component: EnderecoEntregaComponent;
++  let fixture: ComponentFixture<EnderecoEntregaComponent>;
+ 
+   beforeEach(async () => {
+     await TestBed.configureTestingModule({
+-      imports: [EnderecoEntrega],
++      imports: [EnderecoEntregaComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+     }).compileComponents();
+ 
+-    fixture = TestBed.createComponent(EnderecoEntrega);
++    fixture = TestBed.createComponent(EnderecoEntregaComponent);
+     component = fixture.componentInstance;
+     await fixture.whenStable();
+   });
+diff --git a/src/app/features/private/delivery/endereco-entrega/endereco-entrega.ts b/src/app/features/private/delivery/endereco-entrega/endereco-entrega.ts
+index 7e727a0..adfbb06 100644
+--- a/src/app/features/private/delivery/endereco-entrega/endereco-entrega.ts
++++ b/src/app/features/private/delivery/endereco-entrega/endereco-entrega.ts
+@@ -1,37 +1,65 @@
+-import { Component, OnInit } from '@angular/core';
++import { Component, OnInit, inject } from '@angular/core';
+ import { Router } from '@angular/router';
+ import { CommonModule } from '@angular/common';
+-import { DeliveryService, OpcaoEntrega, OPCOES_ENTREGA } from '../../../../core/services/delivery';
++import { DeliveryService, OpcaoEntrega, OPCOES_ENTREGA, Pedido } from '../../../../core/services/delivery';
++import { ProfileService } from '../../../../core/services/profile';
++import { ResponseAddressDto } from '../../../../core/models/profile';
+ 
+ @Component({
+   selector: 'app-endereco-entrega',
+   imports: [CommonModule],
+   templateUrl: './endereco-entrega.html',
+-  styleUrl: './endereco-entrega.scss'
++  styleUrl: './endereco-entrega.scss',
+ })
+ export class EnderecoEntregaComponent implements OnInit {
+-  pedido: any;
++  private readonly router = inject(Router);
++  private readonly deliveryService = inject(DeliveryService);
++  private readonly profileService = inject(ProfileService);
++
++  pedido?: Partial<Pedido>;
+   opcoes: OpcaoEntrega[] = OPCOES_ENTREGA;
+-  opcaoSelecionada: string = 'padrao';
+-  endereco: string = 'Rua tuiucue, 122';
+-  bairro: string = 'Jardim da Saúde';
+-
+-  constructor(
+-    private router: Router,
+-    private deliveryService: DeliveryService
+-  ) {}
+-
+-ngOnInit() {
+-  this.pedido = this.deliveryService.getPedidoAtual();
+-  this.deliveryService.setEndereco(this.endereco, this.bairro);
+-  this.deliveryService.setOpcaoEntrega(this.opcoes[0]);
+-}
++  opcaoSelecionada = 'padrao';
++  endereco = '';
++  bairro = '';
++  semEndereco = false;
++
++  ngOnInit() {
++    this.pedido = this.deliveryService.getPedidoAtual();
++    this.deliveryService.setOpcaoEntrega(this.opcoes[0]);
++    this.carregarEndereco();
++  }
++
++  /** Endereço de entrega = endereço do perfil (Módulo 2). O pedido não recebe endereço na API. */
++  private carregarEndereco() {
++    this.profileService.me().subscribe({
++      next: (p) => this.aplicarEndereco(p.address),
++      error: () => (this.semEndereco = true),
++    });
++  }
++
++  private aplicarEndereco(addr?: ResponseAddressDto) {
++    if (!addr || !(addr.street || addr.city)) {
++      this.semEndereco = true;
++      return;
++    }
++    const linha1 = [addr.street, addr.number].filter(Boolean).join(', ');
++    const linha2 = [addr.neighborhood, [addr.city, addr.state].filter(Boolean).join('/')]
++      .filter(Boolean)
++      .join(' - ');
++    this.endereco = linha1;
++    this.bairro = linha2;
++    this.deliveryService.setEndereco(this.endereco, this.bairro);
++  }
+ 
+   selecionarOpcao(opcao: OpcaoEntrega) {
+     this.opcaoSelecionada = opcao.id;
+     this.deliveryService.setOpcaoEntrega(opcao);
+   }
+ 
++  irParaPerfil() {
++    this.router.navigate(['/perfil']);
++  }
++
+   continuar() {
+     this.router.navigate(['/delivery/revisao']);
+   }
+@@ -44,4 +72,4 @@ ngOnInit() {
+     if (valor === 0) return 'Grátis';
+     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/app/features/private/delivery/revisao-pedido/revisao-pedido.html b/src/app/features/private/delivery/revisao-pedido/revisao-pedido.html
+index bc23aa6..1e6ef4d 100644
+--- a/src/app/features/private/delivery/revisao-pedido/revisao-pedido.html
++++ b/src/app/features/private/delivery/revisao-pedido/revisao-pedido.html
+@@ -127,7 +127,12 @@
+ 
+   <!-- BOTÃO -->
+   <div class="revisao-actions">
+-    <button class="revisao-btn" (click)="finalizarPedido()">FINALIZAR PEDIDO</button>
++    @if (erro) {
++      <span class="revisao-erro">{{ erro }}</span>
++    }
++    <button class="revisao-btn" (click)="finalizarPedido()" [disabled]="enviando">
++      {{ enviando ? 'FINALIZANDO…' : 'FINALIZAR PEDIDO' }}
++    </button>
+   </div>
+ 
+ </div>
+\ No newline at end of file
+diff --git a/src/app/features/private/delivery/revisao-pedido/revisao-pedido.spec.ts b/src/app/features/private/delivery/revisao-pedido/revisao-pedido.spec.ts
+index 708bb77..1c10e95 100644
+--- a/src/app/features/private/delivery/revisao-pedido/revisao-pedido.spec.ts
++++ b/src/app/features/private/delivery/revisao-pedido/revisao-pedido.spec.ts
+@@ -1,17 +1,21 @@
+ import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
+ 
+-import { RevisaoPedido } from './revisao-pedido';
++import { RevisaoPedidoComponent } from './revisao-pedido';
+ 
+-describe('RevisaoPedido', () => {
+-  let component: RevisaoPedido;
+-  let fixture: ComponentFixture<RevisaoPedido>;
++describe('RevisaoPedidoComponent', () => {
++  let component: RevisaoPedidoComponent;
++  let fixture: ComponentFixture<RevisaoPedidoComponent>;
+ 
+   beforeEach(async () => {
+     await TestBed.configureTestingModule({
+-      imports: [RevisaoPedido],
++      imports: [RevisaoPedidoComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+     }).compileComponents();
+ 
+-    fixture = TestBed.createComponent(RevisaoPedido);
++    fixture = TestBed.createComponent(RevisaoPedidoComponent);
+     component = fixture.componentInstance;
+     await fixture.whenStable();
+   });
+diff --git a/src/app/features/private/delivery/revisao-pedido/revisao-pedido.ts b/src/app/features/private/delivery/revisao-pedido/revisao-pedido.ts
+index 8eae92a..481f0bf 100644
+--- a/src/app/features/private/delivery/revisao-pedido/revisao-pedido.ts
++++ b/src/app/features/private/delivery/revisao-pedido/revisao-pedido.ts
+@@ -1,39 +1,49 @@
+-import { Component, OnInit } from '@angular/core';
++import { Component, OnInit, inject } from '@angular/core';
+ import { Router } from '@angular/router';
+ import { CommonModule } from '@angular/common';
+ import { DeliveryService, Pedido } from '../../../../core/services/delivery';
++import { ApiError } from '../../../../core/models/common';
+ 
+ @Component({
+   selector: 'app-revisao-pedido',
+   imports: [CommonModule],
+   templateUrl: './revisao-pedido.html',
+-  styleUrl: './revisao-pedido.scss'
++  styleUrl: './revisao-pedido.scss',
+ })
+ export class RevisaoPedidoComponent implements OnInit {
+-  pedido?: Partial<Pedido>;
++  private readonly router = inject(Router);
++  private readonly deliveryService = inject(DeliveryService);
+ 
+-  constructor(
+-    private router: Router,
+-    private deliveryService: DeliveryService
+-  ) {}
++  pedido?: Partial<Pedido>;
++  enviando = false;
++  erro = '';
+ 
+   ngOnInit() {
+     this.pedido = this.deliveryService.getPedidoAtual();
+   }
+ 
+   get formaPagamentoLabel(): string {
+-    const formas: Record<string, string> = {
+-      credito: 'Cartão de Crédito',
+-      debito: 'Cartão de Débito',
+-      pix: 'PIX',
+-      dinheiro: 'Dinheiro na entrega'
+-    };
+-    return formas[this.pedido?.formaPagamento ?? ''] ?? 'Cartão de Crédito';
++    return this.pedido?.formaPagamento === 'pix' ? 'PIX' : 'Cartão de Crédito';
+   }
+ 
+   finalizarPedido() {
+-    const pedido = this.deliveryService.finalizarPedido();
+-    this.router.navigate(['/delivery/status', pedido.id]);
++    if (this.enviando) return;
++    if (!this.pedido?.restaurante || !this.pedido?.itens?.length) {
++      this.erro = 'Sua sacola está vazia.';
++      return;
++    }
++    this.erro = '';
++    this.enviando = true;
++    this.deliveryService.criarPedido().subscribe({
++      next: (res) => {
++        this.enviando = false;
++        this.router.navigate(['/delivery/status', res.foodOrder.id]);
++      },
++      error: (err: ApiError) => {
++        this.enviando = false;
++        this.erro = err?.message?.trim() ? err.message : 'Não foi possível finalizar o pedido.';
++      },
++    });
+   }
+ 
+   voltar() {
+@@ -47,4 +57,4 @@ export class RevisaoPedidoComponent implements OnInit {
+   get total(): number {
+     return this.deliveryService.calcularTotal();
+   }
+-}
+\ No newline at end of file
++}

@@ -49,13 +49,21 @@
       </div>
     }
 
-    <!-- ENDEREÇO -->
+    <!-- ENDEREÇO (do perfil) -->
     <div class="endereco-card">
-      <div class="endereco-card__info">
-        <span class="endereco-card__rua">{{ endereco }}</span>
-        <span class="endereco-card__bairro">{{ bairro }}</span>
-      </div>
-      <button class="endereco-card__trocar">Trocar endereço</button>
+      @if (semEndereco) {
+        <div class="endereco-card__info">
+          <span class="endereco-card__rua">Nenhum endereço cadastrado</span>
+          <span class="endereco-card__bairro">Cadastre um endereço no seu perfil para continuar.</span>
+        </div>
+        <button class="endereco-card__trocar" (click)="irParaPerfil()">Cadastrar</button>
+      } @else {
+        <div class="endereco-card__info">
+          <span class="endereco-card__rua">{{ endereco }}</span>
+          <span class="endereco-card__bairro">{{ bairro }}</span>
+        </div>
+        <button class="endereco-card__trocar" (click)="irParaPerfil()">Trocar endereço</button>
+      }
     </div>
 
     <!-- OPÇÕES DE ENTREGA -->

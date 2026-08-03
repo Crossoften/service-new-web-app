@@ -1,17 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { Sacola } from './sacola';
+import { SacolaComponent } from './sacola';
 
-describe('Sacola', () => {
-  let component: Sacola;
-  let fixture: ComponentFixture<Sacola>;
+describe('SacolaComponent', () => {
+  let component: SacolaComponent;
+  let fixture: ComponentFixture<SacolaComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Sacola],
+      imports: [SacolaComponent],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Sacola);
+    fixture = TestBed.createComponent(SacolaComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

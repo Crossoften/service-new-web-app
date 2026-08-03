@@ -1,0 +1,840 @@
+diff --git a/src/app/core/models/enums.ts b/src/app/core/models/enums.ts
+index d434840..47cf231 100644
+--- a/src/app/core/models/enums.ts
++++ b/src/app/core/models/enums.ts
+@@ -4,7 +4,7 @@
+  */
+ 
+ // ── Usuário ──────────────────────────────────────────────────────────────────
+-export type UserProfileType = 'Client' | 'Supplier' | 'Partner' | 'Delivery' | 'Influencer';
++export type UserProfileType = 'Client' | 'Supplier' | 'Delivery' | 'Influencer';
+ export type UserRole = 'Master' | 'Admin' | 'User';
+ export type UserStatus = 'Active' | 'Pending' | 'Inactive';
+ export type BillingType = 'None' | 'Subscription' | 'Commission';
+diff --git a/src/app/core/models/plan.ts b/src/app/core/models/plan.ts
+new file mode 100644
+index 0000000..33cd5e2
+--- /dev/null
++++ b/src/app/core/models/plan.ts
+@@ -0,0 +1,30 @@
++import { PlanInterval } from './enums';
++
++/**
++ * Plano de assinatura ativo (ResponsePlanDto do Swagger).
++ * Observação: `price` e `monthlyPrice` chegam como **string** (ex.: "39.90").
++ */
++export interface ResponsePlanDto {
++  id: number;
++  name: string;
++  slug: string;
++  description?: string;
++  price: string;
++  interval: PlanInterval;
++  intervalCount: number;
++  bonusMonths: number;
++  monthlyPrice: string;
++  isActive: boolean;
++  sortOrder: number;
++  createdAt: string;
++  updatedAt: string;
++  categoryId?: number;
++}
++
++/** Retorno paginado de `GET /v1/plans/active` (ResponseFindAllPlansDto). */
++export interface ResponseFindAllPlansDto {
++  plans: ResponsePlanDto[];
++  currentPage: number;
++  totalPages: number;
++  totalRecords: number;
++}
+diff --git a/src/app/core/models/subscription.ts b/src/app/core/models/subscription.ts
+new file mode 100644
+index 0000000..2fc01d7
+--- /dev/null
++++ b/src/app/core/models/subscription.ts
+@@ -0,0 +1,36 @@
++import { PaymentMethod, SubscriptionStatus } from './enums';
++
++/**
++ * Corpo de `POST /v1/subscriptions` (CreateSubscriptionDto).
++ * Obrigatórios: `planId` e `method`. Demais campos (cartão/endereço) são opcionais.
++ */
++export interface CreateSubscriptionDto {
++  planId: number;
++  method: PaymentMethod;
++  holderName?: string;
++  cardBrand?: string;
++  cardNumber?: string;
++  billingStreet?: string;
++  billingNeighborhood?: string;
++  billingCity?: string;
++  billingState?: string;
++  billingZipCode?: string;
++}
++
++/** Assinatura retornada pela API (subset usado no Front — ResponseSubscriptionDto). */
++export interface ResponseSubscriptionDto {
++  id: number;
++  status: SubscriptionStatus;
++  amount: string;
++  planName: string;
++  planInterval: string;
++  intervalCount: number;
++  createdAt: string;
++  updatedAt: string;
++}
++
++/** Retorno de `POST /v1/subscriptions` (CreateSubscriptionResponseDto). */
++export interface CreateSubscriptionResponseDto {
++  message: string;
++  subscription: ResponseSubscriptionDto;
++}
+diff --git a/src/app/core/services/auth.ts b/src/app/core/services/auth.ts
+index 6b756df..105cc0c 100644
+--- a/src/app/core/services/auth.ts
++++ b/src/app/core/services/auth.ts
+@@ -22,7 +22,6 @@ const PROFILE_HOME_ROUTES: Record<UserProfileType, string> = {
+   Supplier: '/fornecedor/home',
+   Delivery: '/entregador/home',
+   Influencer: '/parceiro/home',
+-  Partner: '/parceiro/home',
+ };
+ 
+ /** Camada de autenticação: login, cadastro e recuperação de senha, integrada à sessão. */
+diff --git a/src/app/core/services/subscription.spec.ts b/src/app/core/services/subscription.spec.ts
+new file mode 100644
+index 0000000..06d3bba
+--- /dev/null
++++ b/src/app/core/services/subscription.spec.ts
+@@ -0,0 +1,20 @@
++import { TestBed } from '@angular/core/testing';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
++
++import { SubscriptionService } from './subscription';
++
++describe('SubscriptionService', () => {
++  let service: SubscriptionService;
++
++  beforeEach(() => {
++    TestBed.configureTestingModule({
++      providers: [provideHttpClient(), provideHttpClientTesting()],
++    });
++    service = TestBed.inject(SubscriptionService);
++  });
++
++  it('should be created', () => {
++    expect(service).toBeTruthy();
++  });
++});
+diff --git a/src/app/core/services/subscription.ts b/src/app/core/services/subscription.ts
+new file mode 100644
+index 0000000..ee3c3a7
+--- /dev/null
++++ b/src/app/core/services/subscription.ts
+@@ -0,0 +1,21 @@
++import { Injectable, inject } from '@angular/core';
++import { Observable } from 'rxjs';
++import { ApiService } from './api';
++import { ResponseFindAllPlansDto } from '../models/plan';
++import { CreateSubscriptionDto, CreateSubscriptionResponseDto } from '../models/subscription';
++
++/** Planos ativos e criação de assinatura (fluxo do fornecedor). */
++@Injectable({ providedIn: 'root' })
++export class SubscriptionService {
++  private readonly api = inject(ApiService);
++
++  /** Lista os planos ativos — `GET /v1/plans/active` (público). */
++  activePlans(): Observable<ResponseFindAllPlansDto> {
++    return this.api.get<ResponseFindAllPlansDto>('/plans/active');
++  }
++
++  /** Cria a assinatura do usuário autenticado — `POST /v1/subscriptions` (Bearer). */
++  create(dto: CreateSubscriptionDto): Observable<CreateSubscriptionResponseDto> {
++    return this.api.post<CreateSubscriptionResponseDto>('/subscriptions', dto);
++  }
++}
+diff --git a/src/app/features/auth/cadastro/cadastro.html b/src/app/features/auth/cadastro/cadastro.html
+index b03b76e..e5771a9 100644
+--- a/src/app/features/auth/cadastro/cadastro.html
++++ b/src/app/features/auth/cadastro/cadastro.html
+@@ -35,7 +35,12 @@
+           </div>
+ 
+           <div class="cadastro-field">
+-            <label>Telefone</label>
++            <label>Email</label>
++            <input type="email" placeholder="seu@email.com" [(ngModel)]="email" autocomplete="email" inputmode="email" />
++          </div>
++
++          <div class="cadastro-field">
++            <label>Telefone <span class="cadastro-field__opt">(opcional)</span></label>
+             <div class="cadastro-field__icon-wrapper">
+               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                 <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+@@ -46,8 +51,8 @@
+           </div>
+ 
+           <div class="cadastro-field">
+-            <label>Código</label>
+-            <input type="text" placeholder="00000" [(ngModel)]="codigo" />
++            <label>Código de convite <span class="cadastro-field__opt">(opcional)</span></label>
++            <input type="text" placeholder="Código do influencer que indicou você" [(ngModel)]="codigo" />
+           </div>
+ 
+           @if (erro) {
+@@ -84,7 +89,12 @@
+           </div>
+ 
+           <div class="cadastro-field">
+-            <label>Telefone</label>
++            <label>Email</label>
++            <input type="email" placeholder="seu@email.com" [(ngModel)]="email" autocomplete="email" inputmode="email" />
++          </div>
++
++          <div class="cadastro-field">
++            <label>Telefone <span class="cadastro-field__opt">(opcional)</span></label>
+             <div class="cadastro-field__icon-wrapper">
+               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                 <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+@@ -131,33 +141,8 @@
+       </div>
+     }
+ 
+-    <!-- STEP 2 - SMS -->
++    <!-- STEP 2 - SENHA -->
+     @if (step === 2) {
+-      <div class="cadastro-content cadastro-content--centered">
+-        <h2 class="cadastro-titulo-step">Insira o código</h2>
+-        <p class="cadastro-descricao-step">Para cadastrar sua nova senha, insira o código que você recebeu por SMS:</p>
+-
+-        <div class="cadastro-sms">
+-          @for (digit of sms; track $index) {
+-            <input
+-              [id]="'sms-' + $index"
+-              class="cadastro-sms__input"
+-              type="tel"
+-              maxlength="1"
+-              [value]="digit"
+-              (input)="onSmsInput($event, $index)"
+-            />
+-          }
+-        </div>
+-
+-        @if (erro) {
+-          <span class="cadastro-erro">{{ erro }}</span>
+-        }
+-      </div>
+-    }
+-
+-    <!-- STEP 3 - SENHA -->
+-    @if (step === 3) {
+       <div class="cadastro-content cadastro-content--centered">
+         <h2 class="cadastro-titulo-step">Nova senha</h2>
+         <p class="cadastro-descricao-step">Cadastre uma senha usando números e caracteres:</p>
+@@ -204,63 +189,57 @@
+       </div>
+     }
+ 
+-    <!-- STEP 4 - PLANOS (fornecedor) -->
+-    @if (step === 4) {
++    <!-- STEP 3 - PLANOS (fornecedor) -->
++    @if (step === 3) {
+       <div class="cadastro-content">
+         <h2 class="cadastro-titulo-step">Selecione o plano de assinatura</h2>
+         <p class="cadastro-descricao-step">Selecione o melhor plano para você</p>
+ 
+-        <div class="cadastro-planos">
+-          @for (plano of planos; track plano.id) {
+-            <div class="cadastro-plano"
+-              [class.cadastro-plano--ativo]="planoSelecionado === plano.id"
+-              (click)="planoSelecionado = plano.id">
+-              <div class="cadastro-plano__info">
+-                <span class="cadastro-plano__nome">{{ plano.label }}</span>
+-                <span class="cadastro-plano__preco">{{ plano.preco }}</span>
++        @if (planos.length) {
++          <div class="cadastro-planos">
++            @for (plano of planos; track plano.id) {
++              <div class="cadastro-plano"
++                [class.cadastro-plano--ativo]="planoSelecionado === plano.id"
++                (click)="planoSelecionado = plano.id">
++                <div class="cadastro-plano__info">
++                  <span class="cadastro-plano__nome">{{ plano.name }}</span>
++                  <span class="cadastro-plano__preco">{{ precoFmt(plano) }} · {{ intervaloLabel(plano) }}</span>
++                </div>
++                <div class="cadastro-plano__radio"
++                  [class.cadastro-plano__radio--ativo]="planoSelecionado === plano.id">
++                </div>
+               </div>
+-              <div class="cadastro-plano__radio"
+-                [class.cadastro-plano__radio--ativo]="planoSelecionado === plano.id">
+-              </div>
+-            </div>
+-          }
+-        </div>
++            }
++          </div>
+ 
+-        <div class="cadastro-beneficios">
+-          <span class="cadastro-beneficios__titulo">Benefícios</span>
+-          @for (b of beneficios; track b) {
+-            <div class="cadastro-beneficio">
+-              <div class="cadastro-beneficio__icon">
+-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+-                  <polyline points="20 6 9 17 4 12"/>
+-                </svg>
++          @if (planoAtual?.description) {
++            <div class="cadastro-beneficios">
++              <span class="cadastro-beneficios__titulo">Benefícios</span>
++              <div class="cadastro-beneficio">
++                <div class="cadastro-beneficio__icon">
++                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
++                    <polyline points="20 6 9 17 4 12"/>
++                  </svg>
++                </div>
++                <span>{{ planoAtual?.description }}</span>
+               </div>
+-              <span>{{ b }}</span>
+             </div>
+           }
+-        </div>
++        } @else {
++          <p class="cadastro-descricao-step">Nenhum plano disponível no momento.</p>
++        }
++
++        @if (erro) {
++          <span class="cadastro-erro">{{ erro }}</span>
++        }
+       </div>
+     }
+ 
+-    <!-- STEP 5 - FINALIZAR ASSINATURA (fornecedor) -->
+-    @if (step === 5) {
++    <!-- STEP 4 - FINALIZAR ASSINATURA (fornecedor) -->
++    @if (step === 4) {
+       <div class="cadastro-content">
+         <h2 class="cadastro-titulo-step">Finalizar assinatura</h2>
+-        <p class="cadastro-descricao-step">Selecione o melhor plano para você</p>
+-
+-        <div class="cadastro-card-info">
+-          <span class="cadastro-card-info__titulo">Endereço de cobrança</span>
+-          <div class="cadastro-card-info__body">
+-            <div>
+-              <p class="cadastro-card-info__nome">Paula Maria</p>
+-              <p class="cadastro-card-info__detalhe">531 Rua 123, São Paulo, SP 18505,</p>
+-            </div>
+-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+-            </svg>
+-          </div>
+-        </div>
++        <p class="cadastro-descricao-step">Revise e confirme sua assinatura</p>
+ 
+         <div class="cadastro-card-info" (click)="adicionarCartao()" style="cursor: pointer;">
+           <span class="cadastro-card-info__titulo">Pagamento</span>
+@@ -282,20 +261,21 @@
+ 
+         <div class="cadastro-resumo">
+           <div class="cadastro-resumo__linha">
+-            <span>Preço:</span><span>R$ 00,00</span>
+-          </div>
+-          <div class="cadastro-resumo__linha">
+-            <span>Frete:</span><span>Grátis</span>
++            <span>Plano:</span><span>{{ planoAtual?.name }}</span>
+           </div>
+           <div class="cadastro-resumo__linha cadastro-resumo__linha--total">
+-            <span>Total a pagar:</span><span>R$ 00,00</span>
++            <span>Total a pagar:</span><span>{{ planoAtual ? precoFmt(planoAtual) : 'R$ 0,00' }}</span>
+           </div>
+         </div>
++
++        @if (erro) {
++          <span class="cadastro-erro">{{ erro }}</span>
++        }
+       </div>
+     }
+ 
+-    <!-- STEP 6 - CARTÃO (fornecedor) -->
+-    @if (step === 6) {
++    <!-- STEP 5 - CARTÃO (fornecedor) -->
++    @if (step === 5) {
+       <div class="cadastro-content">
+         <h2 class="cadastro-titulo-step">Adicionar cartão</h2>
+         <p class="cadastro-descricao-step">Adicione o melhor cartão para o pagamento</p>
+@@ -333,11 +313,12 @@
+ 
+   <!-- BOTÃO -->
+   <div class="cadastro-actions">
+-    <button class="cadastro-btn" (click)="continuar()">
+-      @if (step === 5) { REALIZAR PAGAMENTO }
+-      @else if (step === 6) { SALVAR }
++    <button class="cadastro-btn" (click)="continuar()" [disabled]="carregando">
++      @if (carregando) { AGUARDE… }
++      @else if (step === 4) { REALIZAR PAGAMENTO }
++      @else if (step === 5) { SALVAR }
+       @else { CONTINUAR }
+     </button>
+   </div>
+ 
+-</div>
+\ No newline at end of file
++</div>
+diff --git a/src/app/features/auth/cadastro/cadastro.scss b/src/app/features/auth/cadastro/cadastro.scss
+index e6588f5..8751192 100644
+--- a/src/app/features/auth/cadastro/cadastro.scss
++++ b/src/app/features/auth/cadastro/cadastro.scss
+@@ -99,6 +99,11 @@
+     color: var(--color-gray-600);
+   }
+ 
++  &__opt {
++    font-weight: 400;
++    color: var(--color-gray-400);
++  }
++
+   input {
+     width: 100%;
+     padding: 12px 14px;
+diff --git a/src/app/features/auth/cadastro/cadastro.spec.ts b/src/app/features/auth/cadastro/cadastro.spec.ts
+index 728d8b5..0c8a675 100644
+--- a/src/app/features/auth/cadastro/cadastro.spec.ts
++++ b/src/app/features/auth/cadastro/cadastro.spec.ts
+@@ -1,17 +1,21 @@
+ import { ComponentFixture, TestBed } from '@angular/core/testing';
++import { provideRouter } from '@angular/router';
++import { provideHttpClient } from '@angular/common/http';
++import { provideHttpClientTesting } from '@angular/common/http/testing';
+ 
+-import { Cadastro } from './cadastro';
++import { CadastroComponent } from './cadastro';
+ 
+-describe('Cadastro', () => {
+-  let component: Cadastro;
+-  let fixture: ComponentFixture<Cadastro>;
++describe('CadastroComponent', () => {
++  let component: CadastroComponent;
++  let fixture: ComponentFixture<CadastroComponent>;
+ 
+   beforeEach(async () => {
+     await TestBed.configureTestingModule({
+-      imports: [Cadastro],
++      imports: [CadastroComponent],
++      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+     }).compileComponents();
+ 
+-    fixture = TestBed.createComponent(Cadastro);
++    fixture = TestBed.createComponent(CadastroComponent);
+     component = fixture.componentInstance;
+     await fixture.whenStable();
+   });
+diff --git a/src/app/features/auth/cadastro/cadastro.ts b/src/app/features/auth/cadastro/cadastro.ts
+index e8baed5..50ea780 100644
+--- a/src/app/features/auth/cadastro/cadastro.ts
++++ b/src/app/features/auth/cadastro/cadastro.ts
+@@ -1,112 +1,124 @@
+-import { Component, OnInit } from '@angular/core';
++import { Component, OnInit, inject } from '@angular/core';
+ import { ActivatedRoute, Router } from '@angular/router';
+ import { CommonModule } from '@angular/common';
+ import { FormsModule } from '@angular/forms';
++import { AuthService } from '../../../core/services/auth';
++import { SubscriptionService } from '../../../core/services/subscription';
++import { SocialNetwork } from '../../../core/models/enums';
++import { CreateUserSocialMediaDto, Perfil, RegisterBaseDto } from '../../../core/models/auth';
++import { ResponsePlanDto } from '../../../core/models/plan';
++import { CreateSubscriptionDto } from '../../../core/models/subscription';
++import { ApiError } from '../../../core/models/common';
+ 
+-export type Perfil = 'cliente' | 'fornecedor' | 'parceiro' | 'entregador';
+-
++/**
++ * Fluxo de cadastro por perfil, integrado à API.
++ *  - Cliente / Entregador / Parceiro:  Dados → Senha → register → Sucesso.
++ *  - Fornecedor:  Dados → Senha → register → [login automático] → Planos → Cartão → assinatura → Sucesso.
++ *
++ * Passos: 1 Dados · 2 Senha · 3 Planos · 4 Finalizar · 5 Cartão.
++ * (A etapa de SMS foi removida — o verify-code é exclusivo do mobile no contrato.)
++ */
+ @Component({
+   selector: 'app-cadastro',
+   imports: [CommonModule, FormsModule],
+   templateUrl: './cadastro.html',
+-  styleUrl: './cadastro.scss'
++  styleUrl: './cadastro.scss',
+ })
+ export class CadastroComponent implements OnInit {
++  private readonly route = inject(ActivatedRoute);
++  private readonly router = inject(Router);
++  private readonly auth = inject(AuthService);
++  private readonly subscriptions = inject(SubscriptionService);
++
+   perfil: Perfil = 'cliente';
+-  step: number = 1;
+-
+-  // Step 1 - Dados
+-  nome: string = '';
+-  telefone: string = '';
+-  codigo: string = '';
+-  termosAceitos: boolean = false;
+-
+-  // Step 1 - Parceiro (redes sociais)
+-  instagram: string = '';
+-  facebook: string = '';
+-  youtube: string = '';
+-  twitter: string = '';
+-  site: string = '';
+-
+-  // Step 2 - SMS
+-  sms: string[] = ['', '', '', ''];
+-
+-  // Step 3 - Senha
+-  senha: string = '';
+-  confirmarSenha: string = '';
+-  senhaVisivel: boolean = false;
+-  confirmarSenhaVisivel: boolean = false;
+-
+-  // Step 4 - Planos (fornecedor)
+-  planoSelecionado: string = 'mensal';
+-  planos = [
+-    { id: 'mensal',     label: 'Plano mensal',    preco: 'R$ 39,90/Mês' },
+-    { id: 'trimestral', label: 'Plano trimestral', preco: 'R$ 99,90' },
+-    { id: 'anual',      label: 'Plano anual',      preco: 'R$ 112,50' },
+-  ];
+-  beneficios = ['Benefício 1', 'Benefício 2', 'Benefício 3', 'Benefício 4'];
+-
+-  // Step 6 - Cartão (fornecedor)
+-  nomeCartao: string = '';
+-  numeroCartao: string = '';
+-  validadeCartao: string = '';
+-  ccv: string = '';
+-
+-  erro: string = '';
+-
+-  constructor(
+-    private route: ActivatedRoute,
+-    private router: Router
+-  ) {}
++  step = 1;
++
++  // Step 1 — Dados
++  nome = '';
++  email = '';
++  telefone = '';
++  codigo = ''; // → inviteCode (opcional)
++  termosAceitos = false;
++
++  // Step 1 — Parceiro (redes sociais)
++  instagram = '';
++  facebook = '';
++  youtube = '';
++  twitter = '';
++  site = '';
++
++  // Step 2 — Senha
++  senha = '';
++  confirmarSenha = '';
++  senhaVisivel = false;
++  confirmarSenhaVisivel = false;
++
++  // Step 3 — Planos (fornecedor)
++  planos: ResponsePlanDto[] = [];
++  planoSelecionado: number | null = null;
++
++  // Step 5 — Cartão (fornecedor)
++  nomeCartao = '';
++  numeroCartao = '';
++  validadeCartao = '';
++  ccv = '';
++
++  erro = '';
++  carregando = false;
+ 
+   ngOnInit() {
+     this.perfil = (this.route.snapshot.paramMap.get('perfil') ?? 'cliente') as Perfil;
+   }
+ 
+   get tituloPasso(): string {
+-    const titulos: Record<number, string> = {
+-      1: 'CADASTRO',
+-      2: 'CADASTRO',
+-      3: 'CADASTRO',
+-      4: 'PLANOS',
+-      5: 'PLANOS',
+-      6: 'PLANOS',
+-    };
+-    return titulos[this.step] ?? 'CADASTRO';
++    return this.step >= 3 ? 'PLANOS' : 'CADASTRO';
++  }
++
++  get planoAtual(): ResponsePlanDto | null {
++    return this.planos.find((p) => p.id === this.planoSelecionado) ?? null;
+   }
+ 
+   formatarTelefone(event: Event) {
+     let valor = (event.target as HTMLInputElement).value.replace(/\D/g, '');
+     if (valor.length > 11) valor = valor.slice(0, 11);
+     if (valor.length > 6) {
+-      valor = `(${valor.slice(0,2)}) ${valor.slice(2,7)}-${valor.slice(7)}`;
++      valor = `(${valor.slice(0, 2)}) ${valor.slice(2, 7)}-${valor.slice(7)}`;
+     } else if (valor.length > 2) {
+-      valor = `(${valor.slice(0,2)}) ${valor.slice(2)}`;
++      valor = `(${valor.slice(0, 2)}) ${valor.slice(2)}`;
+     } else if (valor.length > 0) {
+       valor = `(${valor}`;
+     }
+     this.telefone = valor;
+   }
+ 
+-  onSmsInput(event: Event, index: number) {
+-    const valor = (event.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 1);
+-    this.sms[index] = valor;
+-    if (valor && index < 3) {
+-      const next = document.getElementById(`sms-${index + 1}`);
+-      next?.focus();
+-    }
++  toggleSenha() {
++    this.senhaVisivel = !this.senhaVisivel;
+   }
+ 
+-  toggleSenha() { this.senhaVisivel = !this.senhaVisivel; }
+-  toggleConfirmarSenha() { this.confirmarSenhaVisivel = !this.confirmarSenhaVisivel; }
++  toggleConfirmarSenha() {
++    this.confirmarSenhaVisivel = !this.confirmarSenhaVisivel;
++  }
+ 
+   adicionarCartao() {
+-    this.step = 6;
++    this.step = 5;
++  }
++
++  precoFmt(plan: ResponsePlanDto): string {
++    const valor = Number(plan.price).toLocaleString('pt-BR', {
++      minimumFractionDigits: 2,
++      maximumFractionDigits: 2,
++    });
++    return `R$ ${valor}`;
++  }
++
++  intervaloLabel(plan: ResponsePlanDto): string {
++    return plan.interval === 'Month' ? 'Mensal' : 'Anual';
+   }
+ 
+   voltar() {
+-    if (this.step === 6) {
+-      this.step = 5;
++    if (this.carregando) return;
++    if (this.step === 5) {
++      this.step = 4;
+       return;
+     }
+     if (this.step > 1) {
+@@ -117,45 +129,191 @@ export class CadastroComponent implements OnInit {
+   }
+ 
+   continuar() {
++    if (this.carregando) return;
+     this.erro = '';
+ 
+     if (this.step === 1) {
+-      if (!this.nome.trim()) { this.erro = 'Informe seu nome.'; return; }
+-      if (this.telefone.replace(/\D/g, '').length < 10) { this.erro = 'Informe um telefone válido.'; return; }
+-      if (!this.termosAceitos) { this.erro = 'Aceite os termos para continuar.'; return; }
++      if (!this.nome.trim()) {
++        this.erro = 'Informe seu nome.';
++        return;
++      }
++      if (!this.email.trim().includes('@')) {
++        this.erro = 'Informe um email válido.';
++        return;
++      }
++      const phone = this.telefone.replace(/\D/g, '');
++      if (phone && phone.length < 10) {
++        this.erro = 'Informe um telefone válido.';
++        return;
++      }
++      if (!this.termosAceitos) {
++        this.erro = 'Aceite os termos para continuar.';
++        return;
++      }
+       this.step = 2;
+       return;
+     }
+ 
+     if (this.step === 2) {
+-      if (this.sms.some(d => !d)) { this.erro = 'Informe o código completo.'; return; }
+-      this.step = 3;
++      if (this.senha.length < 8) {
++        this.erro = 'A senha deve ter no mínimo 8 caracteres.';
++        return;
++      }
++      if (this.senha !== this.confirmarSenha) {
++        this.erro = 'As senhas não conferem.';
++        return;
++      }
++      this.submitCadastro();
+       return;
+     }
+ 
+     if (this.step === 3) {
+-      if (this.senha.length < 6) { this.erro = 'A senha deve ter no mínimo 6 caracteres.'; return; }
+-      if (this.senha !== this.confirmarSenha) { this.erro = 'As senhas não conferem.'; return; }
+-      if (this.perfil === 'fornecedor') { this.step = 4; return; }
+-      this.router.navigate(['/cadastro/sucesso']);
++      if (this.planoSelecionado == null) {
++        this.erro = 'Selecione um plano.';
++        return;
++      }
++      this.step = 4;
+       return;
+     }
+ 
+     if (this.step === 4) {
+-      this.step = 5;
++      this.realizarPagamento();
+       return;
+     }
+ 
+     if (this.step === 5) {
+-      this.router.navigate(['/cadastro/sucesso']);
++      if (!this.nomeCartao.trim()) {
++        this.erro = 'Informe o nome do titular.';
++        return;
++      }
++      if (this.numeroCartao.replace(/\D/g, '').length < 16) {
++        this.erro = 'Informe um número de cartão válido.';
++        return;
++      }
++      this.step = 4;
+       return;
+     }
++  }
++
++  // ── Integração ────────────────────────────────────────────────────────────
+ 
+-    if (this.step === 6) {
+-      if (!this.nomeCartao.trim()) { this.erro = 'Informe o nome do titular.'; return; }
+-      if (this.numeroCartao.replace(/\D/g, '').length < 16) { this.erro = 'Informe um número de cartão válido.'; return; }
+-      this.step = 5;
++  private submitCadastro() {
++    this.carregando = true;
++    this.auth.register(this.perfil, this.buildRegisterDto()).subscribe({
++      next: () => {
++        if (this.perfil === 'fornecedor') {
++          this.autoLoginAndLoadPlans();
++        } else {
++          this.carregando = false;
++          this.router.navigate(['/cadastro/sucesso']);
++        }
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = this.msg(err, 'Não foi possível concluir o cadastro.');
++      },
++    });
++  }
++
++  /** Fornecedor: autentica logo após o registro para poder criar a assinatura (Bearer). */
++  private autoLoginAndLoadPlans() {
++    this.auth.login({ email: this.email.trim(), password: this.senha }).subscribe({
++      next: () => this.loadPlans(),
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = this.msg(err, 'Cadastro concluído, mas não foi possível autenticar. Faça login.');
++      },
++    });
++  }
++
++  private loadPlans() {
++    this.subscriptions.activePlans().subscribe({
++      next: (res) => {
++        this.carregando = false;
++        this.planos = res.plans ?? [];
++        this.planoSelecionado = this.planos.length ? this.planos[0].id : null;
++        this.step = 3;
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = this.msg(err, 'Não foi possível carregar os planos.');
++      },
++    });
++  }
++
++  private realizarPagamento() {
++    if (this.planoSelecionado == null) {
++      this.erro = 'Selecione um plano.';
+       return;
+     }
++    this.carregando = true;
++    this.subscriptions.create(this.buildSubscriptionDto()).subscribe({
++      next: () => {
++        this.carregando = false;
++        this.router.navigate(['/cadastro/sucesso']);
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = this.msg(err, 'Não foi possível concluir a assinatura.');
++      },
++    });
++  }
++
++  private buildRegisterDto(): RegisterBaseDto {
++    const dto: RegisterBaseDto = {
++      name: this.nome.trim(),
++      email: this.email.trim(),
++      password: this.senha,
++      confirmPassword: this.confirmarSenha,
++      acceptedTerms: this.termosAceitos,
++    };
++    const phone = this.telefone.replace(/\D/g, '');
++    if (phone) dto.phone = phone;
++    const invite = this.codigo.trim();
++    if (invite) dto.inviteCode = invite;
++    if (this.perfil === 'parceiro') {
++      const socialMedias = this.buildSocialMedias();
++      if (socialMedias.length) dto.socialMedias = socialMedias;
++    }
++    return dto;
++  }
++
++  private buildSocialMedias(): CreateUserSocialMediaDto[] {
++    const fontes: { url: string; network: SocialNetwork }[] = [
++      { url: this.instagram, network: 'Instagram' },
++      { url: this.facebook, network: 'Facebook' },
++      { url: this.youtube, network: 'YouTube' },
++      { url: this.twitter, network: 'X' },
++      { url: this.site, network: 'Other' },
++    ];
++    return fontes
++      .filter((f) => f.url.trim())
++      .map((f) => ({ network: f.network, url: f.url.trim() }));
++  }
++
++  private buildSubscriptionDto(): CreateSubscriptionDto {
++    const dto: CreateSubscriptionDto = {
++      planId: this.planoSelecionado as number,
++      method: 'CreditCard',
++    };
++    const holder = this.nomeCartao.trim();
++    const card = this.numeroCartao.replace(/\D/g, '');
++    if (holder) dto.holderName = holder;
++    if (card) {
++      dto.cardNumber = card;
++      dto.cardBrand = this.detectBrand(card);
++    }
++    return dto;
++  }
++
++  private detectBrand(num: string): string {
++    if (num.startsWith('4')) return 'Visa';
++    if (/^5[1-5]/.test(num)) return 'Mastercard';
++    if (/^3[47]/.test(num)) return 'Amex';
++    return 'Other';
++  }
++
++  private msg(err: ApiError, fallback: string): string {
++    return err?.message?.trim() ? err.message : fallback;
+   }
+-}
+\ No newline at end of file
++}

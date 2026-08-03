@@ -227,4 +227,46 @@
   transition: opacity 0.2s;
 
   &:active { opacity: 0.85; }
+
+  &:disabled { opacity: 0.6; cursor: default; }
+
+  &--cancel {
+    background: transparent;
+    color: #dc2626;
+    border: 2px solid #dc2626;
+    margin-bottom: 10px;
+  }
+}
+
+.status-loading,
+.status-erro {
+  text-align: center;
+  color: var(--color-gray-600);
+  font-size: 14px;
+  margin-top: 24px;
+}
+
+.status-erro { color: #dc2626; }
+
+.status-cancelado {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.status-detalhes__linha--total {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.status-mapa__placeholder small {
+  font-size: 11px;
+  opacity: 0.7;
 }

@@ -99,6 +99,11 @@
     color: var(--color-gray-600);
   }
 
+  &__opt {
+    font-weight: 400;
+    color: var(--color-gray-400);
+  }
+
   input {
     width: 100%;
     padding: 12px 14px;

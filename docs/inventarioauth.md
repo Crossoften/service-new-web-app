@@ -86,13 +86,13 @@ Splash → Login ──(ok)──> roteia por profileType
 
 | Tela / Ação | Endpoint | Status | Observação |
 |---|---|---|---|
-| Login | `POST /login` | 🟠 **Parcial** | FE usa telefone; API usa **email** (BE-12) |
+| Login | `POST /login` | ✅ **Integrado** (Slice 1) | FE migrado p/ email; roteia por `profileType` |
 | Selecionar perfil | — | ✅ | Mapeia p/ `register/*`; parceiro→`influencer` |
-| Cadastro cliente | `register/client` | 🟠 **Parcial** | falta `email`; remover SMS |
-| Cadastro entregador | `register/delivery` | 🟠 **Parcial** | idem; + rota de destino inexistente |
-| Cadastro parceiro | `register/influencer` | 🟠 **Parcial** | idem; usar `RegisterInfluencerDto` |
-| Cadastro fornecedor | `register/supplier` (+ `plans/active` + `subscriptions`) | 🟠 **Parcial** | remover SMS; planos/assinatura reais; sequência register→login→subscribe |
-| Esqueci a senha | `forgot` + `reset` | 🔴 **Não integrado** | telas inexistentes |
+| Cadastro cliente | `register/client` | ✅ **Integrado** (Slice 2) | email + sem SMS |
+| Cadastro entregador | `register/delivery` | ✅ **Integrado** (Slice 2) | email + sem SMS |
+| Cadastro parceiro | `register/influencer` | ✅ **Integrado** (Slice 2) | email + `socialMedias[]` |
+| Cadastro fornecedor | `register/supplier` (+ `plans/active` + `subscriptions`) | ✅ **Integrado** (Slice 2) | register→login auto→planos reais→`POST /subscriptions` |
+| Esqueci a senha | `forgot` + `reset` | ✅ **Integrado** (Slice 3) | telas `/esqueci-senha` + `/redefinir-senha` |
 | Sucesso | — | ✅ | ok |
 
 ---
@@ -101,14 +101,14 @@ Splash → Login ──(ok)──> roteia por profileType
 
 | # | Divergência | Categoria | Ação |
 |---|---|---|---|
-| A1 | Login por **telefone** × API por **email** | Negócio + Front | migrar FE p/ email (D confirmada); se cliente exigir telefone → BE-12 |
-| A2 | **Etapa de SMS** no cadastro sem contrato web | Front | remover step 2 no web |
-| A3 | **`email` não coletado** no cadastro | Front | adicionar campo (obrigatório na API) |
-| A4 | **Role mockada** por telefone + `localStorage('role')` | Front | usar `profileType` do login + `SessionService` |
-| A5 | **Planos hardcoded** | Front | consumir `GET /plans/active` |
-| A6 | **Cartão** não persiste | Front | `POST /subscriptions` (fornecedor) |
-| A7 | **Esqueci a senha** não implementado | Front | criar telas `forgot`/`reset` |
-| A8 | `authGuard` não aplicado às rotas | Front | aplicar `authGuard`/`profileGuard` |
+| A1 | ~~Login por **telefone** × API por **email**~~ → **resolvido** (Slice 1) | Front | FE migrado p/ email |
+| A2 | ~~**Etapa de SMS** no cadastro~~ → **resolvido** (Slice 2) | Front | step SMS removido |
+| A3 | ~~**`email` não coletado**~~ → **resolvido** (Slice 2) | Front | campo email adicionado |
+| A4 | ~~**Role mockada**~~ → **resolvido** (Slice 1) | Front | usa `profileType` + `SessionService` |
+| A5 | ~~**Planos hardcoded**~~ → **resolvido** (Slice 2) | Front | consome `GET /plans/active` |
+| A6 | ~~**Cartão** não persiste~~ → **resolvido** (Slice 2) | Front | `POST /subscriptions` (fornecedor) |
+| A7 | ~~**Esqueci a senha** não implementado~~ → **resolvido** (Slice 3) | Front | telas `/esqueci-senha` + `/redefinir-senha` |
+| A8 | ~~`authGuard` não aplicado às rotas~~ → **resolvido** (Slice 3) | Front | `authGuard`/`profileGuard` aplicados |
 | A9 | ~~Entregador sem rota de destino~~ → **resolvido**: `/entregador/home` já existe no `origin` | Front | `Delivery` → `/entregador/home` |
 | A10 | Autorização por `profileType` não garantida no back | Back-end | BE-14 |
 | A11 | `ResetPasswordDto.password` `maxLength: 8` | Back-end | BE-13 |
@@ -117,10 +117,10 @@ Splash → Login ──(ok)──> roteia por profileType
 
 ## 7. Telas novas necessárias
 
-| Nova tela | Rota sugerida | Conteúdo | Endpoint |
-|---|---|---|---|
-| Esqueci a senha | `/esqueci-senha` | email → enviar | `POST /no-auth/forgot` |
-| Redefinir senha | `/redefinir-senha` | código + nova senha + confirmar | `POST /no-auth/reset` |
+| Nova tela | Rota | Conteúdo | Endpoint | Status |
+|---|---|---|---|---|
+| Esqueci a senha | `/esqueci-senha` | email → enviar código | `POST /no-auth/forgot` | ✅ **criada** (Slice 3) |
+| Redefinir senha | `/redefinir-senha` | código (4 díg.) + nova senha + confirmar | `POST /no-auth/reset` | ✅ **criada** (Slice 3) |
 
 *(Ambas reutilizam o layout/UX das telas de auth existentes — sem nova arquitetura.)*
 

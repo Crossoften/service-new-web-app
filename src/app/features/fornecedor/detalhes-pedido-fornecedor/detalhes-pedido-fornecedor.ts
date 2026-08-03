@@ -1,63 +1,112 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { FornecedorService, PedidoFornecedor, StatusPedidoFornecedor } from '../../../core/services/fornecedor';
+import { FornecedorService } from '../../../core/services/fornecedor';
+import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../core/models/food-order';
+import { ApiError } from '../../../core/models/common';
+
+const STATUS_LABEL: Record<FoodOrderStatus, string> = {
+  Received: 'Recebido',
+  Accepted: 'Aceito',
+  Preparing: 'Em preparo',
+  OnTheWay: 'A caminho',
+  Delivered: 'Entregue',
+  Cancelled: 'Cancelado',
+};
 
 @Component({
   selector: 'app-detalhes-pedido-fornecedor',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './detalhes-pedido-fornecedor.html',
-  styleUrl: './detalhes-pedido-fornecedor.scss'
+  styleUrl: './detalhes-pedido-fornecedor.scss',
 })
 export class DetalhesPedidoFornecedorComponent implements OnInit {
-  pedido?: PedidoFornecedor;
-  statusAberto: boolean = false;
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly fornecedorService = inject(FornecedorService);
 
-  statusOpcoes: { id: StatusPedidoFornecedor; label: string }[] = [
-    { id: 'recebido',  label: 'Recebido' },
-    { id: 'preparo',   label: 'Em preparo' },
-    { id: 'caminho',   label: 'A caminho' },
-    { id: 'entregue',  label: 'Entregue' },
-    { id: 'cancelado', label: 'Cancelado' },
-  ];
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private fornecedorService: FornecedorService
-  ) {}
+  pedidoId = 0;
+  pedido?: ResponseFoodOrderDto;
+  carregando = false;
+  processando = false;
+  erro = '';
 
   ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.pedido = this.fornecedorService.getPedido(id);
+    this.pedidoId = Number(this.route.snapshot.paramMap.get('id'));
+    this.carregar();
   }
 
-  get statusAtualLabel(): string {
-    return this.statusOpcoes.find(s => s.id === this.pedido?.status)?.label ?? '';
+  carregar() {
+    this.carregando = true;
+    this.erro = '';
+    this.fornecedorService.getPedidoRecebido(this.pedidoId).subscribe({
+      next: (p) => {
+        this.carregando = false;
+        this.pedido = p;
+      },
+      error: (err: ApiError) => {
+        this.carregando = false;
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o pedido.';
+      },
+    });
   }
 
-  toggleStatus() {
-    this.statusAberto = !this.statusAberto;
+  get statusLabel(): string {
+    return this.pedido ? STATUS_LABEL[this.pedido.status] : '';
   }
 
-  selecionarStatus(status: StatusPedidoFornecedor) {
-    if (this.pedido) {
-      this.pedido.status = status;
-      this.fornecedorService.atualizarStatus(this.pedido.id, status);
-    }
-    this.statusAberto = false;
+  get podeResponder(): boolean {
+    return this.pedido?.status === 'Received';
   }
 
-  salvar() {
-    this.router.navigate(['/fornecedor/home']);
+  get podePreparar(): boolean {
+    return this.pedido?.status === 'Accepted';
   }
 
-  cancelar() {
+  aceitar() {
+    this.responder('Accepted');
+  }
+
+  recusar() {
+    this.responder('Cancelled');
+  }
+
+  private responder(status: 'Accepted' | 'Cancelled') {
+    if (this.processando) return;
+    this.processando = true;
+    this.erro = '';
+    this.fornecedorService.responderPedido(this.pedidoId, status).subscribe({
+      next: (p) => {
+        this.processando = false;
+        this.pedido = p;
+      },
+      error: (err: ApiError) => this.falhar(err),
+    });
+  }
+
+  emPreparo() {
+    if (this.processando) return;
+    this.processando = true;
+    this.erro = '';
+    this.fornecedorService.marcarPreparo(this.pedidoId).subscribe({
+      next: (p) => {
+        this.processando = false;
+        this.pedido = p;
+      },
+      error: (err: ApiError) => this.falhar(err),
+    });
+  }
+
+  private falhar(err: ApiError) {
+    this.processando = false;
+    this.erro = err?.message?.trim() ? err.message : 'Não foi possível atualizar o pedido.';
+  }
+
+  fmt(valor?: string): string {
+    return Number(valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  voltar() {
     history.back();
-  }
-
-  formatarPreco(valor: number): string {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 }

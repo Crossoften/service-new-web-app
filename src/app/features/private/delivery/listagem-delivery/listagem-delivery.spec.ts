@@ -1,17 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { ListagemDelivery } from './listagem-delivery';
+import { ListagemDeliveryComponent } from './listagem-delivery';
 
-describe('ListagemDelivery', () => {
-  let component: ListagemDelivery;
-  let fixture: ComponentFixture<ListagemDelivery>;
+describe('ListagemDeliveryComponent', () => {
+  let component: ListagemDeliveryComponent;
+  let fixture: ComponentFixture<ListagemDeliveryComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ListagemDelivery],
+      imports: [ListagemDeliveryComponent],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ListagemDelivery);
+    fixture = TestBed.createComponent(ListagemDeliveryComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

@@ -1,0 +1,139 @@
+diff --git a/src/app/core/models/auth.ts b/src/app/core/models/auth.ts
+index feb7646..a132642 100644
+--- a/src/app/core/models/auth.ts
++++ b/src/app/core/models/auth.ts
+@@ -72,3 +72,8 @@ export interface ResetPasswordDto {
+   password: string;
+   confirmPassword: string;
+ }
++
++/** Confirmação de conta pós-cadastro — `POST /v1/no-auth/verify-code`. */
++export interface VerifyCodeDto {
++  code: string;
++}
+diff --git a/src/app/core/services/auth.ts b/src/app/core/services/auth.ts
+index 105cc0c..7c11fc4 100644
+--- a/src/app/core/services/auth.ts
++++ b/src/app/core/services/auth.ts
+@@ -14,6 +14,7 @@ import {
+   RegisterUserResponseDto,
+   ResetPasswordDto,
+   ResponseLoginDto,
++  VerifyCodeDto,
+ } from '../models/auth';
+ 
+ /** Rota inicial por perfil após o login (usa o `profileType` do ResponseLoginDto). */
+@@ -42,6 +43,11 @@ export class AuthService {
+     return this.api.post<RegisterUserResponseDto>(`/no-auth/register/${REGISTER_PATHS[perfil]}`, dto);
+   }
+ 
++  /** Confirma a conta com o código enviado por email — `POST /v1/no-auth/verify-code`. */
++  verifyCode(dto: VerifyCodeDto): Observable<ApiMessage> {
++    return this.api.post<ApiMessage>('/no-auth/verify-code', dto);
++  }
++
+   /** Envia o código de redefinição ao email. */
+   forgot(dto: ForgotDto): Observable<ApiMessage> {
+     return this.api.post<ApiMessage>('/no-auth/forgot', dto);
+diff --git a/src/app/features/auth/cadastro/cadastro.html b/src/app/features/auth/cadastro/cadastro.html
+index 757dc92..d73790f 100644
+--- a/src/app/features/auth/cadastro/cadastro.html
++++ b/src/app/features/auth/cadastro/cadastro.html
+@@ -189,12 +189,33 @@
+       </div>
+     }
+ 
++    <!-- STEP 3 - CÓDIGO DE VERIFICAÇÃO (email) -->
++    @if (step === 3) {
++      <div class="cadastro-content cadastro-content--centered">
++        <h2 class="cadastro-titulo-step">Confirme sua conta</h2>
++        <p class="cadastro-descricao-step">Enviamos um código para o seu email. Digite-o abaixo para concluir o cadastro:</p>
++
++        <div class="cadastro-form">
++          <div class="cadastro-field">
++            <label>Código de verificação</label>
++            <input type="text" placeholder="Digite o código" [(ngModel)]="codigoVerificacao" inputmode="numeric" autocomplete="one-time-code" />
++          </div>
++
++          @if (erro) {
++            <span class="cadastro-erro">{{ erro }}</span>
++          }
++        </div>
++      </div>
++    }
++
+   </div>
+ 
+   <!-- BOTÃO -->
+   <div class="cadastro-actions">
+     <button class="cadastro-btn" (click)="continuar()" [disabled]="carregando">
+-      {{ carregando ? 'AGUARDE…' : 'CONTINUAR' }}
++      @if (carregando) { AGUARDE… }
++      @else if (step === 3) { CONFIRMAR }
++      @else { CONTINUAR }
+     </button>
+   </div>
+ 
+diff --git a/src/app/features/auth/cadastro/cadastro.ts b/src/app/features/auth/cadastro/cadastro.ts
+index 2145fde..af8970d 100644
+--- a/src/app/features/auth/cadastro/cadastro.ts
++++ b/src/app/features/auth/cadastro/cadastro.ts
+@@ -49,6 +49,9 @@ export class CadastroComponent implements OnInit {
+   senhaVisivel = false;
+   confirmarSenhaVisivel = false;
+ 
++  // Step 3 — Código de verificação (verify-code, enviado por email)
++  codigoVerificacao = '';
++
+   erro = '';
+   carregando = false;
+ 
+@@ -128,6 +131,11 @@ export class CadastroComponent implements OnInit {
+       this.submitCadastro();
+       return;
+     }
++
++    if (this.step === 3) {
++      this.verificarCodigo();
++      return;
++    }
+   }
+ 
+   // ── Integração ────────────────────────────────────────────────────────────
+@@ -137,7 +145,8 @@ export class CadastroComponent implements OnInit {
+     this.auth.register(this.perfil, this.buildRegisterDto()).subscribe({
+       next: () => {
+         this.carregando = false;
+-        this.router.navigate(['/cadastro/sucesso']);
++        // Conta criada (status Pending) + código enviado por email → etapa de verificação.
++        this.step = 3;
+       },
+       error: (err: ApiError) => {
+         this.carregando = false;
+@@ -146,6 +155,26 @@ export class CadastroComponent implements OnInit {
+     });
+   }
+ 
++  /** Confirma a conta com o código recebido por email — `POST /no-auth/verify-code`. */
++  private verificarCodigo() {
++    const code = this.codigoVerificacao.trim();
++    if (!code) {
++      this.erro = 'Informe o código enviado ao seu email.';
++      return;
++    }
++    this.carregando = true;
++    this.auth.verifyCode({ code }).subscribe({
++      next: () => {
++        this.carregando = false;
++        this.router.navigate(['/cadastro/sucesso']);
++      },
++      error: (err: ApiError) => {
++        this.carregando = false;
++        this.erro = this.msg(err, 'Código inválido. Verifique e tente novamente.');
++      },
++    });
++  }
++
+   private buildRegisterDto(): RegisterBaseDto {
+     const dto: RegisterBaseDto = {
+       name: this.nome.trim(),

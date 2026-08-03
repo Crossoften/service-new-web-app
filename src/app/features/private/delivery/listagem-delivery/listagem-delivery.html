@@ -10,6 +10,12 @@
   <div class="page-content">
     <div class="listagem-delivery">
 
+      @if (carregando) {
+        <div class="listagem-delivery__vazio"><p>Carregando restaurantes…</p></div>
+      } @else if (erro) {
+        <div class="listagem-delivery__vazio"><p>{{ erro }}</p></div>
+      }
+
       @for (restaurante of restaurantesFiltrados; track restaurante.id) {
         <div class="restaurante-card" (click)="abrirRestaurante(restaurante)">
 
@@ -44,7 +50,7 @@
         </div>
       }
 
-      @if (restaurantesFiltrados.length === 0) {
+      @if (!carregando && !erro && restaurantesFiltrados.length === 0) {
         <div class="listagem-delivery__vazio">
           <p>Nenhum restaurante encontrado.</p>
         </div>

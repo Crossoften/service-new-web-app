@@ -1,31 +1,42 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DeliveryService, ItemCardapio, Adicional } from '../../../../core/services/delivery';
+import { ApiError } from '../../../../core/models/common';
 
 @Component({
   selector: 'app-cardapio-item',
   imports: [CommonModule],
   templateUrl: './cardapio-item.html',
-  styleUrl: './cardapio-item.scss'
+  styleUrl: './cardapio-item.scss',
 })
 export class CardapioItemComponent implements OnInit {
-  item?: ItemCardapio;
-  restauranteId?: number;
-  quantidade: number = 1;
-  adicionais: Adicional[] = [];
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly deliveryService = inject(DeliveryService);
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private deliveryService: DeliveryService
-  ) {}
+  item?: ItemCardapio;
+  restauranteId = 0;
+  quantidade = 1;
+  adicionais: Adicional[] = [];
+  carregando = false;
+  erro = '';
 
   ngOnInit() {
     const itemId = Number(this.route.snapshot.paramMap.get('id'));
     this.restauranteId = Number(this.route.snapshot.queryParamMap.get('restauranteId'));
-    this.item = this.deliveryService.getItem(this.restauranteId, itemId);
-    this.adicionais = this.item?.adicionais.map(a => ({ ...a, selecionado: false })) ?? [];
+    this.carregando = true;
+    this.deliveryService.getItem(this.restauranteId, itemId).subscribe({
+      next: (item) => {
+        this.carregando = false;
+        this.item = item;
+        this.adicionais = item?.adicionais.map((a) => ({ ...a, selecionado: false })) ?? [];
+      },
+      error: (err: ApiError) => {
+        this.carregando = false;
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o item.';
+      },
+    });
   }
 
   toggleAdicional(adicional: Adicional) {
@@ -41,15 +52,14 @@ export class CardapioItemComponent implements OnInit {
   }
 
   get totalPreco(): number {
-    const extras = this.adicionais
-      .filter(a => a.selecionado)
-      .reduce((acc, a) => acc + a.preco, 0);
+    const extras = this.adicionais.filter((a) => a.selecionado).reduce((acc, a) => acc + a.preco, 0);
     return ((this.item?.preco ?? 0) + extras) * this.quantidade;
   }
 
   adicionar() {
-    const selecionados = this.adicionais.filter(a => a.selecionado);
-    this.deliveryService.addItem(this.item!, this.quantidade, selecionados);
+    if (!this.item) return;
+    const selecionados = this.adicionais.filter((a) => a.selecionado);
+    this.deliveryService.addItem(this.item, this.quantidade, selecionados);
     this.router.navigate(['/delivery/sacola']);
   }
 

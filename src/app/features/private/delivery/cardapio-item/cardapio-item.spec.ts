@@ -1,17 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { CardapioItem } from './cardapio-item';
+import { CardapioItemComponent } from './cardapio-item';
 
-describe('CardapioItem', () => {
-  let component: CardapioItem;
-  let fixture: ComponentFixture<CardapioItem>;
+describe('CardapioItemComponent', () => {
+  let component: CardapioItemComponent;
+  let fixture: ComponentFixture<CardapioItemComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CardapioItem],
+      imports: [CardapioItemComponent],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(CardapioItem);
+    fixture = TestBed.createComponent(CardapioItemComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

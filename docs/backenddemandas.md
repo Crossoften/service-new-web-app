@@ -1,265 +1,74 @@
-# Demandas de Back-end — Auditoria (Fluxo + Ata + Swagger)
+# Demandas de Back-end — STATUS pós-implementação
 
-> Documento consolidado a partir de **três fontes**, na ordem de prioridade do projeto:
-> 1. **Documentação funcional** — `fluxoserviceapp.md` (mapa de telas) + **Ata da reunião com o cliente (24/06/2026)**.
-> 2. **Swagger/OpenAPI** — `Documentação da API Projeto Service.` (NestJS 10, base `https://homolog.crosoften.com:8029`, prefixo `/v1`).
-> 3. **Código Angular** (`service-app`).
+> Cruzamento das demandas (BE-01…BE-17) com o **Swagger atualizado**. O time de back-end implementou
+> a grande maioria. Este documento vira um **tracker de status**.
 >
-> **Escopo:** apenas pendências do **Back-end**. Nenhuma alteração de API é feita pelo Front. Correções de FE seguem por patches.
-> **Contexto (ata):** projeto ~70% concluído; os 30% restantes = integração FE↔BE + testes. Cadastro real ainda desativado (tudo simulável).
+> **Última atualização:** 2026-07-31 (Swagger novo).
 
-## Legenda de prioridade
+## Resumo
 
-| Prioridade | Significado |
-|---|---|
-| 🔴 Crítica | Bloqueia uma vertical/jornada inteira; sem isso não há integração. |
-| 🟠 Alta | Funcionalidade prevista (fluxo/ata) sem contrato; impacto direto na jornada. |
-| 🟡 Média | Lacuna/inconsistência que degrada UX/robustez, com contorno possível. |
-| ⚪ Baixa | Ajuste de qualidade/documentação do contrato. |
-
-## Modelo de análise por vertical
-
-Cada vertical do produto precisa de **3 camadas**. O Swagger cobre bem a **camada 1** (catálogo) de quase tudo,
-mas falta a **camada 2 (transação/pedido/reserva com ciclo de vida)** e a **camada 3 (chat)** em várias.
-
-| Vertical | 1. Catálogo | 2. Transação | 3. Chat |
+| # | Demanda | Endpoint(s) entregues | Status |
 |---|---|---|---|
-| Serviços | ✅ `/services` | ✅ `/budgets`→`/works` | ✅ `/chats` (`Work`/`Budget`) |
-| Compra e Vender | ✅ `/products` | ✅ `/commercial-transactions` (`Product`) | ✅ `/chats` (`CommercialTransaction`) |
-| Aluguel | ✅ `/products?transactionType=Rent` | ❌ **falta** (BE-04) | ❌ **falta** (BE-08) |
-| Transporte | ✅ `/transportations` | ❌ **falta** (BE-05) | ❌ **falta** (BE-08) |
-| Hospedagem | ✅ `/accommodations` | ❌ **falta** (BE-06) | ❌ **falta** (BE-08) |
-| Delivery | ❌ **falta** (BE-01) | ❌ **falta** (BE-01) | ❌ **falta** (BE-08) |
-| Empregos | ❌ **falta** (BE-07) | ❌ **falta** (BE-07) | ❌ **falta** (BE-08) |
-| Entregador | perfil `Delivery` existe | ❌ **falta** (BE-03) | — |
+| BE-01 | Delivery domínio | `/restaurants`, `/restaurants/menu-*`, `/food-orders` | ✅ Implementado |
+| BE-02 | Cobrança híbrida delivery | `billingType`, `/restaurants/me/payouts`, `commissionAmount` no pedido | ✅ Implementado |
+| BE-03 | Entregador + rastreamento | `/deliveries/*` (accept/reject/pickup/**location**/deliver) | ✅ Implementado |
+| BE-04 | Aluguel transacional | `/rentals/*` | ✅ Implementado |
+| BE-05 | Transporte pedido | `/transport-requests/*` | ✅ Implementado |
+| BE-06 | Hospedagem reserva | `/bookings/*` | ✅ Implementado |
+| BE-07 | Empregos | `/jobs/*` (+ apply, applications) | ✅ Implementado |
+| BE-08 | ChatContextType ampliado | +`Rental,TransportRequest,Booking,FoodOrder,Job` | ✅ Implementado |
+| BE-09 | Negociação além de Product | entidades próprias por vertical | ✅ Resolvido por design |
+| BE-10 | Indicações do usuário | `/referrals/me`, `/referrals/me/summary` | ✅ Implementado |
+| BE-11 | Partner × Influencer | `Partner` removido; Influencer é o perfil de indicação | ✅ Resolvido |
+| BE-12 | Login email × telefone | mantido email (decisão) | ✅ N/A |
+| BE-13 | Qualidade de contrato | `/logout` criado; reset `minLength 8/maxLength 32` | 🟡 Falta `birthDate` (ainda `type:object`) |
+| BE-14 | Autorização por `profileType` | 403 explícitos nas rotas de delivery/food-order/deliveries | ✅ Implementado |
+| BE-15 | Assinatura como pré-condição do fornecedor | não indicado no contrato | ⚠️ Verificar com a API |
+| BE-16 | Cobrança por vertical | delivery híbrido (payouts) | ✅ Implementado |
+| BE-17 | Repasse entregador/influencer | payouts (restaurante) + comissão (influencer); entregador não explícito | 🟡 Parcial |
 
-## Resumo das demandas
+## Pendências remanescentes (para o time de API)
 
-| # | Demanda | Prioridade |
+1. **BE-15 — Assinatura como pré-condição.** Confirmar se um `Supplier` sem assinatura ativa é bloqueado ao
+   publicar/receber demanda (checagem em `subscriptions/current`), com `403` + motivo para o Front orientar.
+2. **BE-17 — Repasse ao entregador.** Existe payout do restaurante (`/restaurants/me/payouts`) e comissão do
+   influencer (`/referrals/me/summary`), mas **não há** relatório/repasse de ganhos do **entregador**
+   (por entrega concluída). Sugerir `GET /v1/deliveries/me/earnings` ou incluir em `/balances/*`.
+3. **BE-13 (resíduo) — `birthDate`.** Ainda declarado como `type: object`; declarar `type: string, format: date`.
+
+## Delivery Cliente — gaps levantados na auditoria (BE-D1…BE-D4)
+
+| # | Gap | Status |
 |---|---|---|
-| BE-01 | Domínio de **Delivery** (restaurantes, cardápio, pedido, status) | 🔴 Crítica |
-| BE-02 | **Cobrança híbrida** do delivery (assinatura OU comissão por estabelecimento) | 🔴 Crítica |
-| BE-03 | **Entregador**: pedidos de entrega + **rastreamento/geolocalização** (mapa) | 🔴 Crítica |
-| BE-04 | **Aluguel**: entidade transacional (período, valor, condições, status) | 🟠 Alta |
-| BE-05 | **Transporte**: pedido de transporte (origem/destino/carga, orçamento, status) | 🟠 Alta |
-| BE-06 | **Hospedagem**: reserva (check-in/out, calendário, pagamento, status) | 🟠 Alta |
-| BE-07 | **Empregos**: domínio completo (empregador + profissional) | 🟠 Alta |
-| BE-08 | Ampliar **`ChatContextType`** para as verticais sem chat | 🟠 Alta |
-| BE-09 | **Negociação** além de `Product` (ou fluxos próprios por vertical) | 🟡 Média |
-| BE-10 | **Indicações do usuário logado** (hoje só no admin) | 🟠 Alta |
-| BE-11 | **Partner × Influencer** → unificar em `Influencer` (D2) | 🟠 Alta |
-| BE-12 | Confirmar identificador de **login (email × telefone)** | 🟠 Alta |
-| BE-13 | Qualidade de contrato (reset senha, `birthDate`, logout) | ⚪ Baixa |
-| BE-14 | **Autorização por `profileType`** nos endpoints | 🔴 Crítica |
-| BE-15 | **Assinatura como pré-condição** de operação do fornecedor | 🟠 Alta |
-| BE-16 | **Cobrança por vertical** (assinatura geral × delivery híbrido) | 🟠 Alta |
-| BE-17 | **Repasse** para entregador e parceiro/influencer | 🟠 Alta |
+| BE-D1 | `ResponseRestaurantDto` sem `avaliação`, `tempo de entrega`, `logo`, `taxa fixa` (a UI mostra) | ⚠️ decisão: incluir no back **ou** remover da UI |
+| BE-D2 | `POST /food-orders` não recebe endereço de entrega | ⚠️ confirmar uso do endereço do perfil / múltiplos endereços |
+| BE-D3 | `paymentMethod` só `CreditCard/Pix/BankSlip` (UI tem débito e dinheiro) | ⚠️ confirmar métodos válidos |
+| BE-D4 | `deliveryFee` é enviado pelo **cliente** no pedido | ⚠️ ideal o back calcular/validar o frete |
 
-> **Decisões de negócio travadas (blueprint §10):** D1 = 1 perfil por conta · D2 = Parceiro é `Influencer` ·
-> D3 = assinatura em todas as verticais de fornecedor (delivery híbrido) · D4 = entregador por repasse, sem assinatura.
+> Detalhes e mapeamentos em `docs/inventario-delivery-cliente.md`.
 
----
+## Delivery Fornecedor — gaps levantados na auditoria (BE-D5, BE-F1, BE-F2)
 
-## BE-01 — Domínio de Delivery inexistente 🔴
-
-**Fontes:** fluxo (Delivery cliente e fornecedor marcados "completos" no FE); ata (delivery é foco estratégico —
-monetização, benchmarking iFood/Rappi, toggle categorias×restaurantes).
-**Swagger:** nenhuma entidade de restaurante, cardápio, item, sacola ou pedido de comida.
-
-**Contrato esperado (mínimo):**
-
-| Método | Rota sugerida | Objetivo |
+| # | Gap | Status |
 |---|---|---|
-| `GET` | `/v1/restaurants` (`categoryId`,`search`,`take`,`skip`) | Listar restaurantes ativos |
-| `GET` | `/v1/restaurants/{id}` | Restaurante + categorias de cardápio + itens |
-| `GET` | `/v1/menu-items/{id}` | Item + adicionais |
-| `POST` | `/v1/food-orders` | Criar pedido (itens, adicionais, endereço, entrega, pagamento) |
-| `GET` | `/v1/food-orders/{id}` | Status (`recebido/preparo/caminho/entregue`) |
-| `GET`+`POST/PATCH/DELETE` | `/v1/restaurants/me/menu` | Gestão de cardápio (fornecedor) |
-| `GET`+`PATCH /{id}/status` | `/v1/restaurants/me/orders` | Fila de pedidos (fornecedor) |
+| BE-D5 | `GET /restaurants/categories` retorna sem `iconUrl` (grid do cliente sem ícone) | ⚠️ incluir `iconUrl` ou Front usa fallback local por `slug` |
+| BE-F1 | Sem `DELETE` de item/categoria/adicional de cardápio | ⚠️ expor DELETE **ou** confirmar soft-delete por `isActive` |
+| BE-F2 | Payout do restaurante é agregado (sem recorte por período) | ⚠️ opcional: `?period=day\|week\|month` |
 
-**Decisão de produto:** telas de delivery **congeladas como mock** no FE até o contrato existir. Prioridade **máxima** de backend (ata).
+> Detalhes em `docs/inventario-delivery-fornecedor.md`.
 
----
+## Dúvidas/ajustes — rodada de correções (BE-Q1…BE-Q3)
 
-## BE-02 — Cobrança híbrida do delivery 🔴
-
-**Fonte (ata):** cada restaurante escolhe **Assinatura OU Comissão (%)**, negociado individualmente pelo gestor;
-demais serviços = **somente assinatura**.
-**Swagger:** existe `billingType = None|Subscription|Commission` e `PATCH /v1/profile/me/billing-type`, além de
-`platformFeeRate` por categoria de serviço. Porém **não há** cálculo/registro de comissão sobre pedidos de delivery
-(depende de BE-01) nem vínculo "estabelecimento → modelo de cobrança negociado".
-
-**Contrato esperado:** definição do `billingType` por fornecedor de delivery + regra de **comissão por pedido**
-(percentual configurável por estabelecimento) e relatório de repasse.
-
-**Impacto:** sem isso a monetização central do delivery não fecha.
-
----
-
-## BE-03 — Entregador: pedidos de entrega + rastreamento 🔴
-
-**Fontes:** fluxo (perfil Entregador "completo" no FE: aceitar/recusar, status em 4 etapas); ata (cliente acompanha
-**trajetória do entregador no mapa**, similar a apps de transporte).
-**Swagger:** perfil `Delivery` existe no `profileType`, mas **não há** pedido de entrega, atribuição, mudança de etapa
-nem **geolocalização em tempo real**.
-
-**Contrato esperado:**
-
-| Método | Rota sugerida | Objetivo |
+| # | Ponto | Status |
 |---|---|---|
-| `GET` | `/v1/deliveries/available` | Pedidos disponíveis para o entregador |
-| `PATCH` | `/v1/deliveries/{id}/accept` · `/reject` | Aceitar/recusar |
-| `PATCH` | `/v1/deliveries/{id}/status` | Etapas (a caminho / retirado / entregue / concluído) |
-| `POST` | `/v1/deliveries/{id}/location` | Enviar posição do entregador (tempo real) |
-| `GET` | `/v1/deliveries/{id}/tracking` | Cliente acompanha trajetória (mapa) |
+| BE-Q1 | **Confirmação de conta** (SMS/email) no web **não existe** — só `verify-code` (mobile) e `forgot/reset` (senha). O cadastro cria a conta direto (`status: Pending/Active`). | ❓ Confirmar: o web precisa de confirmação por email/SMS? Se sim, expor endpoint. Hoje o Front cadastra → Sucesso → Login. |
+| BE-Q2 | **Telefone** passou a ser **obrigatório no Front** (cliente/fornecedor/etc.). No contrato, `phone` é opcional em `RegisterBaseDto`. | ❓ Confirmar se o back deve tornar `phone` obrigatório também (hoje valida formato quando enviado: "Informe um telefone válido no formato brasileiro."). |
+| BE-Q3 | **Assinatura do fornecedor** (planos + `POST /subscriptions`) foi movida para **onboarding pós-login** (o login automático no cadastro era frágil). Relaciona-se ao **BE-15** (assinatura como pré-condição). | ❓ Confirmar o momento/obrigatoriedade da assinatura (bloqueia publicar antes de assinar?). |
 
-**Nota técnica:** rastreamento em tempo real exige canal (WebSocket/SSE) — definir com o time de API. Depende de BE-01.
+## Observações
 
----
-
-## BE-04 — Aluguel: entidade transacional 🟠
-
-**Fontes:** fluxo (cliente: solicitar aluguel com período/valor/condições → status → chat; fornecedor: cadastrar item,
-solicitações, aceitar/recusar/negociar).
-**Swagger:** `/products?transactionType=Rent` cobre só o **catálogo**. Não há entidade de **aluguel** (período de
-locação, valor por período, condições, disponibilidade, ciclo de vida do contrato).
-
-**Contrato esperado:** `POST/GET/PATCH /v1/rentals` com `productId`, período (`startDate/endDate`), valor,
-condições, e status (`Requested/Accepted/Active/Returned/Cancelled`) + fila de solicitações do locador.
-
----
-
-## BE-05 — Transporte: pedido de transporte 🟠
-
-**Fontes:** fluxo (solicitar transporte: origem/destino/carga → orçamento → status/mapa → chat).
-**Swagger:** `/transportations` é só **catálogo de veículos** (+reviews). Não há **pedido de transporte**.
-
-**Contrato esperado:** `POST/GET/PATCH /v1/transport-requests` com origem, destino, descrição da carga, orçamento
-(resposta do transportador), status (`Requested/Quoted/Accepted/InTransit/Delivered/Cancelled`) e localização.
-
----
-
-## BE-06 — Hospedagem: reserva 🟠
-
-**Fontes:** fluxo (cliente: selecionar período → revisão → pagamento → confirmação → status → chat; fornecedor:
-reservas recebidas, aceitar/recusar, calendário de disponibilidade). **Hospedagem não existe nas rotas atuais do FE.**
-**Swagger:** `/accommodations` (+reviews) é só **catálogo**. Não há **reserva/booking**.
-
-**Contrato esperado:** `POST/GET/PATCH /v1/bookings` com `accommodationId`, `checkIn/checkOut`, hóspedes, valor total,
-pagamento, status (`Requested/Confirmed/CheckedIn/Completed/Cancelled`) + **calendário de disponibilidade** por hospedagem.
-
----
-
-## BE-07 — Empregos: domínio completo 🟠
-
-**Fontes:** fluxo (dois lados — **Empregador**: vagas, candidatos, chat; **Profissional**: perfil, propostas, chat).
-**Swagger:** nenhuma entidade de vaga/candidatura/proposta.
-
-**Contrato esperado:** `/v1/jobs` (+`/categories`,`/{id}`), `POST /v1/jobs/{id}/apply`, `GET /v1/jobs/me/applications`,
-gestão de vagas do empregador e propostas do profissional, com status e chat.
-
----
-
-## BE-08 — Ampliar `ChatContextType` 🟠
-
-**Problema:** `ChatContextType` só aceita **`Budget | Work | CommercialTransaction`**. O fluxo prevê **chat** em
-aluguel (locador), transporte (transportador), hospedagem (anfitrião), delivery e empregos.
-**Contrato esperado:** ampliar o enum (ex.: `Rental`, `TransportRequest`, `Booking`, `FoodOrder`, `Job`) e permitir
-`GET /v1/chats/context/{contextType}/{referenceId}` para esses contextos (depende de BE-04…BE-07).
-
----
-
-## BE-09 — Negociação além de Produto 🟡
-
-**Problema:** `commercial-transactions.referenceType` só tem **`"Product"`**. Se a negociação/proposta for reaproveitada
-para outras verticais (ex.: aluguel), o enum precisa ampliar; caso contrário, cada vertical terá seu fluxo próprio
-(BE-04…BE-07). **Decisão de arquitetura pendente com o time de API.**
-
----
-
-## BE-10 — Indicações do usuário logado 🟠
-
-**Fontes:** fluxo (Parceiro: home com stats de indicações, "Meu Código", "Indicações" com abas Todas/Ativas/Inativas);
-ata (compartilhamento nativo WhatsApp/Telegram para indicar).
-**Swagger:** indicações só existem no **admin** (`/admin-users/referrals`, `/admin-influencers/{id}/referrals`). O
-`/profile/me` traz `referralCode`, mas não os indicados nem a comissão do próprio usuário.
-**Contrato esperado:** `GET /v1/referrals/me` (lista de indicados + status) e `GET /v1/referrals/me/summary`
-(`referralCode`, totais, comissão acumulada, ranking).
-
----
-
-## BE-11 — Partner × Influencer → unificar em `Influencer` 🟠
-
-**Decisão (D2):** o "Parceiro" do app é o perfil **`Influencer`** (indicação/comissão). 
-**Problema:** a API mantém **dois** perfis — `Partner` (cadastro `/no-auth/register/partner`) e `Influencer` — com
-papéis sobrepostos.
-**Contrato esperado:** depreciar/esclarecer o perfil `Partner`; direcionar o cadastro de "parceiro" do app para
-`Influencer` (ou consolidar os dois no backend). O Front passa a mapear **parceiro → `Influencer`**.
-
----
-
-## BE-12 — Confirmar identificador de login (email × telefone) 🟠
-
-**Conflito entre fontes:** o **fluxo (doc funcional)** diz **"Login: telefone + senha"**; o **Swagger** implementa
-**email + senha**; a **ata** é neutra (discute auto-preenchimento de código "SMS ou e-mail", não o identificador).
-**Decisão atual (a validar com o cliente):** Front migra para **email + senha** conforme a API. **Sem verificação SMS no
-web** (o Swagger diz que `verify-code` é "somente mobile"). Se o cliente exigir **login/registro por telefone + SMS**,
-isso vira demanda de backend (login por telefone, envio e verificação de SMS).
-
----
-
-## BE-14 — Autorização por `profileType` nos endpoints 🔴
-
-**Fonte:** blueprint §8 (perfil define o que pode fazer).
-**Problema:** o Swagger só exige `bearerAuth`; **não há gating por perfil** documentado. Um `Client` poderia,
-pelo contrato, criar serviço/produto/hospedagem; um não-fornecedor poderia acessar rotas de provedor.
-**Contrato esperado:** aplicar autorização por `profileType` — ex.: apenas `Supplier` em `POST /services|/products|
-/transportations|/accommodations` e nos `my-*` de oferta; apenas `Client` nos fluxos de consumo/pagamento;
-apenas `Delivery` nos pedidos de entrega; apenas `Influencer` nas indicações. Retornar `403` fora do perfil.
-
-**Impacto:** sem isso, as regras de perfil do produto não são garantidas pelo backend (risco de segurança/negócio).
-
----
-
-## BE-15 — Assinatura como pré-condição de operação do fornecedor 🟠
-
-**Decisão (D3).** **Problema:** não há regra que exija **assinatura ativa** para o `Supplier` publicar/receber demanda.
-**Contrato esperado:** bloquear operações de oferta quando não houver assinatura ativa (checar `subscriptions/current`),
-com resposta clara (ex.: `403` + motivo) para o Front orientar a contratação.
-
----
-
-## BE-16 — Modelo de cobrança por vertical do fornecedor 🟠
-
-**Decisão (D3 + ata).** **Regra:** **todas** as verticais de fornecedor exigem **assinatura**; **delivery** admite
-**assinatura OU comissão (%)** por estabelecimento (BE-02).
-**Contrato esperado:** vincular o `billingType`/regra de cobrança ao contexto do fornecedor e, no delivery, permitir a
-escolha por estabelecimento + cálculo de comissão por pedido.
-
----
-
-## BE-17 — Repasse para entregador e parceiro/influencer 🟠
-
-**Decisão (D4).** **Problema:** entregador (`Delivery`) e parceiro (`Influencer`) **recebem** sem vender catálogo,
-mas não há regra de repasse ligada a eles.
-**Contrato esperado:** repasse por **entrega concluída** (entregador) e por **indicação convertida** (influencer),
-refletidos em `balances/*` e conta bancária, **sem assinatura** para esses perfis.
-
----
-
-## BE-13 — Qualidade de contrato ⚪
-
-- **`ResetPasswordDto.password` com `maxLength: 8`** (`POST /v1/no-auth/reset`): impede redefinir senhas > 8 caracteres,
-  divergindo do cadastro. Alinhar a política de senha entre cadastro e reset.
-- **`birthDate` como `type: object`** (`RegisterBaseDto`, `UpdateUserDto` etc.): declarar `type: string, format: date` (ISO 8601).
-- **Sem rota de logout/invalidação de token**: `POST /v1/logout` (opcional; hoje logout será só client-side).
-
----
-
-## Observações (sem ação obrigatória de back-end)
-
-- **Serviços gerais = assinatura** (ata) → coberto por `/plans` + `/subscriptions`.
-- **Gestão de ícones/imagens pelo admin** (ata) → coberto pelo Portal Gerencial (`/admin-categories` com `iconUrl/iconKey`); fora do PWA.
-- **Preços como string** nas respostas (`"350.00"`) e `number` nos requests → o Front trata a conversão.
-- **Auto-preenchimento de código de verificação** (ata) → recurso **nativo mobile** (iOS/Android); não se aplica ao PWA web.
+- **Autorização por perfil (BE-14)** aparece nas rotas novas (ex.: "Apenas clientes podem realizar pedidos",
+  "Apenas o restaurante do pedido pode respondê-lo", "Apenas o entregador responsável..."). O Front deve
+  respeitar isso com os guards por `profileType`.
+- **Rastreamento em tempo real:** `/deliveries/{id}/location` é polling (PATCH lat/lng + `locationUpdatedAt`).
+  Não há WebSocket declarado — o Front fará polling do `/deliveries/{id}` / `/food-orders/{id}` para o mapa.

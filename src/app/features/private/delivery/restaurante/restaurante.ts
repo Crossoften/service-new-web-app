@@ -1,35 +1,45 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { DeliveryService, Restaurante, CategoriaCardapio, ItemCardapio } from '../../../../core/services/delivery';
+import { DeliveryService, Restaurante, ItemCardapio } from '../../../../core/services/delivery';
+import { ApiError } from '../../../../core/models/common';
 
 @Component({
   selector: 'app-restaurante',
   imports: [CommonModule],
   templateUrl: './restaurante.html',
-  styleUrl: './restaurante.scss'
+  styleUrl: './restaurante.scss',
 })
 export class RestauranteComponent implements OnInit {
-  restaurante?: Restaurante;
-  categoriaAtiva: number = 0;
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly deliveryService = inject(DeliveryService);
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private deliveryService: DeliveryService
-  ) {}
+  restaurante?: Restaurante;
+  categoriaAtiva = 0;
+  carregando = false;
+  erro = '';
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.restaurante = this.deliveryService.getRestaurante(id);
-    if (this.restaurante?.categorias.length) {
-      this.categoriaAtiva = this.restaurante.categorias[0].id;
-    }
+    this.carregando = true;
+    this.deliveryService.getRestaurante(id).subscribe({
+      next: (r) => {
+        this.carregando = false;
+        this.restaurante = r;
+        if (r.categorias.length) {
+          this.categoriaAtiva = r.categorias[0].id;
+        }
+      },
+      error: (err: ApiError) => {
+        this.carregando = false;
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o restaurante.';
+      },
+    });
   }
 
   get categoriaAtivaItens(): ItemCardapio[] {
-    return this.restaurante?.categorias
-      .find(c => c.id === this.categoriaAtiva)?.itens ?? [];
+    return this.restaurante?.categorias.find((c) => c.id === this.categoriaAtiva)?.itens ?? [];
   }
 
   selecionarCategoria(id: number) {
@@ -38,7 +48,7 @@ export class RestauranteComponent implements OnInit {
 
   abrirItem(item: ItemCardapio) {
     this.router.navigate(['/delivery/item', item.id], {
-      queryParams: { restauranteId: this.restaurante?.id }
+      queryParams: { restauranteId: this.restaurante?.id },
     });
   }
 

@@ -72,3 +72,8 @@ export interface ResetPasswordDto {
   password: string;
   confirmPassword: string;
 }
+
+/** Confirmação de conta pós-cadastro — `POST /v1/no-auth/verify-code`. */
+export interface VerifyCodeDto {
+  code: string;
+}

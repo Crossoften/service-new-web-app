@@ -2,11 +2,7 @@
 
   <!-- HEADER -->
   <div class="home-f-header">
-    <button class="home-f-header__voltar" (click)="router.navigate(['/home'])">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="15 18 9 12 15 6"/>
-      </svg>
-    </button>
+    <div style="width: 22px"></div>
     <div class="home-f-header__restaurante">
       <div class="home-f-header__logo">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -14,8 +10,8 @@
         </svg>
       </div>
       <div class="home-f-header__info">
-        <span class="home-f-header__nome">Pizzaria Bella Itália</span>
-        <span class="home-f-header__avaliacao">⭐ 4.7</span>
+        <span class="home-f-header__nome">{{ restaurante?.name ?? 'Meu restaurante' }}</span>
+        <span class="home-f-header__avaliacao">{{ aberto ? 'Aberto' : 'Fechado' }}</span>
       </div>
     </div>
     <button class="home-f-header__sino">
@@ -28,45 +24,53 @@
 
   <div class="page-content">
 
-    <!-- FATURAMENTO -->
-    @if (faturamento) {
+    @if (semRestaurante) {
+      <div class="home-f-card" style="flex-direction: column; gap: 12px; align-items: flex-start;">
+        <span class="home-f-card__titulo">Você ainda não cadastrou seu restaurante.</span>
+        <button class="home-f-status__btn home-f-status__btn--ativo" (click)="criarRestaurante()">Criar restaurante</button>
+      </div>
+    }
+
+    <!-- FATURAMENTO (payout) -->
+    @if (payout) {
       <div class="home-f-faturamento">
         <div class="home-f-faturamento__item">
-          <span class="home-f-faturamento__label">Dia</span>
-          <span class="home-f-faturamento__valor">{{ formatarPreco(faturamento.dia) }}</span>
+          <span class="home-f-faturamento__label">Pedidos</span>
+          <span class="home-f-faturamento__valor">{{ payout.totalOrders }}</span>
         </div>
         <div class="home-f-faturamento__divider"></div>
         <div class="home-f-faturamento__item">
-          <span class="home-f-faturamento__label">Semana</span>
-          <span class="home-f-faturamento__valor">{{ formatarPreco(faturamento.semana) }}</span>
+          <span class="home-f-faturamento__label">Vendas</span>
+          <span class="home-f-faturamento__valor">{{ fmt(payout.totalItemsValue) }}</span>
         </div>
         <div class="home-f-faturamento__divider"></div>
         <div class="home-f-faturamento__item">
-          <span class="home-f-faturamento__label">Mês</span>
-          <span class="home-f-faturamento__valor">{{ formatarPreco(faturamento.mes) }}</span>
+          <span class="home-f-faturamento__label">A receber</span>
+          <span class="home-f-faturamento__valor">{{ fmt(payout.netAmount) }}</span>
         </div>
       </div>
-      <button class="home-f-ver-mais">Ver mais</button>
     }
 
     <!-- STATUS OPERACIONAL -->
-    <div class="home-f-card">
-      <span class="home-f-card__titulo">Status Operacional</span>
-      <div class="home-f-status">
-        <button
-          class="home-f-status__btn"
-          [class.home-f-status__btn--ativo]="statusOperacional === 'aberto'"
-          (click)="statusOperacional = 'aberto'">
-          Aberto
-        </button>
-        <button
-          class="home-f-status__btn"
-          [class.home-f-status__btn--ativo]="statusOperacional === 'fechado'"
-          (click)="statusOperacional = 'fechado'">
-          Fechado
-        </button>
+    @if (restaurante) {
+      <div class="home-f-card">
+        <span class="home-f-card__titulo">Status Operacional</span>
+        <div class="home-f-status">
+          <button
+            class="home-f-status__btn"
+            [class.home-f-status__btn--ativo]="aberto"
+            (click)="setAberto(true)">
+            Aberto
+          </button>
+          <button
+            class="home-f-status__btn"
+            [class.home-f-status__btn--ativo]="!aberto"
+            (click)="setAberto(false)">
+            Fechado
+          </button>
+        </div>
       </div>
-    </div>
+    }
 
     <!-- GERENCIAR CARDÁPIO -->
     <div class="home-f-card home-f-card--link" (click)="router.navigate(['/fornecedor/cardapio'])">
@@ -94,7 +98,6 @@
           </div>
           <span class="home-f-pedido__item">{{ pedido.item }}</span>
           <span class="home-f-pedido__pagamento">Pagamento: {{ pedido.pagamento }}</span>
-          <span class="home-f-pedido__endereco">Endereço: {{ pedido.endereco }} - {{ pedido.bairro }}</span>
           <div class="home-f-pedido__footer">
             <span class="home-f-pedido__total">Total: {{ formatarPreco(pedido.total) }}</span>
             <span class="home-f-pedido__status" [ngClass]="statusClass(pedido.status)">
