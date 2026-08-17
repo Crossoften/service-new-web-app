@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 export interface CategoriaItem {
   label: string;
   icon: string;
+  /** Id da categoria na API, quando a origem for o back-end (opcional). */
+  id?: number;
 }
 
 @Component({

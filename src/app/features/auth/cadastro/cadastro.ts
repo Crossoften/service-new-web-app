@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/services/auth';
 import { SocialNetwork } from '../../../core/models/enums';
 import { CreateUserSocialMediaDto, Perfil, RegisterBaseDto } from '../../../core/models/auth';
 import { ApiError } from '../../../core/models/common';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Fluxo de cadastro por perfil, integrado à API.
@@ -34,6 +35,7 @@ export class CadastroComponent implements OnInit {
   email = '';
   telefone = '';
   codigo = ''; // → inviteCode (opcional)
+  referralCode = ''; // → referralCode (via link de indicação `?ref=`)
   termosAceitos = false;
 
   // Step 1 — Parceiro (redes sociais)
@@ -57,6 +59,8 @@ export class CadastroComponent implements OnInit {
 
   ngOnInit() {
     this.perfil = (this.route.snapshot.paramMap.get('perfil') ?? 'cliente') as Perfil;
+    // Link de indicação: `/cadastro/:perfil?ref=CODIGO` → preenche o referralCode.
+    this.referralCode = this.route.snapshot.queryParamMap.get('ref')?.trim() ?? '';
   }
 
   get tituloPasso(): string {
@@ -144,6 +148,13 @@ export class CadastroComponent implements OnInit {
     this.carregando = true;
     this.auth.register(this.perfil, this.buildRegisterDto()).subscribe({
       next: () => {
+        // BYPASS TEMPORÁRIO (dev): enquanto o back-end não envia o email do
+        // código (BE-Q1), builds de desenvolvimento pulam a verificação e
+        // tentam autenticar direto. Em produção a flag é `false`.
+        if (!environment.production && environment.bypassVerifyCode) {
+          this.bypassVerificacao();
+          return;
+        }
         this.carregando = false;
         // Conta criada (status Pending) + código enviado por email → etapa de verificação.
         this.step = 3;
@@ -151,6 +162,29 @@ export class CadastroComponent implements OnInit {
       error: (err: ApiError) => {
         this.carregando = false;
         this.erro = this.msg(err, 'Não foi possível concluir o cadastro.');
+      },
+    });
+  }
+
+  /**
+   * Bypass de verificação (apenas dev): tenta login direto com as credenciais
+   * recém-criadas. Se o back-end exigir conta ativada, cai na etapa do código
+   * com uma mensagem clara — o bypass de front só resolve se o back permitir
+   * login de conta Pending.
+   */
+  private bypassVerificacao() {
+    this.auth.login({ email: this.email.trim(), password: this.senha }).subscribe({
+      next: (res) => {
+        this.carregando = false;
+        this.router.navigate([this.auth.homeRouteFor(res.profileType ?? null)]);
+      },
+      error: (err: ApiError) => {
+        this.carregando = false;
+        this.step = 3;
+        this.erro = this.msg(
+          err,
+          'Bypass indisponível: a conta exige ativação no back-end. Aguarde o código por email.',
+        );
       },
     });
   }
@@ -187,6 +221,8 @@ export class CadastroComponent implements OnInit {
     if (phone) dto.phone = phone;
     const invite = this.codigo.trim();
     if (invite) dto.inviteCode = invite;
+    const referral = this.referralCode.trim();
+    if (referral) dto.referralCode = referral;
     if (this.perfil === 'parceiro') {
       const socialMedias = this.buildSocialMedias();
       if (socialMedias.length) dto.socialMedias = socialMedias;

@@ -1,0 +1,49 @@
+.mc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  padding-top: calc(16px + var(--safe-top));
+
+  &__voltar { background: none; border: none; color: var(--color-text); cursor: pointer; padding: 0; }
+  &__titulo { font-size: 16px; font-weight: 700; color: var(--color-text); }
+}
+
+.mc-msg {
+  text-align: center;
+  color: var(--color-gray-600);
+  font-size: 14px;
+  padding: 32px 16px;
+}
+
+.mc-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 16px 24px;
+}
+
+.mc-card {
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  &__vaga { font-size: 15px; font-weight: 600; color: var(--color-text); }
+}
+
+.mc-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 50px;
+  background: var(--color-gray-100);
+  color: var(--color-gray-600);
+
+  &--accepted { background: #e6f5ea; color: #1a7f37; }
+  &--rejected { background: #fdecec; color: #d33; }
+}

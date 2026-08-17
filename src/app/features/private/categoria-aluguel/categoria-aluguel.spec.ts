@@ -1,22 +1,37 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 
-import { CategoriaAluguel } from './categoria-aluguel';
+import { CategoriaAluguelComponent } from './categoria-aluguel';
 
-describe('CategoriaAluguel', () => {
-  let component: CategoriaAluguel;
-  let fixture: ComponentFixture<CategoriaAluguel>;
+describe('CategoriaAluguelComponent', () => {
+  let component: CategoriaAluguelComponent;
+  let fixture: ComponentFixture<CategoriaAluguelComponent>;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CategoriaAluguel],
+      imports: [CategoriaAluguelComponent],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(CategoriaAluguel);
+    fixture = TestBed.createComponent(CategoriaAluguelComponent);
     component = fixture.componentInstance;
-    await fixture.whenStable();
+    httpMock = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  afterEach(() => httpMock.verify());
+
+  it('carrega as categorias de produto', () => {
+    httpMock
+      .expectOne((r) => r.url.endsWith('/products/categories'))
+      .flush([{ id: 3, name: 'Carro', slug: 'carro', isActive: true, sortOrder: 1 }]);
+    expect(component.items.length).toBe(1);
+    expect(component.items[0].id).toBe(3);
   });
 });

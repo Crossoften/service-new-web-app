@@ -1,0 +1,87 @@
+<div class="page-container">
+
+  <div class="dh-header">
+    <button class="dh-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="dh-header__titulo">Hospedagem</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="dh-msg">Carregando…</p>
+    } @else if (erro && !acomodacao) {
+      <p class="dh-msg">{{ erro }}</p>
+    } @else if (acomodacao) {
+
+      <div class="dh-img">
+        @if (acomodacao.imageUrl) {
+          <img [src]="acomodacao.imageUrl" [alt]="acomodacao.name" />
+        } @else {
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M3 21h18M4 21V7l8-4 8 4v14M9 21v-6h6v6"/>
+          </svg>
+        }
+      </div>
+
+      <div class="dh-info">
+        <h2 class="dh-info__nome">{{ acomodacao.name }}</h2>
+        @if (acomodacao.city) {
+          <span class="dh-info__local">{{ acomodacao.city }}{{ acomodacao.state ? ', ' + acomodacao.state : '' }}</span>
+        }
+        <span class="dh-info__preco">{{ formatarPreco(acomodacao.price) }} <small>/ diária</small></span>
+        <div class="dh-specs">
+          @if (acomodacao.roomsQuantity) { <span>{{ acomodacao.roomsQuantity }} quartos</span> }
+          <span>{{ acomodacao.category.name }}</span>
+        </div>
+        @if (acomodacao.description) {
+          <p class="dh-info__desc">{{ acomodacao.description }}</p>
+        }
+      </div>
+
+      @if (sucesso) {
+        <p class="dh-msg dh-msg--ok">{{ sucesso }}</p>
+      } @else {
+        <div class="dh-form">
+          <div class="dh-field dh-field--row">
+            <div class="dh-field">
+              <label>Check-in</label>
+              <input type="date" [(ngModel)]="checkIn" />
+            </div>
+            <div class="dh-field">
+              <label>Check-out</label>
+              <input type="date" [(ngModel)]="checkOut" />
+            </div>
+          </div>
+          <div class="dh-field">
+            <label>Hóspedes</label>
+            <input type="number" min="1" [(ngModel)]="hospedes" />
+          </div>
+          @if (noites > 0) {
+            <div class="dh-total">
+              <span>{{ noites }} diária(s)</span>
+              <strong>{{ formatarPreco(totalEstimado) }}</strong>
+            </div>
+          }
+          @if (erro) { <span class="dh-erro">{{ erro }}</span> }
+        </div>
+      }
+    }
+  </div>
+
+  @if (acomodacao && !sucesso) {
+    <div class="dh-actions">
+      <button class="dh-btn" (click)="reservar()" [disabled]="processando">
+        {{ processando ? 'ENVIANDO…' : 'SOLICITAR RESERVA' }}
+      </button>
+    </div>
+  } @else if (sucesso) {
+    <div class="dh-actions">
+      <button class="dh-btn" (click)="verMinhasReservas()">VER MINHAS RESERVAS</button>
+    </div>
+  }
+
+</div>

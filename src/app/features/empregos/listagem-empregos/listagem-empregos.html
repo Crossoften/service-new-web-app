@@ -1,0 +1,44 @@
+<div class="page-container">
+
+  <div class="le-header">
+    <button class="le-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="le-header__titulo">Vagas</span>
+    <button class="le-header__novo" (click)="publicar()" aria-label="Publicar vaga">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="le-sub">
+    <button class="le-sub__link" (click)="minhasCandidaturas()">Minhas candidaturas →</button>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="le-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="le-msg">{{ erro }}</p>
+    } @else if (vagas.length === 0) {
+      <p class="le-msg">Nenhuma vaga disponível.</p>
+    } @else {
+      <div class="le-lista">
+        @for (v of vagas; track v.id) {
+          <div class="le-card" (click)="abrir(v.id)">
+            <div class="le-card__top">
+              <span class="le-card__titulo">{{ v.title }}</span>
+              <span class="le-card__tipo">{{ tipoLabel(v) }}</span>
+            </div>
+            <span class="le-card__empresa">{{ v.employer.name }}</span>
+            @if (v.value) { <span class="le-card__valor">{{ formatarPreco(v.value) }}</span> }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

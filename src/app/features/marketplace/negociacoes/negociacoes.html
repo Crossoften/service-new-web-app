@@ -1,0 +1,39 @@
+<div class="page-container">
+
+  <div class="ng-header">
+    <button class="ng-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="ng-header__titulo">Negociações</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="ng-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="ng-msg">{{ erro }}</p>
+    } @else if (negociacoes.length === 0) {
+      <p class="ng-msg">Você ainda não tem negociações.</p>
+    } @else {
+      <div class="ng-lista">
+        @for (n of negociacoes; track n.id) {
+          <div class="ng-card" (click)="abrir(n.id)">
+            <div class="ng-card__top">
+              <span class="ng-card__nome">{{ n.product?.name || n.title || 'Produto' }}</span>
+              <span class="ng-card__status ng-card__status--{{ n.status.toLowerCase() }}">{{ statusLabel(n) }}</span>
+            </div>
+            <div class="ng-card__meta">
+              <span class="ng-card__valor">{{ valor(n) }}</span>
+              <span>·</span>
+              <span>Comprador: {{ n.buyer.name }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

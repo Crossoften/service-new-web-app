@@ -1,87 +1,141 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FornecedorServicosService } from '../../../../core/services/fornecedor-servicos';
+import { finalize } from 'rxjs';
+import { ServiceCatalogService } from '../../../../core/services/service-catalog';
+import { ApiService } from '../../../../core/services/api';
+import { ServiceCategoryDto } from '../../../../core/models/service';
+import { ApiError } from '../../../../core/models/common';
 
 @Component({
   selector: 'app-criar-servico',
   imports: [CommonModule, FormsModule],
   templateUrl: './criar-servico.html',
-  styleUrl: './criar-servico.scss'
+  styleUrl: './criar-servico.scss',
 })
 export class CriarServicoComponent implements OnInit {
-  modoEdicao: boolean = false;
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly catalog = inject(ServiceCatalogService);
+  private readonly api = inject(ApiService);
+
+  modoEdicao = false;
   servicoId?: number;
 
-  categoria: string = '';
-  nome: string = '';
-  tipo: string = 'Online';
-  registro: string = '';
-  valor: string = '';
-  descricao: string = '';
-  imagem: string = '';
-  bloqueado: boolean = false;
-  tipoAberto: boolean = false;
-  erro: string = '';
+  categorias: ServiceCategoryDto[] = [];
+  categoryId?: number;
+  nome = '';
+  tipo = 'Online';
+  registro = '';
+  valor = '';
+  descricao = '';
+  imagem = '';
+  imageKey = '';
+  bloqueado = false;
+  tipoAberto = false;
+  erro = '';
+  salvando = false;
+  enviandoFoto = false;
 
-  tipos = ['Online', 'Presencial', 'Híbrido'];
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private fornecedorServicosService: FornecedorServicosService
-  ) {}
+  tipos = ['Online', 'Presencial', 'Em domicílio'];
 
   ngOnInit() {
-    this.categoria = this.fornecedorServicosService.getCategoria();
+    this.catalog.categorias().subscribe({
+      next: (cats) => (this.categorias = cats),
+      error: () => {},
+    });
 
     const id = this.route.snapshot.queryParamMap.get('id');
     if (id) {
       this.modoEdicao = true;
       this.servicoId = Number(id);
-      const servico = this.fornecedorServicosService.getServico(this.servicoId);
-      if (servico) {
-        this.nome = servico.nome;
-        this.tipo = servico.tipo;
-        this.registro = servico.registro;
-        this.valor = servico.valor.toString();
-        this.descricao = servico.descricao;
-        this.imagem = servico.imagem;
-        this.bloqueado = servico.bloqueado;
-        this.categoria = servico.categoria;
-      }
+      this.catalog.meuServico(this.servicoId).subscribe({
+        next: (s) => {
+          this.categoryId = s.categoryId;
+          this.nome = s.nome;
+          this.tipo = s.tipo;
+          this.registro = s.registro;
+          this.valor = String(s.valor);
+          this.descricao = s.descricao;
+          this.imagem = s.imagem;
+          this.imageKey = s.imageKey ?? '';
+        },
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o serviço.';
+        },
+      });
     }
   }
 
-  toggleTipo() { this.tipoAberto = !this.tipoAberto; }
+  toggleTipo() {
+    this.tipoAberto = !this.tipoAberto;
+  }
 
   selecionarTipo(tipo: string) {
     this.tipo = tipo;
     this.tipoAberto = false;
   }
 
-  adicionarImagem() {
-    // Futuramente: abrir file picker
+  adicionarImagem(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.enviandoFoto = true;
+    this.erro = '';
+    this.api
+      .uploadOne(file)
+      .pipe(finalize(() => (this.enviandoFoto = false)))
+      .subscribe({
+        next: (res) => {
+          this.imagem = res.fileUrl;
+          this.imageKey = res.fileKey;
+        },
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível enviar a imagem.';
+        },
+      });
   }
 
   criarServico() {
+    if (this.salvando) return;
     this.erro = '';
-    if (!this.nome.trim()) { this.erro = 'Informe o nome do serviço.'; return; }
-    if (!this.valor || isNaN(Number(this.valor))) { this.erro = 'Informe um valor válido.'; return; }
+    if (!this.categoryId) {
+      this.erro = 'Selecione a categoria.';
+      return;
+    }
+    if (!this.nome.trim()) {
+      this.erro = 'Informe o nome do serviço.';
+      return;
+    }
+    if (!this.valor || isNaN(Number(this.valor))) {
+      this.erro = 'Informe um valor válido.';
+      return;
+    }
 
-    this.fornecedorServicosService.salvarServico({
-      id: this.servicoId,
-      categoria: this.categoria,
-      nome: this.nome,
-      tipo: this.tipo,
-      registro: this.registro,
-      valor: Number(this.valor),
-      descricao: this.descricao,
-      imagem: this.imagem,
+    const dto = {
+      name: this.nome.trim(),
+      type: this.catalog.tipoApi(this.tipo),
+      registrationCode: this.registro.trim() || undefined,
+      price: Number(this.valor),
+      description: this.descricao.trim() || undefined,
+      imageUrl: this.imagem || undefined,
+      imageKey: this.imageKey || undefined,
+      categoryId: this.categoryId,
+    };
+
+    this.salvando = true;
+    const req$ =
+      this.modoEdicao && this.servicoId
+        ? this.catalog.atualizarServico(this.servicoId, dto)
+        : this.catalog.criarServico(dto);
+
+    req$.pipe(finalize(() => (this.salvando = false))).subscribe({
+      next: () => this.router.navigate(['/fornecedor/servicos']),
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível salvar o serviço.';
+      },
     });
-
-    this.router.navigate(['/fornecedor/servicos']);
   }
 
   voltar() {

@@ -75,7 +75,9 @@
   </button>
 
   <div class="requisitos-actions">
-    <button class="requisitos-btn" (click)="confirmar()">CONFIRMAR</button>
+    <button class="requisitos-btn" (click)="confirmar()" [disabled]="enviando">
+      {{ enviando ? 'ENVIANDO…' : 'CONFIRMAR' }}
+    </button>
   </div>
 
 </div>

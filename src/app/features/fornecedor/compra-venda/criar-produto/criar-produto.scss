@@ -1,0 +1,119 @@
+.cp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  padding-top: calc(16px + var(--safe-top));
+
+  &__voltar {
+    background: none;
+    border: none;
+    color: var(--color-text);
+    cursor: pointer;
+    padding: 0;
+  }
+
+  &__titulo {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+}
+
+.cp-msg {
+  text-align: center;
+  color: var(--color-gray-600);
+  font-size: 14px;
+  padding: 32px 16px;
+}
+
+.cp-form {
+  padding: 8px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cp-foto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+
+  &__preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 12px;
+    background: var(--color-gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-600);
+    overflow: hidden;
+
+    img { width: 100%; height: 100%; object-fit: cover; }
+  }
+
+  &__btn {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    cursor: pointer;
+  }
+}
+
+.cp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &--row {
+    flex-direction: row;
+    gap: 12px;
+    .cp-field { flex: 1; }
+  }
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  input,
+  select,
+  textarea {
+    border: 1px solid var(--color-gray-100);
+    background: var(--color-white);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 14px;
+    color: var(--color-text);
+    font-family: inherit;
+  }
+
+  textarea { resize: vertical; }
+}
+
+.cp-erro {
+  color: #d33;
+  font-size: 13px;
+}
+
+.cp-actions {
+  padding: 12px 16px calc(12px + var(--safe-bottom));
+}
+
+.cp-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 50px;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.6; }
+  &:active { opacity: 0.85; }
+}

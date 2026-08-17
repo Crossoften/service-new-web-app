@@ -1,0 +1,39 @@
+<div class="page-container">
+
+  <div class="mt-header">
+    <button class="mt-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="mt-header__titulo">Meus pedidos</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="mt-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="mt-msg">{{ erro }}</p>
+    } @else if (pedidos.length === 0) {
+      <p class="mt-msg">Você ainda não tem pedidos de transporte.</p>
+    } @else {
+      <div class="mt-lista">
+        @for (p of pedidos; track p.id) {
+          <div class="mt-card" (click)="abrir(p.id)">
+            <div class="mt-card__top">
+              <span class="mt-card__nome">{{ p.transportation.name }}</span>
+              <span class="mt-status mt-status--{{ p.status.toLowerCase() }}">{{ statusLabel(p) }}</span>
+            </div>
+            <div class="mt-card__rota">
+              <span>{{ p.origin }}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              <span>{{ p.destination }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

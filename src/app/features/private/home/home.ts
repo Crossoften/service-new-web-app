@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-home',
@@ -8,6 +9,7 @@ import { Router } from '@angular/router';
   styleUrl: './home.scss'
 })
 export class HomeComponent {
+  private readonly auth = inject(AuthService);
   devMenuAberto = false;
 
   servicos = [
@@ -16,8 +18,8 @@ export class HomeComponent {
     { label: 'COMPRA E VENDER',         rota: '/compra-vender' },
     { label: 'ALUGUEL',                 rota: '/aluguel' },
     { label: 'TRANSPORTE',              rota: '/transporte' },
-    { label: 'HOSPEDAGEM',              rota: null },
-    { label: 'EMPREGOS E EMPREGADORES', rota: '/empregos' },
+    { label: 'HOSPEDAGEM',              rota: '/hospedagem' },
+    { label: 'EMPREGOS E EMPREGADORES', rota: '/empregos/vagas' },
     { label: 'ANUNCIE AQUI',            rota: null },
   ];
 
@@ -32,5 +34,12 @@ export class HomeComponent {
       this.devMenuAberto = false;
       this.router.navigate([rota]);
     }
+  }
+
+  /** Encerra a sessão e volta ao login (permite trocar de conta/perfil). */
+  sair() {
+    this.devMenuAberto = false;
+    this.auth.logout();
+    this.router.navigate(['/login']);
   }
 }

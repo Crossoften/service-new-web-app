@@ -53,6 +53,12 @@
 | `inventario-auth.md` | Inventário detalhado do Módulo Auth |
 | `inventario-delivery-cliente.md` | Inventário detalhado do Delivery Cliente (auditoria) |
 | `inventario-delivery-fornecedor.md` | Inventário detalhado do Delivery Fornecedor (auditoria) |
+| `inventario-entregador.md` | Inventário detalhado do Entregador (auditoria) |
+| `inventario-parceiro.md` | Inventário detalhado do Parceiro/Influencer (auditoria) |
+| `inventario-marketplace.md` | Inventário detalhado do Marketplace/Compra-Venda (auditoria) |
+| `api-contract-ref.md` | **Referência de contrato** (DTOs reais do Swagger) — durável p/ módulos 8–13 |
+| `inventario-servicos.md` | Inventário do módulo Serviços (`/services`+`/budgets`+`/works`) + plano de fatias |
+| `swagger.json` do cliente (2026-08-03) capturado em `api-contract-ref.md` | — |
 
 ---
 
@@ -63,20 +69,124 @@
 | **Fase 0 — Fundação** (HttpClient, interceptors, session, guards, models, env) | ✅ **Concluída** (build ok) | `patches/fase-0-fundacao.patch` |
 | **Módulo 1 — Auth** | ✅ **Concluído** (Slices 1–3, build+specs ok) | fatiado (ver abaixo) |
 | **Módulo 2 — Perfil** | ✅ **Concluído** (`/profile/me`, endereço, foto, cobrança, logout) | `patches/modulo-2-perfil.patch` |
-| Módulo 3 — Serviços (Cliente) | ⏳ Pendente | — |
-| Módulo 4 — Serviços (Fornecedor) | ⏳ Pendente | — |
+| Módulos 3/4 — Serviços (`/services` + `/budgets` + `/works`) | 🚧 **Em andamento** (S-1..S-4 ok; **falta S-5 Trabalhos**) | fatiado (ver abaixo) · `inventario-servicos.md` |
 | Módulo 5 — Delivery Cliente (`/restaurants`, `/food-orders`) | ✅ **Concluído** (DC-1/2/3) | fatiado (ver abaixo) |
 | Módulo 6 — Delivery Fornecedor (`/restaurants/me`, cardápio, pedidos) | ✅ **Concluído** (DF-1/2) | fatiado (ver abaixo) |
-| Módulo 7 — Entregador (`/deliveries` + rastreamento) | 🔄 **Próximo** (backend pronto) | — |
-| Módulo 8 — Parceiro/Influencer (`/referrals/me`) | ⏳ Pendente (backend pronto) | — |
-| Módulo 9 — Marketplace: Compra-Venda (`/products` + `/commercial-transactions`) | ⏳ Pendente (backend pronto) | — |
-| Módulo 10 — Aluguel (`/products?Rent` + `/rentals`) | ⏳ Pendente (backend pronto) | — |
-| Módulo 11 — Transporte (`/transportations` + `/transport-requests`) | ⏳ Pendente (backend pronto) | — |
-| Módulo 12 — Hospedagem (`/accommodations` + `/bookings`) | ⏳ Pendente (backend pronto) | — |
-| Módulo 13 — Empregos (`/jobs` + applications) | ⏳ Pendente (backend pronto) | — |
+| Módulo 7 — Entregador (`/deliveries` + rastreamento) | ✅ **Concluído** (E-1/E-2) | fatiado (ver abaixo) |
+| Módulo 8 — Parceiro/Influencer (`/referrals/me`) | ✅ **Concluído** (P-1..P-5) | fatiado (ver abaixo) |
+| Módulo 9 — Marketplace: Compra-Venda (`/products` + `/commercial-transactions`) | ✅ **Concluído** (M-1..M-4) | fatiado (ver abaixo) |
+| Módulo 10 — Aluguel (`/products?Rent` + `/rentals`) | ✅ **Concluído** (A-1..A-3) | `patches/aluguel-a1-a3-vitrine-solicitacao-gestao.patch` |
+| Módulo 11 — Transporte (`/transportations` + `/transport-requests`) | ✅ **Concluído** (T-1..T-3) | `patches/transporte-t1-t3-catalogo-pedidos.patch` |
+| Módulo 12 — Hospedagem (`/accommodations` + `/bookings`) | ✅ **Concluído** (H-1..H-3) | `patches/hospedagem-empregos-verticais-finais.patch` |
+| Módulo 13 — Empregos (`/jobs` + applications) | ✅ **Concluído** (E-1..E-3) | `patches/hospedagem-empregos-verticais-finais.patch` |
+| Transversal — Chat (`/chats`) | ✅ **Concluído** | `patches/chat-conversas.patch` |
 
 > 🎉 **Nada mais congelado:** o Swagger novo (2026-07-31) implementou BE-01…BE-17. Todas as verticais têm backend transacional.
 > ✅ **Limpeza feita (Slice 2):** `Partner` removido de `core/models/enums.ts` (`UserProfileType`) e de `PROFILE_HOME_ROUTES` em `auth.ts`.
+
+### Módulos 3/4 — Serviços (fatias)
+
+| Slice | Escopo | Status | Patch |
+|---|---|---|---|
+| **S-1** | **Cliente: catálogo + solicitar orçamento** — `categoria-servicos` (cats reais) + `listagem-servicos` (`GET /services`, view-model `Prestador`) + `detalhes-prestador` (`GET /services/{id}`) + `requisitos-servico` (→ `POST /budgets`, um por prestador) | ✅ **concluído** (build+specs ok) | `patches/servicos-s1-catalogo-orcamento.patch` |
+| **S-2** | **Cliente: orçamentos** — `orcamentos` (`GET /budgets?scope=Requested`, view-model `Orcamento`) + `aprovar-orcamento` (`GET /budgets/{id}` + **aprovar** `PATCH …/approve` → gera trabalho; **responder acréscimo** `…/respond-extra`) | ✅ **concluído** (build+specs ok) | `patches/servicos-s2-orcamentos-cliente.patch` |
+| **S-3** | **Fornecedor: serviços** — `listagem-servicos-fornecedor` (`GET /services/my-services`, abas Ativos/Inativos) + `criar-servico` (categoria via dropdown real, tipo pt↔`ServiceType`, upload de imagem → `POST/PATCH /services`) | ✅ **concluído** (build+specs ok) | `patches/servicos-s3-fornecedor-servicos.patch` |
+| **S-4** | **Fornecedor: orçamentos** — `orcamentos-fornecedor` (`GET /budgets?scope=Received`, abas por status) + `fazer-orcamento` (**responder** `PATCH /budgets/{id}` com valor/prazo/descrição + **pedir mais info** `…/request-more-information`) | ✅ **concluído** (build+specs ok) | `patches/servicos-s4-fornecedor-orcamentos.patch` |
+| **S-5** | Trabalhos (`/works`): start/confirm-arrival/finish/pay/warranty/cancel + `WorkService` | ⏳ Pendente | — |
+
+> Novos `ServiceCatalogService` + models `service.ts`/`budget.ts`. Detalhes/limitações (anexos, urgência) em
+> `inventario-servicos.md`. Camada de view-model `Prestador` mantém as telas mock com mínima mudança.
+
+### Transversal — Chat (`/chats`)
+
+Tela de conversa `features/chat/chat` na rota `/chat/:id` (o `chatRoomId` já vem em todos os fluxos).
+- Mensagens via `GET /chats/{id}/messages` (ordenadas por data), envio via `POST /chats/{id}/messages`,
+  marca lido via `PATCH /chats/{id}/read`. **Polling a cada 10s** (sem WebSocket no contrato).
+- Bolhas "minha vs. do outro" por `session.userId` vs `sender.id`.
+- Botão de **chat no cabeçalho** dos detalhes de: **negociação** (Marketplace), **aluguel**, **pedido de
+  transporte**, **reserva** (Hospedagem) e **pedido de delivery** — cliente (`status-pedido`) e fornecedor
+  (`detalhes-pedido-fornecedor`) — todos navegam para `/chat/{chatRoomId}`.
+- `ChatService` + model `chat.ts`. Patches: `patches/chat-conversas.patch` + `patches/chat-delivery.patch`.
+- **Inbox (lista de conversas):** não há endpoint de listagem no contrato → registrado como **BE-Q5**.
+
+### Módulo 12 — Hospedagem (fatias)
+
+| Slice | Escopo | Status | Patch |
+|---|---|---|---|
+| **H-1** | **Vitrine** — `categoria-hospedagem` (categorias reais) + `listagem-hospedagem` (`GET /accommodations`) | ✅ **concluído** | `patches/hospedagem-empregos-verticais-finais.patch` |
+| **H-2** | **Detalhe + reservar** — `detalhe-hospedagem` (check-in/out/hóspedes, total = noites × diária → `POST /bookings`) | ✅ **concluído** | (mesmo patch) |
+| **H-3** | **Minhas reservas** — `minhas-reservas` (`GET /bookings`) + `reserva-detalhe` com ações do anfitrião: **confirmar/recusar**, **check-in**, **concluir**, **cancelar** | ✅ **concluído** | (mesmo patch) |
+
+### Módulo 13 — Empregos (fatias)
+
+| Slice | Escopo | Status | Patch |
+|---|---|---|---|
+| **E-1** | **Vagas + candidatura** — `listagem-empregos` (`GET /jobs?scope=All`) + `detalhe-vaga` (candidatar `POST /jobs/{id}/apply`; empregador vê candidaturas) | ✅ **concluído** | `patches/hospedagem-empregos-verticais-finais.patch` |
+| **E-2** | **Minhas candidaturas** — `minhas-candidaturas` (`GET /jobs/applications/me`) | ✅ **concluído** | (mesmo patch) |
+| **E-3** | **Publicar + gerir** — `publicar-vaga` (`POST /jobs`) + `vaga-candidaturas` (empregador **aceita/recusa** — `PATCH /jobs/applications/{id}/respond`) | ✅ **concluído** | (mesmo patch) |
+
+> Novos `AccommodationService`/`JobService` + models. Papéis (hóspede/anfitrião, candidato/empregador) por
+> `session.userId`. Entradas no dev-menu: "Minhas Reservas" e "Minhas Candidaturas".
+
+### Módulo 11 — Transporte (fatias)
+
+| Slice | Escopo | Status | Patch |
+|---|---|---|---|
+| **T-1** | **Vitrine** — `categoria-transporte` (categorias reais `/transportations/categories`) + `listagem-transporte` (`GET /transportations`) | ✅ **concluído** (build+specs ok) | `patches/transporte-t1-t3-catalogo-pedidos.patch` |
+| **T-2** | **Detalhe + solicitar** — `detalhe-transporte` (veículo + origem/destino/carga → `POST /transport-requests`) | ✅ **concluído** | (mesmo patch) |
+| **T-3** | **Meus pedidos** — `meus-transportes` (`GET /transport-requests`) + `transporte-pedido-detalhe` com ações: **cotar** (transportador), **aceitar/recusar** cotação (solicitante), **iniciar** (`InTransit`), **entregar**, **cancelar** | ✅ **concluído** | (mesmo patch) |
+
+> Novo `TransportService` + models `transportation.ts`/`transport-request.ts`. Fluxo com etapa de **cotação**:
+> Solicitado → Cotado → Aceito → Em trânsito → Entregue. Papéis por `session.userId` vs `requester.id`/`provider.id`.
+
+### Módulo 10 — Aluguel (fatias)
+
+| Slice | Escopo | Status | Patch |
+|---|---|---|---|
+| **A-1** | **Vitrine** — `categoria-aluguel` (categorias reais) + `listagem-aluguel` (produtos alugáveis: filtra `transactionType` ≠ `Sale`) | ✅ **concluído** (build+specs ok) | `patches/aluguel-a1-a3-vitrine-solicitacao-gestao.patch` |
+| **A-2** | **Detalhe + solicitar** — `detalhe-aluguel` (produto + datas/valor/condições → `POST /rentals`) | ✅ **concluído** | (mesmo patch) |
+| **A-3** | **Meus aluguéis** — `meus-alugueis` (lista `GET /rentals`) + `aluguel-detalhe` com ações por papel: **aceitar/recusar**, **retirada** (`start`), **devolução** (`return`), **cancelar** | ✅ **concluído** | (mesmo patch) |
+
+> Reusa `MarketplaceService` (produtos) + novo `RentalService` (`/rentals`) e `rental.ts`. Locatário/locador
+> resolvidos por `session.userId` vs `requester.id`/`provider.id`. Datas via `<input type=date>` → ISO no POST.
+
+### Módulo 9 — Marketplace/Compra-Venda (fatias)
+
+| Slice | Escopo | Status | Patch |
+|---|---|---|---|
+| **M-1** | **Vitrine** — categorias reais (`GET /products/categories`) + listagem (`GET /products`, filtro por categoria/busca); models `product.ts`, `MarketplaceService` | ✅ **concluído** (build+specs ok) | `patches/marketplace-m1-vitrine-negociacao.patch` |
+| **M-2** | **Detalhe + iniciar negociação** — `GET /products/{id}` + "Tenho interesse" (`POST /commercial-transactions`); model `commercial-transaction.ts` | ✅ **concluído** (build+specs ok) | (mesmo patch M-1) |
+| **M-3** | **Criar/editar produto** (fornecedor) — `POST/PATCH/DELETE /products` + upload de imagem; modo "Meus produtos" na listagem (`/products/my-products`) | ✅ **concluído** (build+specs ok) | `patches/marketplace-m3-m4-produtos-negociacoes.patch` |
+| **M-4** | **Negociações** — lista (`GET /commercial-transactions`) + detalhe com ações por papel: **aceitar/recusar** (vendedor), **pagar** (comprador), **concluir**, **cancelar** | ✅ **concluído** (build+specs ok) | (mesmo patch M-3) |
+
+> Contrato disponível (`api-contract-ref.md`). Todas as telas do marketplace (antes vazias) foram
+> **construídas** e ligadas à API. Rotas ativadas: `produtos`, `meus-produtos`, `produto/novo`,
+> `produto/editar/:id`, `produto/:id`, `negociacoes`, `negociacao/:id`. Papel comprador/vendedor
+> resolvido por `session.userId` vs `buyer.id`/`seller.id`.
+
+### Módulo 8 — Parceiro/Influencer (fatias)
+
+| Slice | Escopo | Status | Patch |
+|---|---|---|---|
+| **P-1** | **Meu Código** — link de indicação real a partir de `GET /profile/me → referralCode`; copiar/compartilhar (Web Share). Cadastro passa a consumir `?ref=CODIGO` → `referralCode` no `register` | ✅ **concluído** (build+specs ok) | `patches/parceiro-p1-meu-codigo-referral.patch` |
+| **P-2** | Home: stats (`referrals/me/summary`) + últimas indicações (`referrals/me`) + link real | ✅ **concluído** | `patches/parceiro-p2-p5-indicacoes-saldo-bancos.patch` |
+| **P-3** | Indicações (Todas/Ativas/Inativas) — `referrals/me` (ativa = `Convertido`) | ✅ **concluído** | (mesmo patch) |
+| **P-4** | Saldo (`balances/receipts`: saldo do mês + histórico) + bancos (`bank-accounts/me`) | ✅ **concluído** | (mesmo patch) |
+| **P-5** | Cadastro de banco (`POST /bank-accounts`) — tipo mapeado p/ `Checking/Savings` | ✅ **concluído** | (mesmo patch) |
+
+> `ReferralsService`, `BalanceService`, `BankAccountService` + models `referral.ts`, `balance.ts`,
+> `bank-account.ts`. **`bank-accounts` é conta única** (`/bank-accounts/me`) — a aba "Bancos" exibe 0 ou 1 conta.
+> Stats da Home mapeiam direto o summary (downloads=totalReferrals, pagantes=totalPaying,
+> comissão=accumulatedCommission, ranking=rankingPosition).
+
+### Módulo 7 — Entregador (fatias)
+
+| Slice | Escopo | Status | Patch |
+|---|---|---|---|
+| **E-1** | **Home & Disponíveis** — `delivery.ts`; `EntregadorService` real; entregas disponíveis (`available`) + aceitar/recusar; atividades (`/deliveries/me`); ganhos = placeholder (BE-17) | ✅ **concluído** (build+specs ok) | `patches/entregador-e1-home-disponiveis.patch` |
+| **E-2** | **Entrega ativa** — detalhe (`GET /deliveries/{id}`) + **coletar** (`pickup`) → **entregar** (`deliver`); envio de **GPS** (`navigator.geolocation` → `PATCH /location`, a cada 15s enquanto PickedUp/OnTheWay) | ✅ **concluído** (build+specs ok) | `patches/entregador-e2-entrega-ativa.patch` |
+
+> Decisões: faturamento = **placeholder "em breve"** (BE-17); **GPS real** (geolocation); endereço de destino **pendente do back** (BE-D2).
 
 ### Módulo 6 — Delivery Fornecedor (fatias)
 

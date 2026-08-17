@@ -19,17 +19,27 @@
     <div class="codigo-card">
       <h3 class="codigo-card__titulo">Seu link de indicação</h3>
       <p class="codigo-card__subtitulo">Seu link personalizado</p>
-      <div class="codigo-card__link">
-        <span>{{ link }}</span>
-      </div>
-      <div class="codigo-card__acoes">
-        <button class="codigo-btn codigo-btn--primary" (click)="copiarLink()">
-          {{ linkCopiado ? 'Copiado!' : 'Copiar link' }}
-        </button>
-        <button class="codigo-btn codigo-btn--primary" (click)="compartilhar()">
-          Compartilhar
-        </button>
-      </div>
+
+      @if (carregando) {
+        <div class="codigo-card__link"><span>Carregando seu código…</span></div>
+      } @else if (erro) {
+        <div class="codigo-card__link"><span>{{ erro }}</span></div>
+      } @else if (codigo) {
+        <p class="codigo-card__codigo">Código: <strong>{{ codigo }}</strong></p>
+        <div class="codigo-card__link">
+          <span>{{ link }}</span>
+        </div>
+        <div class="codigo-card__acoes">
+          <button class="codigo-btn codigo-btn--primary" (click)="copiarLink()">
+            {{ linkCopiado ? 'Copiado!' : 'Copiar link' }}
+          </button>
+          <button class="codigo-btn codigo-btn--primary" (click)="compartilhar()">
+            Compartilhar
+          </button>
+        </div>
+      } @else {
+        <div class="codigo-card__link"><span>Você ainda não tem um código de indicação.</span></div>
+      }
     </div>
 
   </div>

@@ -1,48 +1,67 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ServicosService, Prestador } from '../../../../core/services/servicos';
+import { finalize } from 'rxjs';
+import { Prestador, ServiceCatalogService } from '../../../../core/services/service-catalog';
+import { ApiError } from '../../../../core/models/common';
 
 @Component({
   selector: 'app-listagem-servicos',
   imports: [CommonModule, FormsModule],
   templateUrl: './listagem-servicos.html',
-  styleUrl: './listagem-servicos.scss'
+  styleUrl: './listagem-servicos.scss',
 })
 export class ListagemServicosComponent implements OnInit {
-  categoria: string = '';
-  prestadores: Prestador[] = [];
-  busca: string = '';
-  selecionarTodos: boolean = false;
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly catalog = inject(ServiceCatalogService);
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private servicosService: ServicosService
-  ) {}
+  categoria = '';
+  categoryId?: number;
+  prestadores: Prestador[] = [];
+  busca = '';
+  selecionarTodos = false;
+  carregando = false;
+  erro = '';
 
   ngOnInit() {
-    this.categoria = this.route.snapshot.paramMap.get('categoria') ?? '';
-    this.prestadores = this.servicosService.getPrestadores(this.categoria);
+    const id = this.route.snapshot.paramMap.get('categoria');
+    this.categoryId = id ? Number(id) : undefined;
+    this.categoria = this.route.snapshot.queryParamMap.get('nome') ?? '';
+    this.carregar();
+  }
+
+  carregar() {
+    this.carregando = true;
+    this.erro = '';
+    this.catalog
+      .prestadores({ categoryId: this.categoryId, search: this.busca.trim() || undefined })
+      .pipe(finalize(() => (this.carregando = false)))
+      .subscribe({
+        next: (lista) => (this.prestadores = lista),
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar os prestadores.';
+        },
+      });
   }
 
   get prestadoresFiltrados(): Prestador[] {
     if (!this.busca.trim()) return this.prestadores;
-    return this.prestadores.filter(p =>
-      p.nome.toLowerCase().includes(this.busca.toLowerCase()) ||
-      p.profissao.toLowerCase().includes(this.busca.toLowerCase())
+    const t = this.busca.toLowerCase();
+    return this.prestadores.filter(
+      (p) => p.nome.toLowerCase().includes(t) || p.profissao.toLowerCase().includes(t),
     );
   }
 
   toggleTodos() {
     this.selecionarTodos = !this.selecionarTodos;
-    this.prestadores.forEach(p => p.selecionado = this.selecionarTodos);
+    this.prestadores.forEach((p) => (p.selecionado = this.selecionarTodos));
   }
 
   togglePrestador(prestador: Prestador) {
     prestador.selecionado = !prestador.selecionado;
-    this.selecionarTodos = this.prestadores.every(p => p.selecionado);
+    this.selecionarTodos = this.prestadores.every((p) => p.selecionado);
   }
 
   abrirDetalhes(prestador: Prestador, event: Event) {
@@ -51,13 +70,13 @@ export class ListagemServicosComponent implements OnInit {
   }
 
   get algumSelecionado(): boolean {
-    return this.prestadores.some(p => p.selecionado);
+    return this.prestadores.some((p) => p.selecionado);
   }
 
   confirmar() {
-    const selecionados = this.prestadores.filter(p => p.selecionado);
-    this.servicosService.setSelecionados(selecionados);
-    this.router.navigate(['/servicos/requisitos']);
+    const ids = this.prestadores.filter((p) => p.selecionado).map((p) => p.id);
+    if (!ids.length) return;
+    this.router.navigate(['/servicos/requisitos'], { queryParams: { ids: ids.join(',') } });
   }
 
   voltar() {

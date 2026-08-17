@@ -1,0 +1,53 @@
+<div class="page-container">
+
+  <div class="lt-header">
+    <button class="lt-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="lt-header__titulo">{{ categoriaNome || 'Transporte' }}</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="lt-busca">
+    <input type="text" placeholder="O QUE VOCÊ PROCURA?" [(ngModel)]="busca" (keyup.enter)="buscar()" />
+    <button class="lt-busca__btn" (click)="buscar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="lt-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="lt-msg">{{ erro }}</p>
+    } @else if (itens.length === 0) {
+      <p class="lt-msg">Nenhum veículo disponível.</p>
+    } @else {
+      <div class="lt-lista">
+        @for (t of itens; track t.id) {
+          <div class="lt-card" (click)="abrir(t.id)">
+            <div class="lt-card__img">
+              @if (t.imageUrl) {
+                <img [src]="t.imageUrl" [alt]="t.name" />
+              } @else {
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                  <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                </svg>
+              }
+            </div>
+            <div class="lt-card__body">
+              <span class="lt-card__nome">{{ t.name }}</span>
+              @if (t.capacity) { <span class="lt-card__sub">Capacidade: {{ t.capacity }}</span> }
+              <span class="lt-card__preco">{{ formatarPreco(t.price) }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

@@ -1,22 +1,34 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { MaisParceiro } from './mais-parceiro';
+import { MaisParceiroComponent } from './mais-parceiro';
+import { SessionService } from '../../../core/services/session';
 
-describe('MaisParceiro', () => {
-  let component: MaisParceiro;
-  let fixture: ComponentFixture<MaisParceiro>;
+describe('MaisParceiroComponent', () => {
+  let component: MaisParceiroComponent;
+  let fixture: ComponentFixture<MaisParceiroComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MaisParceiro],
+      imports: [MaisParceiroComponent],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(MaisParceiro);
+    fixture = TestBed.createComponent(MaisParceiroComponent);
     component = fixture.componentInstance;
-    await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('"Sair" (/login) encerra a sessão', () => {
+    const session = TestBed.inject(SessionService);
+    session.setSession({ token: 't', userId: 1, profileType: 'Influencer', role: null });
+    component.navegar('/login');
+    expect(session.isAuthenticated()).toBe(false);
   });
 });

@@ -1,17 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { HomeEntregador } from './home-entregador';
+import { HomeEntregadorComponent } from './home-entregador';
 
-describe('HomeEntregador', () => {
-  let component: HomeEntregador;
-  let fixture: ComponentFixture<HomeEntregador>;
+describe('HomeEntregadorComponent', () => {
+  let component: HomeEntregadorComponent;
+  let fixture: ComponentFixture<HomeEntregadorComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HomeEntregador],
+      imports: [HomeEntregadorComponent],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(HomeEntregador);
+    fixture = TestBed.createComponent(HomeEntregadorComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

@@ -106,6 +106,10 @@ export class DetalhesPedidoFornecedorComponent implements OnInit {
     return Number(valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
+  abrirChat() {
+    if (this.pedido) this.router.navigate(['/chat', this.pedido.chatRoomId]);
+  }
+
   voltar() {
     history.back();
   }

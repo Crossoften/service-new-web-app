@@ -23,9 +23,9 @@
 | BE-12 | Login email × telefone | mantido email (decisão) | ✅ N/A |
 | BE-13 | Qualidade de contrato | `/logout` criado; reset `minLength 8/maxLength 32` | 🟡 Falta `birthDate` (ainda `type:object`) |
 | BE-14 | Autorização por `profileType` | 403 explícitos nas rotas de delivery/food-order/deliveries | ✅ Implementado |
-| BE-15 | Assinatura como pré-condição do fornecedor | não indicado no contrato | ⚠️ Verificar com a API |
+| BE-15 | Assinatura como pré-condição do fornecedor | **Confirmado**: sem assinatura, o fornecedor recebe `403 "É necessário ter uma assinatura ativa..."` — inclusive em **GETs** (`/restaurants/me`, `/restaurants/categories`), não só no `POST`. | ✅ Implementado (Front trata **globalmente** no `errorInterceptor` → redirect p/ `/fornecedor/assinatura`) |
 | BE-16 | Cobrança por vertical | delivery híbrido (payouts) | ✅ Implementado |
-| BE-17 | Repasse entregador/influencer | payouts (restaurante) + comissão (influencer); entregador não explícito | 🟡 Parcial |
+| BE-17 | Repasse/ganhos do **entregador** | payouts (restaurante) + comissão (influencer); **entregador não tem endpoint** de ganhos (a Home do entregador mostra faturamento) | 🟡 Parcial — expor `GET /v1/deliveries/me/earnings` |
 
 ## Pendências remanescentes (para o time de API)
 
@@ -61,9 +61,11 @@
 
 | # | Ponto | Status |
 |---|---|---|
-| BE-Q1 | **Confirmação de conta** (SMS/email) no web **não existe** — só `verify-code` (mobile) e `forgot/reset` (senha). O cadastro cria a conta direto (`status: Pending/Active`). | ❓ Confirmar: o web precisa de confirmação por email/SMS? Se sim, expor endpoint. Hoje o Front cadastra → Sucesso → Login. |
+| BE-Q1 | **Confirmação de conta** via `verify-code` **É deste webapp** (a anotação "somente para mobile" refere-se a este app; "web" = portal administrativo). Fluxo: register → código por **email** → `verify-code`. **Faltam:** (a) rota de **reenvio** de código; (b) o **canal** (email) não está explícito no contrato; (c) a anotação do Swagger ("web não precisa consumir") gera ambiguidade. **⚠️ Em homolog o email do código não está sendo enviado** — bloqueia o cadastro. **Bypass no Front (só dev):** flag `environment.bypassVerifyCode` pula a verificação e faz login direto após o `register` (patch `fix-bypass-verify-code-dev.patch`); em produção a flag é `false`. **✅ Testado em homolog (03/08): conta recém-criada em status `Pending` consegue fazer login sem `verify-code`** → o bypass resolve o cadastro em dev/homolog. **🔒 Achado de segurança:** como o login **não exige** conta verificada, uma conta não-confirmada autentica e usa o app normalmente — a etapa `verify-code` está, na prática, **não imposta**. | ❗ (1) Confirmar se login de conta `Pending` é **intencional** (senão, bloquear login não-verificado); (2) corrigir envio do email do código em homolog; (3) expor **reenviar código**. |
 | BE-Q2 | **Telefone** passou a ser **obrigatório no Front** (cliente/fornecedor/etc.). No contrato, `phone` é opcional em `RegisterBaseDto`. | ❓ Confirmar se o back deve tornar `phone` obrigatório também (hoje valida formato quando enviado: "Informe um telefone válido no formato brasileiro."). |
 | BE-Q3 | **Assinatura do fornecedor** (planos + `POST /subscriptions`) foi movida para **onboarding pós-login** (o login automático no cadastro era frágil). Relaciona-se ao **BE-15** (assinatura como pré-condição). | ❓ Confirmar o momento/obrigatoriedade da assinatura (bloqueia publicar antes de assinar?). |
+| BE-Q5 | **Não há endpoint de listagem de chats do usuário (inbox).** O contrato só permite abrir chat por **contexto** (`GET /chats/context/{contextType}/{referenceId}`) ou por **id** (`GET /chats/{id}`). O Front abre o chat a partir do `chatRoomId` de cada negócio (negociação/aluguel/transporte/reserva/pedido). Uma **tela de "Conversas" (inbox)** agregando todos os chats do usuário depende de um endpoint novo. | ❗ Expor `GET /chats` (ou `/chats/me`) paginado, com último trecho, contraparte e não-lidas, para a inbox. |
+| BE-Q4 | **`/login` nem sempre retorna `profileType`.** Sem ele, o Front roteava todo mundo para a home de **cliente** e o `profileGuard` bloqueava as telas de fornecedor/entregador/parceiro (usuário "preso" como cliente). **Contornado no Front:** quando o `/login` não traz `profileType`, buscamos em `GET /my-self` e completamos a sessão (patch `fix-login-profiletype-logout.patch`). | ❗ Idealmente **incluir `profileType` no `ResponseLoginDto`** para evitar o round-trip extra. |
 
 ## Observações
 

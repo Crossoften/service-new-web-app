@@ -85,7 +85,9 @@
   </div>
 
   <div class="banco-actions">
-    <button class="banco-btn" (click)="salvar()">SALVAR</button>
+    <button class="banco-btn" (click)="salvar()" [disabled]="salvando">
+      {{ salvando ? 'SALVANDO…' : 'SALVAR' }}
+    </button>
   </div>
 
 </div>

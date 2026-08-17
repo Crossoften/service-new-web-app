@@ -1,0 +1,49 @@
+<div class="chat-container">
+
+  <div class="chat-header">
+    <button class="chat-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="chat-header__titulo">{{ outroNome }}</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="chat-mensagens">
+    @if (carregando) {
+      <p class="chat-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="chat-msg">{{ erro }}</p>
+    } @else if (mensagens.length === 0) {
+      <p class="chat-msg">Nenhuma mensagem ainda. Comece a conversa!</p>
+    } @else {
+      @for (m of mensagens; track m.id) {
+        <div class="chat-bolha" [class.chat-bolha--minha]="souRemetente(m)">
+          @if (!souRemetente(m)) { <span class="chat-bolha__autor">{{ m.sender.name }}</span> }
+          @if (m.message) { <span class="chat-bolha__texto">{{ m.message }}</span> }
+          @if (m.fileUrl) {
+            <a class="chat-bolha__arquivo" [href]="m.fileUrl" target="_blank" rel="noopener">
+              📎 {{ m.fileName || 'anexo' }}
+            </a>
+          }
+          <span class="chat-bolha__hora">{{ m.createdAt | date: 'dd/MM HH:mm' }}</span>
+        </div>
+      }
+    }
+  </div>
+
+  <div class="chat-input">
+    <input
+      type="text"
+      placeholder="Mensagem…"
+      [(ngModel)]="novaMensagem"
+      (keyup.enter)="enviar()" />
+    <button class="chat-input__enviar" (click)="enviar()" [disabled]="enviando" aria-label="Enviar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+
+</div>

@@ -20,10 +20,15 @@
         }
       </div>
 
-      <!-- CATEGORIA (bloqueada) -->
+      <!-- CATEGORIA -->
       <div class="cs-field">
         <label>Categoria</label>
-        <input type="text" [value]="categoria" disabled class="cs-field__disabled" />
+        <select [(ngModel)]="categoryId" class="cs-field__disabled">
+          <option [ngValue]="undefined" disabled>Selecione…</option>
+          @for (c of categorias; track c.id) {
+            <option [ngValue]="c.id">{{ c.name }}</option>
+          }
+        </select>
       </div>
 
       <!-- TIPO -->
@@ -81,11 +86,12 @@
               </svg>
             }
           </div>
-          <button class="cs-imagem__fab" (click)="adicionarImagem()">
+          <label class="cs-imagem__fab">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-          </button>
+            <input type="file" accept="image/png,image/jpeg" (change)="adicionarImagem($event)" hidden />
+          </label>
         </div>
       </div>
 
@@ -97,7 +103,9 @@
   </div>
 
   <div class="cs-actions">
-    <button class="cs-btn" (click)="criarServico()">CRIAR SERVIÇO</button>
+    <button class="cs-btn" (click)="criarServico()" [disabled]="salvando || enviandoFoto">
+      {{ salvando ? 'SALVANDO…' : (modoEdicao ? 'SALVAR' : 'CRIAR SERVIÇO') }}
+    </button>
   </div>
 
 </div>

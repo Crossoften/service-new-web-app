@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-mais-parceiro',
@@ -9,6 +10,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './mais-parceiro.scss'
 })
 export class MaisParceiroComponent {
+  private readonly auth = inject(AuthService);
 
   opcoes = [
     { label: 'Notificações', rota: null },
@@ -24,7 +26,12 @@ export class MaisParceiroComponent {
   constructor(private router: Router) {}
 
   navegar(rota: string | null) {
-    if (rota) this.router.navigate([rota]);
+    if (!rota) return;
+    // "Sair" precisa encerrar a sessão antes (senão o guestGuard devolve para a home).
+    if (rota === '/login') {
+      this.auth.logout();
+    }
+    this.router.navigate([rota]);
   }
 
   voltar() {

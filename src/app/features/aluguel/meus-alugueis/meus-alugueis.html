@@ -1,0 +1,39 @@
+<div class="page-container">
+
+  <div class="ma-header">
+    <button class="ma-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="ma-header__titulo">Meus aluguéis</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="ma-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="ma-msg">{{ erro }}</p>
+    } @else if (alugueis.length === 0) {
+      <p class="ma-msg">Você ainda não tem aluguéis.</p>
+    } @else {
+      <div class="ma-lista">
+        @for (a of alugueis; track a.id) {
+          <div class="ma-card" (click)="abrir(a.id)">
+            <div class="ma-card__top">
+              <span class="ma-card__nome">{{ a.product.name }}</span>
+              <span class="ma-status ma-status--{{ a.status.toLowerCase() }}">{{ statusLabel(a) }}</span>
+            </div>
+            <div class="ma-card__meta">
+              <span class="ma-card__valor">{{ formatarPreco(a.price) }}</span>
+              <span>·</span>
+              <span>Locatário: {{ a.requester.name }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

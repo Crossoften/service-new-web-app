@@ -1,0 +1,78 @@
+<div class="page-container">
+
+  <div class="dt-header">
+    <button class="dt-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="dt-header__titulo">Transporte</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="dt-msg">Carregando…</p>
+    } @else if (erro && !transporte) {
+      <p class="dt-msg">{{ erro }}</p>
+    } @else if (transporte) {
+
+      <div class="dt-img">
+        @if (transporte.imageUrl) {
+          <img [src]="transporte.imageUrl" [alt]="transporte.name" />
+        } @else {
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        }
+      </div>
+
+      <div class="dt-info">
+        <h2 class="dt-info__nome">{{ transporte.name }}</h2>
+        @if (transporte.model) { <span class="dt-info__sub">{{ transporte.model }}</span> }
+        <span class="dt-info__preco">A partir de {{ formatarPreco(transporte.price) }}</span>
+        <div class="dt-specs">
+          @if (transporte.capacity) { <span>Capacidade: {{ transporte.capacity }}</span> }
+          @if (transporte.year) { <span>Ano: {{ transporte.year }}</span> }
+          @if (transporte.mileageKm) { <span>{{ transporte.mileageKm }} km</span> }
+        </div>
+        @if (transporte.description) {
+          <p class="dt-info__desc">{{ transporte.description }}</p>
+        }
+      </div>
+
+      @if (sucesso) {
+        <p class="dt-msg dt-msg--ok">{{ sucesso }}</p>
+      } @else {
+        <div class="dt-form">
+          <div class="dt-field">
+            <label>Origem</label>
+            <input type="text" placeholder="Cidade / endereço de coleta" [(ngModel)]="origem" />
+          </div>
+          <div class="dt-field">
+            <label>Destino</label>
+            <input type="text" placeholder="Cidade / endereço de entrega" [(ngModel)]="destino" />
+          </div>
+          <div class="dt-field">
+            <label>Carga (opcional)</label>
+            <textarea rows="3" placeholder="Descreva a carga" [(ngModel)]="carga"></textarea>
+          </div>
+          @if (erro) { <span class="dt-erro">{{ erro }}</span> }
+        </div>
+      }
+    }
+  </div>
+
+  @if (transporte && !sucesso) {
+    <div class="dt-actions">
+      <button class="dt-btn" (click)="solicitar()" [disabled]="processando">
+        {{ processando ? 'ENVIANDO…' : 'SOLICITAR TRANSPORTE' }}
+      </button>
+    </div>
+  } @else if (sucesso) {
+    <div class="dt-actions">
+      <button class="dt-btn" (click)="verMeusPedidos()">VER MEUS PEDIDOS</button>
+    </div>
+  }
+
+</div>

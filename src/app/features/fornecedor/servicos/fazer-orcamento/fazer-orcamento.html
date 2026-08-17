@@ -138,7 +138,9 @@
 
   <!-- BOTÕES -->
   <div class="fo-actions">
-    <button class="fo-btn fo-btn--primary" (click)="enviar()">ENVIAR</button>
+    <button class="fo-btn fo-btn--primary" (click)="enviar()" [disabled]="enviando">
+      {{ enviando ? 'ENVIANDO…' : 'ENVIAR' }}
+    </button>
     <button class="fo-btn fo-btn--outline" (click)="abrirMaisInfos()">PEDIR MAIS INFORMAÇÕES</button>
   </div>
 

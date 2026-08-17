@@ -1,24 +1,48 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
 import { HeaderBuscaComponent } from '../../../shared/components/header-busca/header-busca';
-import { CategoriaGridComponent, CategoriaItem } from '../../../shared/components/categoria-grid/categoria-grid';
+import {
+  CategoriaGridComponent,
+  CategoriaItem,
+} from '../../../shared/components/categoria-grid/categoria-grid';
+import { MarketplaceService } from '../../../core/services/marketplace';
+import { ApiError } from '../../../core/models/common';
 
 @Component({
   selector: 'app-categoria-aluguel',
   imports: [HeaderBuscaComponent, CategoriaGridComponent],
   templateUrl: './categoria-aluguel.html',
-  styleUrl: './categoria-aluguel.scss'
+  styleUrl: './categoria-aluguel.scss',
 })
-export class CategoriaAluguelComponent {
+export class CategoriaAluguelComponent implements OnInit {
+  private readonly marketplace = inject(MarketplaceService);
+  private readonly router = inject(Router);
 
-  items: CategoriaItem[] = [
-    { label: 'Casa',        icon: 'assets/categorias/aluguel/casa.png' },
-    { label: 'Salão de Festa',        icon: 'assets/categorias/aluguel/salao-de-festa.png' },
-    { label: 'Ponto Comercial',            icon: 'assets/categorias/aluguel/ponto-comercial.png' },
-    { label: 'Caminhão', icon: 'assets/categorias/aluguel/caminhao.png' },
-    { label: 'Pasto',               icon: 'assets/categorias/aluguel/pasto.png' },
-    { label: 'Betoneira',       icon: 'assets/categorias/aluguel/betoneira.png' },
-    { label: 'Carro',            icon: 'assets/categorias/aluguel/carro.png' },
-    { label: 'Moto',             icon: 'assets/categorias/aluguel/moto.png' },
-    { label: 'Britadeira',              icon: 'assets/categorias/aluguel/britadeira.png' },
-  ];
+  items: CategoriaItem[] = [];
+  carregando = false;
+  erro = '';
+
+  ngOnInit() {
+    this.carregando = true;
+    this.marketplace
+      .categorias()
+      .pipe(finalize(() => (this.carregando = false)))
+      .subscribe({
+        next: (categorias) => {
+          this.items = categorias.map((c) => ({ id: c.id, label: c.name, icon: c.iconUrl ?? '' }));
+        },
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim()
+            ? err.message
+            : 'Não foi possível carregar as categorias.';
+        },
+      });
+  }
+
+  abrirCategoria(item: CategoriaItem) {
+    this.router.navigate(['/aluguel/produtos'], {
+      queryParams: item.id ? { categoryId: item.id, categoria: item.label } : {},
+    });
+  }
 }

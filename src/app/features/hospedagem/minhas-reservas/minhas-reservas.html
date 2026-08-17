@@ -1,0 +1,39 @@
+<div class="page-container">
+
+  <div class="mr-header">
+    <button class="mr-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="mr-header__titulo">Minhas reservas</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="mr-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="mr-msg">{{ erro }}</p>
+    } @else if (reservas.length === 0) {
+      <p class="mr-msg">Você ainda não tem reservas.</p>
+    } @else {
+      <div class="mr-lista">
+        @for (r of reservas; track r.id) {
+          <div class="mr-card" (click)="abrir(r.id)">
+            <div class="mr-card__top">
+              <span class="mr-card__nome">{{ r.accommodation.name }}</span>
+              <span class="mr-status mr-status--{{ r.status.toLowerCase() }}">{{ statusLabel(r) }}</span>
+            </div>
+            <div class="mr-card__meta">
+              <span>{{ r.checkIn | date: 'dd/MM' }} – {{ r.checkOut | date: 'dd/MM' }}</span>
+              <span>·</span>
+              <span class="mr-card__valor">{{ formatarPreco(r.totalValue) }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

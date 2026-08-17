@@ -1,0 +1,79 @@
+<div class="page-container">
+
+  <div class="td-header">
+    <button class="td-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="td-header__titulo">Pedido de transporte</span>
+    @if (pedido) {
+      <button class="td-header__voltar" (click)="abrirChat()" aria-label="Abrir chat">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </button>
+    } @else {
+      <div style="width: 22px"></div>
+    }
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="td-msg">Carregando…</p>
+    } @else if (erro && !pedido) {
+      <p class="td-msg">{{ erro }}</p>
+    } @else if (pedido) {
+
+      <div class="td-card">
+        <div class="td-card__top">
+          <span class="td-card__nome">{{ pedido.transportation.name }}</span>
+          <span class="td-status td-status--{{ pedido.status.toLowerCase() }}">{{ statusLabel }}</span>
+        </div>
+
+        <div class="td-rota">
+          <span>{{ pedido.origin }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          <span>{{ pedido.destination }}</span>
+        </div>
+
+        @if (pedido.quotedValue) {
+          <div class="td-linha"><span>Cotação</span><strong>{{ formatarPreco(pedido.quotedValue) }}</strong></div>
+        }
+        <div class="td-linha"><span>Solicitante</span><strong>{{ pedido.requester.name }}</strong></div>
+        <div class="td-linha"><span>Transportador</span><strong>{{ pedido.provider.name }}</strong></div>
+        @if (pedido.cargoDescription) {
+          <p class="td-desc">{{ pedido.cargoDescription }}</p>
+        }
+      </div>
+
+      <!-- COTAÇÃO (transportador) -->
+      @if (podeCotar) {
+        <div class="td-cotar">
+          <label>Valor da cotação (R$)</label>
+          <input type="number" placeholder="0,00" [(ngModel)]="valorCotacao" />
+        </div>
+      }
+
+      @if (erro) { <p class="td-msg td-msg--erro">{{ erro }}</p> }
+    }
+  </div>
+
+  @if (pedido) {
+    <div class="td-actions">
+      @if (podeCotar) {
+        <button class="td-btn" (click)="cotar()" [disabled]="processando">ENVIAR COTAÇÃO</button>
+      } @else if (podeResponder) {
+        <button class="td-btn td-btn--ghost" (click)="recusar()" [disabled]="processando">RECUSAR</button>
+        <button class="td-btn" (click)="aceitar()" [disabled]="processando">ACEITAR COTAÇÃO</button>
+      } @else if (podeIniciar) {
+        <button class="td-btn" (click)="iniciar()" [disabled]="processando">INICIAR TRANSPORTE</button>
+      } @else if (podeEntregar) {
+        <button class="td-btn" (click)="entregar()" [disabled]="processando">CONFIRMAR ENTREGA</button>
+      } @else if (podeCancelar) {
+        <button class="td-btn td-btn--ghost" (click)="cancelar()" [disabled]="processando">CANCELAR</button>
+      }
+    </div>
+  }
+
+</div>

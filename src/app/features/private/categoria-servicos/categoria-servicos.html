@@ -5,10 +5,16 @@
   </app-header-busca>
 
   <div class="page-content">
-    <app-categoria-grid
-      [items]="items"
-      tipo="servicos"
-      (itemSelecionado)="onItemSelecionado($event)">
-    </app-categoria-grid>
+    @if (carregando) {
+      <p class="cs-msg">Carregando categorias…</p>
+    } @else if (erro) {
+      <p class="cs-msg">{{ erro }}</p>
+    } @else {
+      <app-categoria-grid
+        [items]="items"
+        tipo="servicos"
+        (itemSelecionado)="onItemSelecionado($event)">
+      </app-categoria-grid>
+    }
   </div>
 </div>

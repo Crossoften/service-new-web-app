@@ -117,9 +117,22 @@
 
   </div>
 
+  @if (erro) {
+    <p style="text-align:center;color:#d33;font-size:13px;padding:0 16px 8px;">{{ erro }}</p>
+  }
+
   <!-- BOTÃO -->
-  <div class="aprovar-actions">
-    <button class="aprovar-btn" (click)="solicitar()">SOLICITAR</button>
-  </div>
+  @if (orcamento) {
+    <div class="aprovar-actions">
+      @if (orcamento.temAcrescimoPendente) {
+        <button class="aprovar-btn" style="background:#fff;color:var(--color-text);border:1px solid var(--color-gray-100);" (click)="responderAcrescimo('Rejected')" [disabled]="processando">RECUSAR ACRÉSCIMO</button>
+        <button class="aprovar-btn" (click)="responderAcrescimo('Approved')" [disabled]="processando">APROVAR ACRÉSCIMO</button>
+      } @else {
+        <button class="aprovar-btn" (click)="solicitar()" [disabled]="processando">
+          {{ processando ? 'AGUARDE…' : 'APROVAR ORÇAMENTO' }}
+        </button>
+      }
+    </div>
+  }
 
 </div>

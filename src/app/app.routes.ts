@@ -56,9 +56,30 @@ import { DetalhesTrabalhoComponent } from './features/fornecedor/servicos/detalh
 import { HomeEntregadorComponent } from './features/entregador/home-entregador/home-entregador';
 import { TrabalhosEntregadorComponent } from './features/entregador/trabalhos-entregador/trabalhos-entregador';
 import { StatusEntregaComponent } from './features/entregador/status-entrega/status-entrega';
-//import { ListagemProdutosComponent } from './features/fornecedor/compra-venda/listagem-produtos/listagem-produtos';
-//import { CriarProdutoComponent } from './features/fornecedor/compra-venda/criar-produto/criar-produto';
-//import { DetalheVendaComponent } from './features/fornecedor/compra-venda/detalhe-venda/detalhe-venda';
+import { ListagemProdutosComponent } from './features/fornecedor/compra-venda/listagem-produtos/listagem-produtos';
+import { CriarProdutoComponent } from './features/fornecedor/compra-venda/criar-produto/criar-produto';
+import { DetalheVendaComponent } from './features/fornecedor/compra-venda/detalhe-venda/detalhe-venda';
+import { NegociacoesComponent } from './features/marketplace/negociacoes/negociacoes';
+import { NegociacaoDetalheComponent } from './features/marketplace/negociacao-detalhe/negociacao-detalhe';
+import { ListagemAluguelComponent } from './features/aluguel/listagem-aluguel/listagem-aluguel';
+import { DetalheAluguelComponent } from './features/aluguel/detalhe-aluguel/detalhe-aluguel';
+import { MeusAlugueisComponent } from './features/aluguel/meus-alugueis/meus-alugueis';
+import { AluguelDetalheComponent } from './features/aluguel/aluguel-detalhe/aluguel-detalhe';
+import { ListagemTransporteComponent } from './features/transporte/listagem-transporte/listagem-transporte';
+import { DetalheTransporteComponent } from './features/transporte/detalhe-transporte/detalhe-transporte';
+import { MeusTransportesComponent } from './features/transporte/meus-transportes/meus-transportes';
+import { TransportePedidoDetalheComponent } from './features/transporte/transporte-pedido-detalhe/transporte-pedido-detalhe';
+import { CategoriaHospedagemComponent } from './features/hospedagem/categoria-hospedagem/categoria-hospedagem';
+import { ListagemHospedagemComponent } from './features/hospedagem/listagem-hospedagem/listagem-hospedagem';
+import { DetalheHospedagemComponent } from './features/hospedagem/detalhe-hospedagem/detalhe-hospedagem';
+import { MinhasReservasComponent } from './features/hospedagem/minhas-reservas/minhas-reservas';
+import { ReservaDetalheComponent } from './features/hospedagem/reserva-detalhe/reserva-detalhe';
+import { ListagemEmpregosComponent } from './features/empregos/listagem-empregos/listagem-empregos';
+import { DetalheVagaComponent } from './features/empregos/detalhe-vaga/detalhe-vaga';
+import { MinhasCandidaturasComponent } from './features/empregos/minhas-candidaturas/minhas-candidaturas';
+import { PublicarVagaComponent } from './features/empregos/publicar-vaga/publicar-vaga';
+import { VagaCandidaturasComponent } from './features/empregos/vaga-candidaturas/vaga-candidaturas';
+import { ChatComponent } from './features/chat/chat/chat';
 
 export const routes: Routes = [
   // Públicas (sem sessão)
@@ -142,9 +163,35 @@ export const routes: Routes = [
 
   // Outras categorias (exige sessão)
   { path: 'compra-vender', component: CategoriaCompraVenderComponent, canActivate: [authGuard] },
+  { path: 'compra-vender/produtos', component: ListagemProdutosComponent, canActivate: [authGuard] },
+  { path: 'compra-vender/meus-produtos', component: ListagemProdutosComponent, data: { mine: true }, canActivate: [authGuard] },
+  { path: 'compra-vender/produto/novo', component: CriarProdutoComponent, canActivate: [authGuard] },
+  { path: 'compra-vender/produto/editar/:id', component: CriarProdutoComponent, canActivate: [authGuard] },
+  { path: 'compra-vender/negociacoes', component: NegociacoesComponent, canActivate: [authGuard] },
+  { path: 'compra-vender/negociacao/:id', component: NegociacaoDetalheComponent, canActivate: [authGuard] },
+  { path: 'compra-vender/produto/:id', component: DetalheVendaComponent, canActivate: [authGuard] },
   { path: 'aluguel', component: CategoriaAluguelComponent, canActivate: [authGuard] },
+  { path: 'aluguel/produtos', component: ListagemAluguelComponent, canActivate: [authGuard] },
+  { path: 'aluguel/meus', component: MeusAlugueisComponent, canActivate: [authGuard] },
+  { path: 'aluguel/produto/:id', component: DetalheAluguelComponent, canActivate: [authGuard] },
+  { path: 'aluguel/:id', component: AluguelDetalheComponent, canActivate: [authGuard] },
   { path: 'transporte', component: CategoriaTransporteComponent, canActivate: [authGuard] },
+  { path: 'transporte/veiculos', component: ListagemTransporteComponent, canActivate: [authGuard] },
+  { path: 'transporte/meus', component: MeusTransportesComponent, canActivate: [authGuard] },
+  { path: 'transporte/veiculo/:id', component: DetalheTransporteComponent, canActivate: [authGuard] },
+  { path: 'transporte/pedido/:id', component: TransportePedidoDetalheComponent, canActivate: [authGuard] },
+  { path: 'hospedagem', component: CategoriaHospedagemComponent, canActivate: [authGuard] },
+  { path: 'hospedagem/lista', component: ListagemHospedagemComponent, canActivate: [authGuard] },
+  { path: 'hospedagem/reservas', component: MinhasReservasComponent, canActivate: [authGuard] },
+  { path: 'hospedagem/acomodacao/:id', component: DetalheHospedagemComponent, canActivate: [authGuard] },
+  { path: 'hospedagem/reserva/:id', component: ReservaDetalheComponent, canActivate: [authGuard] },
   { path: 'empregos', component: CategoriaEmpregosComponent, canActivate: [authGuard] },
+  { path: 'empregos/vagas', component: ListagemEmpregosComponent, canActivate: [authGuard] },
+  { path: 'empregos/candidaturas', component: MinhasCandidaturasComponent, canActivate: [authGuard] },
+  { path: 'empregos/vaga/nova', component: PublicarVagaComponent, canActivate: [authGuard] },
+  { path: 'empregos/vaga/:id/candidaturas', component: VagaCandidaturasComponent, canActivate: [authGuard] },
+  { path: 'empregos/vaga/:id', component: DetalheVagaComponent, canActivate: [authGuard] },
+  { path: 'chat/:id', component: ChatComponent, canActivate: [authGuard] },
   { path: 'listagem/:tipo', component: ListagemGenericaComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'splash' }
 ];

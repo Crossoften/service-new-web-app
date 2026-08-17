@@ -1,1 +1,103 @@
-<p>criar-produto works!</p>
+<div class="page-container">
+
+  <!-- HEADER -->
+  <div class="cp-header">
+    <button class="cp-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="cp-header__titulo">{{ titulo }}</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="cp-msg">Carregando…</p>
+    } @else {
+      <div class="cp-form">
+
+        <!-- FOTO -->
+        <div class="cp-foto">
+          <div class="cp-foto__preview">
+            @if (imageUrl) {
+              <img [src]="imageUrl" alt="Foto do produto" />
+            } @else {
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+              </svg>
+            }
+          </div>
+          <label class="cp-foto__btn">
+            {{ enviandoFoto ? 'Enviando…' : 'Escolher imagem' }}
+            <input type="file" accept="image/png,image/jpeg" (change)="selecionarFoto($event)" hidden />
+          </label>
+        </div>
+
+        <!-- CATEGORIA -->
+        <div class="cp-field">
+          <label>Categoria</label>
+          <select [(ngModel)]="categoryId">
+            <option [ngValue]="undefined" disabled>Selecione…</option>
+            @for (c of categorias; track c.id) {
+              <option [ngValue]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- TIPO -->
+        <div class="cp-field">
+          <label>Tipo de negociação</label>
+          <select [(ngModel)]="transactionType">
+            @for (t of tipos; track t.id) {
+              <option [ngValue]="t.id">{{ t.label }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- NOME -->
+        <div class="cp-field">
+          <label>Nome</label>
+          <input type="text" placeholder="Ex.: Fiat Bravo" [(ngModel)]="nome" />
+        </div>
+
+        <!-- MODELO / ANO -->
+        <div class="cp-field cp-field--row">
+          <div class="cp-field">
+            <label>Modelo</label>
+            <input type="text" placeholder="Opcional" [(ngModel)]="modelo" />
+          </div>
+          <div class="cp-field">
+            <label>Ano</label>
+            <input type="number" placeholder="Opcional" [(ngModel)]="ano" />
+          </div>
+        </div>
+
+        <!-- PREÇO -->
+        <div class="cp-field">
+          <label>Preço (R$)</label>
+          <input type="number" placeholder="0,00" [(ngModel)]="preco" />
+        </div>
+
+        <!-- DESCRIÇÃO -->
+        <div class="cp-field">
+          <label>Descrição</label>
+          <textarea rows="4" placeholder="Detalhes do produto" [(ngModel)]="descricao"></textarea>
+        </div>
+
+        @if (erro) {
+          <span class="cp-erro">{{ erro }}</span>
+        }
+      </div>
+    }
+  </div>
+
+  @if (!carregando) {
+    <div class="cp-actions">
+      <button class="cp-btn" (click)="salvar()" [disabled]="salvando || enviandoFoto">
+        {{ salvando ? 'SALVANDO…' : 'SALVAR' }}
+      </button>
+    </div>
+  }
+
+</div>

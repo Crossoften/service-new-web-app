@@ -1,0 +1,32 @@
+<div class="page-container">
+
+  <div class="mc-header">
+    <button class="mc-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="mc-header__titulo">Minhas candidaturas</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="mc-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="mc-msg">{{ erro }}</p>
+    } @else if (candidaturas.length === 0) {
+      <p class="mc-msg">Você ainda não se candidatou a vagas.</p>
+    } @else {
+      <div class="mc-lista">
+        @for (c of candidaturas; track c.id) {
+          <div class="mc-card">
+            <span class="mc-card__vaga">{{ c.job.title }}</span>
+            <span class="mc-status mc-status--{{ c.status.toLowerCase() }}">{{ statusLabel(c) }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

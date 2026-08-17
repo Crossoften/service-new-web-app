@@ -1,0 +1,54 @@
+<div class="page-container">
+
+  <div class="pv-header">
+    <button class="pv-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="pv-header__titulo">Publicar vaga</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    <div class="pv-form">
+      <div class="pv-field">
+        <label>Título</label>
+        <input type="text" placeholder="Ex.: Desenvolvedor Back-end" [(ngModel)]="titulo" />
+      </div>
+
+      <div class="pv-field">
+        <label>Tipo de contratação</label>
+        <select [(ngModel)]="tipo">
+          @for (t of tipos; track t.id) {
+            <option [ngValue]="t.id">{{ t.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="pv-field">
+        <label>Remuneração (R$) — opcional</label>
+        <input type="number" placeholder="0,00" [(ngModel)]="valor" />
+      </div>
+
+      <div class="pv-field">
+        <label>Requisitos</label>
+        <textarea rows="3" placeholder="Requisitos da vaga" [(ngModel)]="requisitos"></textarea>
+      </div>
+
+      <div class="pv-field">
+        <label>Descrição</label>
+        <textarea rows="4" placeholder="Detalhes da vaga" [(ngModel)]="descricao"></textarea>
+      </div>
+
+      @if (erro) { <span class="pv-erro">{{ erro }}</span> }
+    </div>
+  </div>
+
+  <div class="pv-actions">
+    <button class="pv-btn" (click)="salvar()" [disabled]="salvando">
+      {{ salvando ? 'PUBLICANDO…' : 'PUBLICAR VAGA' }}
+    </button>
+  </div>
+
+</div>

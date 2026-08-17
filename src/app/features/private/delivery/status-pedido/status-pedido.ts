@@ -139,6 +139,10 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
     // implementar depois
   }
 
+  abrirChat() {
+    if (this.pedido) this.router.navigate(['/chat', this.pedido.chatRoomId]);
+  }
+
   voltar() {
     this.router.navigate(['/home']);
   }

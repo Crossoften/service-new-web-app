@@ -1,0 +1,60 @@
+.mt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  padding-top: calc(16px + var(--safe-top));
+
+  &__voltar { background: none; border: none; color: var(--color-text); cursor: pointer; padding: 0; }
+  &__titulo { font-size: 16px; font-weight: 700; color: var(--color-text); }
+}
+
+.mt-msg {
+  text-align: center;
+  color: var(--color-gray-600);
+  font-size: 14px;
+  padding: 32px 16px;
+}
+
+.mt-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 16px 24px;
+}
+
+.mt-card {
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &:active { opacity: 0.9; }
+
+  &__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  &__nome { font-size: 15px; font-weight: 600; color: var(--color-text); }
+  &__rota {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--color-gray-600);
+    svg { flex-shrink: 0; color: var(--color-primary); }
+  }
+}
+
+.mt-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 50px;
+  background: var(--color-gray-100);
+  color: var(--color-gray-600);
+
+  &--quoted, &--accepted, &--intransit, &--delivered { background: #e6f5ea; color: #1a7f37; }
+  &--rejected, &--cancelled { background: #fdecec; color: #d33; }
+}

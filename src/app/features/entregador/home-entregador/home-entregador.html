@@ -2,11 +2,7 @@
 
   <!-- HEADER -->
   <div class="he-header">
-    <button class="he-header__voltar" (click)="router.navigate(['/home'])">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <polyline points="15 18 9 12 15 6"/>
-      </svg>
-    </button>
+    <div style="width: 22px"></div>
     <div class="he-header__user">
       <div class="he-header__foto">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -29,26 +25,11 @@
 
   <div class="page-content">
 
-    <!-- FATURAMENTO -->
-    @if (faturamento) {
-      <div class="he-faturamento">
-        <div class="he-faturamento__item">
-          <span class="he-faturamento__label">Dia</span>
-          <span class="he-faturamento__valor">{{ formatarPreco(faturamento.dia) }}</span>
-        </div>
-        <div class="he-faturamento__divider"></div>
-        <div class="he-faturamento__item">
-          <span class="he-faturamento__label">Semana</span>
-          <span class="he-faturamento__valor">{{ formatarPreco(faturamento.semana) }}</span>
-        </div>
-        <div class="he-faturamento__divider"></div>
-        <div class="he-faturamento__item">
-          <span class="he-faturamento__label">Mês</span>
-          <span class="he-faturamento__valor">{{ formatarPreco(faturamento.mes) }}</span>
-        </div>
-      </div>
-      <button class="he-ver-mais">Ver mais</button>
-    }
+    <!-- GANHOS (em breve — sem endpoint no back, BE-17) -->
+    <div class="he-card">
+      <span class="he-card__titulo">Ganhos</span>
+      <span class="he-card__acao">Em breve</span>
+    </div>
 
     <!-- STATUS OPERACIONAL -->
     <div class="he-card">
@@ -69,8 +50,20 @@
       </div>
     </div>
 
-    <!-- PEDIDO PENDENTE -->
-    @if (pedidoPendente) {
+    <!-- ENTREGAS DISPONÍVEIS -->
+    <div class="he-secao-header">
+      <h3 class="he-secao-titulo">Entregas disponíveis</h3>
+    </div>
+
+    @if (carregando) {
+      <p class="he-msg">Carregando entregas…</p>
+    } @else if (erro) {
+      <p class="he-msg">{{ erro }}</p>
+    } @else if (disponiveis.length === 0) {
+      <p class="he-msg">Nenhuma entrega disponível no momento.</p>
+    }
+
+    @for (pedido of disponiveis; track pedido.id) {
       <div class="he-pedido-pendente">
         <div class="he-pedido-pendente__header">
           <div class="he-pedido-pendente__logo">
@@ -79,24 +72,23 @@
             </svg>
           </div>
           <div class="he-pedido-pendente__info">
-            <span class="he-pedido-pendente__titulo">Pedido #{{ pedidoPendente.numero }} — {{ pedidoPendente.restaurante }}</span>
+            <span class="he-pedido-pendente__titulo">Pedido #{{ pedido.numero }} — {{ pedido.restaurante }}</span>
             <div class="he-pedido-pendente__meta">
-              <span class="he-pedido-pendente__valor">{{ formatarPreco(pedidoPendente.valor) }}</span>
+              <span class="he-pedido-pendente__valor">{{ formatarPreco(pedido.valor) }}</span>
               <span class="he-pedido-pendente__dot">•</span>
-              <span class="he-pedido-pendente__pag">{{ pedidoPendente.pagamento }}</span>
-              <span class="he-pedido-pendente__dot">•</span>
-              <span class="he-pedido-pendente__status">A caminho</span>
+              <span class="he-pedido-pendente__pag">{{ pedido.pagamento }}</span>
             </div>
-            <span class="he-pedido-pendente__cliente">Cliente: {{ pedidoPendente.cliente }}</span>
-            <span class="he-pedido-pendente__endereco">Endereço: {{ pedidoPendente.endereco }} – {{ pedidoPendente.bairro }}</span>
+            @if (pedido.cliente) {
+              <span class="he-pedido-pendente__cliente">Cliente: {{ pedido.cliente }}</span>
+            }
           </div>
         </div>
 
         <div class="he-pedido-pendente__acoes">
-          <button class="he-pedido-pendente__btn he-pedido-pendente__btn--recusar" (click)="recusarPedido()">
+          <button class="he-pedido-pendente__btn he-pedido-pendente__btn--recusar" (click)="recusar(pedido)">
             RECUSAR
           </button>
-          <button class="he-pedido-pendente__btn he-pedido-pendente__btn--aceitar" (click)="aceitarPedido()">
+          <button class="he-pedido-pendente__btn he-pedido-pendente__btn--aceitar" (click)="aceitar(pedido)">
             ACEITAR
           </button>
         </div>

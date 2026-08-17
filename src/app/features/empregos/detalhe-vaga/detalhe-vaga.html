@@ -1,0 +1,68 @@
+<div class="page-container">
+
+  <div class="dvg-header">
+    <button class="dvg-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="dvg-header__titulo">Vaga</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="dvg-msg">Carregando…</p>
+    } @else if (erro && !vaga) {
+      <p class="dvg-msg">{{ erro }}</p>
+    } @else if (vaga) {
+
+      <div class="dvg-info">
+        <div class="dvg-info__top">
+          <h2 class="dvg-info__titulo">{{ vaga.title }}</h2>
+          <span class="dvg-info__tipo">{{ tipoLabel }}</span>
+        </div>
+        <span class="dvg-info__empresa">{{ vaga.employer.name }}</span>
+        @if (vaga.value) { <span class="dvg-info__valor">{{ formatarPreco(vaga.value) }}</span> }
+
+        @if (vaga.requirements) {
+          <div class="dvg-bloco">
+            <span class="dvg-bloco__label">Requisitos</span>
+            <p class="dvg-bloco__texto">{{ vaga.requirements }}</p>
+          </div>
+        }
+        @if (vaga.description) {
+          <div class="dvg-bloco">
+            <span class="dvg-bloco__label">Descrição</span>
+            <p class="dvg-bloco__texto">{{ vaga.description }}</p>
+          </div>
+        }
+      </div>
+
+      @if (!souEmpregador && !sucesso) {
+        <div class="dvg-form">
+          <label>Mensagem (opcional)</label>
+          <textarea rows="3" placeholder="Apresente-se ao empregador" [(ngModel)]="mensagem"></textarea>
+          @if (erro) { <span class="dvg-erro">{{ erro }}</span> }
+        </div>
+      } @else if (sucesso) {
+        <p class="dvg-msg dvg-msg--ok">{{ sucesso }}</p>
+      }
+    }
+  </div>
+
+  @if (vaga) {
+    <div class="dvg-actions">
+      @if (souEmpregador) {
+        <button class="dvg-btn" (click)="verCandidaturas()">VER CANDIDATURAS ({{ vaga.applicationsCount ?? 0 }})</button>
+      } @else if (sucesso) {
+        <button class="dvg-btn" (click)="verMinhasCandidaturas()">VER MINHAS CANDIDATURAS</button>
+      } @else {
+        <button class="dvg-btn" (click)="candidatar()" [disabled]="processando">
+          {{ processando ? 'ENVIANDO…' : 'CANDIDATAR-SE' }}
+        </button>
+      }
+    </div>
+  }
+
+</div>

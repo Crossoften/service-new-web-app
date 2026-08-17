@@ -1,0 +1,17 @@
+<div class="page-container">
+  <app-header-busca titulo="SELECIONE A CATEGORIA" variante="padrao"></app-header-busca>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="ch-msg">Carregando categorias…</p>
+    } @else if (erro) {
+      <p class="ch-msg">{{ erro }}</p>
+    } @else {
+      <app-categoria-grid
+        [items]="items"
+        tipo="hospedagem"
+        (itemSelecionado)="abrirCategoria($event)">
+      </app-categoria-grid>
+    }
+  </div>
+</div>

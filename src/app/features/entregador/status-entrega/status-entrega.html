@@ -27,20 +27,28 @@
     </button>
   </div>
 
-  <!-- MAPA PLACEHOLDER -->
+  <!-- MAPA / GPS -->
   <div class="se-mapa">
     <div class="se-mapa__placeholder">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
         <circle cx="12" cy="10" r="3"/>
       </svg>
-      <span>Mapa disponível em breve</span>
+      @if (gpsAtivo) {
+        <span>Enviando sua localização…</span>
+      } @else {
+        <span>Mapa disponível em breve</span>
+      }
     </div>
   </div>
 
   <div class="page-content">
 
-    @if (pedido) {
+    @if (carregando) {
+      <p class="se-msg">Carregando entrega…</p>
+    } @else if (erro && !entrega) {
+      <p class="se-msg">{{ erro }}</p>
+    } @else if (entrega) {
 
       <!-- CARD RESTAURANTE -->
       <div class="se-restaurante">
@@ -50,42 +58,52 @@
           </svg>
         </div>
         <div class="se-restaurante__info">
-          <span class="se-restaurante__nome">{{ pedido.restaurante }}</span>
+          <span class="se-restaurante__nome">{{ restauranteNome }}</span>
           <div class="se-restaurante__meta">
-            <span class="se-restaurante__valor">{{ formatarPreco(pedido.valor) }}</span>
+            <span class="se-restaurante__valor">{{ formatarPreco(valor) }}</span>
             <span>•</span>
-            <span class="se-restaurante__pag">{{ pedido.pagamento }}</span>
+            <span class="se-restaurante__pag">{{ pagamento }}</span>
           </div>
-          <span class="se-restaurante__endereco">Endereço: {{ pedido.endereco }} – {{ pedido.bairro }}</span>
+          @if (clienteNome) {
+            <span class="se-restaurante__endereco">Cliente: {{ clienteNome }}</span>
+          }
         </div>
       </div>
 
-      <!-- BARRA DE PROGRESSO -->
-      <div class="se-progresso">
-        <div class="se-progresso__barra">
-          @for (etapa of etapas; track etapa.id; let i = $index) {
-            <div class="se-progresso__ponto"
-              [class.se-progresso__ponto--ativo]="etapaAtingida(i)">
-            </div>
-            @if (i < etapas.length - 1) {
-              <div class="se-progresso__linha"
-                [class.se-progresso__linha--ativa]="etapaAtingida(i + 1)">
+      @if (cancelado) {
+        <div class="se-cancelado"><strong>Entrega cancelada</strong></div>
+      } @else {
+        <!-- BARRA DE PROGRESSO -->
+        <div class="se-progresso">
+          <div class="se-progresso__barra">
+            @for (etapa of etapas; track etapa.id; let i = $index) {
+              <div class="se-progresso__ponto"
+                [class.se-progresso__ponto--ativo]="etapaAtingida(i)">
               </div>
+              @if (i < etapas.length - 1) {
+                <div class="se-progresso__linha"
+                  [class.se-progresso__linha--ativa]="etapaAtingida(i + 1)">
+                </div>
+              }
             }
-          }
+          </div>
+          <div class="se-progresso__label">
+            <span>{{ labelAtual }}</span>
+          </div>
         </div>
-        <div class="se-progresso__label">
-          <span>{{ labelAtual }}</span>
-        </div>
-      </div>
+      }
+
+      @if (erro) { <p class="se-msg se-msg--erro">{{ erro }}</p> }
 
     }
 
   </div>
 
   <!-- BOTÃO -->
-  <div class="se-actions">
-    <button class="se-btn" (click)="avancar()">{{ labelBotao }}</button>
-  </div>
+  @if (entrega) {
+    <div class="se-actions">
+      <button class="se-btn" (click)="acaoPrincipal()" [disabled]="processando">{{ labelBotao }}</button>
+    </div>
+  }
 
 </div>

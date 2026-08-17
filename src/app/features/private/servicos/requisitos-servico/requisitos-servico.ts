@@ -1,32 +1,46 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ServicosService, Arquivo } from '../../../../core/services/servicos';
+import { finalize, forkJoin, of } from 'rxjs';
+import { ServiceCatalogService } from '../../../../core/services/service-catalog';
+import { ApiError } from '../../../../core/models/common';
+
+interface Arquivo {
+  id: number;
+  nome: string;
+  tipo: string;
+}
 
 @Component({
   selector: 'app-requisitos-servico',
   imports: [CommonModule, FormsModule],
   templateUrl: './requisitos-servico.html',
-  styleUrl: './requisitos-servico.scss'
+  styleUrl: './requisitos-servico.scss',
 })
-export class RequisitosServicoComponent {
-  descricao: string = '';
-  tipoServico: string = 'Urgente';
-  tiposServico: string[] = ['Urgente', 'Normal', 'Agendado'];
-  tipoAberto: boolean = false;
-  erro: string = '';
+export class RequisitosServicoComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly catalog = inject(ServiceCatalogService);
 
-  arquivos: Arquivo[] = [
-    { id: 1, nome: 'ARQUIVO.PDF', tipo: 'pdf' },
-    { id: 2, nome: 'ARQUIVO.MP3', tipo: 'mp3' },
-    { id: 3, nome: 'ARQUIVO.MP4', tipo: 'mp4' },
-  ];
+  descricao = '';
+  tipoServico = 'Urgente';
+  tiposServico = ['Urgente', 'Normal', 'Agendado'];
+  tipoAberto = false;
+  erro = '';
+  enviando = false;
 
-  constructor(
-    private router: Router,
-    private servicosService: ServicosService
-  ) {}
+  private serviceIds: number[] = [];
+
+  arquivos: Arquivo[] = [];
+
+  ngOnInit() {
+    const ids = this.route.snapshot.queryParamMap.get('ids') ?? '';
+    this.serviceIds = ids
+      .split(',')
+      .map((s) => Number(s))
+      .filter((n) => Number.isFinite(n) && n > 0);
+  }
 
   toggleTipo() {
     this.tipoAberto = !this.tipoAberto;
@@ -38,30 +52,38 @@ export class RequisitosServicoComponent {
   }
 
   adicionarArquivo() {
-    // Futuramente: abrir file picker
-    const novoArquivo: Arquivo = {
-      id: this.arquivos.length + 1,
-      nome: `ARQUIVO_${this.arquivos.length + 1}.PDF`,
-      tipo: 'pdf'
-    };
-    this.arquivos.push(novoArquivo);
+    // Upload real de anexos será tratado em fatia posterior (POST /upload/one-file).
   }
 
   removerArquivo(id: number) {
-    this.arquivos = this.arquivos.filter(a => a.id !== id);
+    this.arquivos = this.arquivos.filter((a) => a.id !== id);
   }
 
   confirmar() {
+    if (this.enviando) return;
+    this.erro = '';
     if (!this.descricao.trim()) {
       this.erro = 'Descreva sua solicitação.';
       return;
     }
-    this.servicosService.setRequisitos({
-      descricao: this.descricao,
-      arquivos: this.arquivos,
-      tipoServico: this.tipoServico
-    });
-    this.router.navigate(['/servicos/orcamentos']);
+    if (!this.serviceIds.length) {
+      this.erro = 'Nenhum prestador selecionado.';
+      return;
+    }
+    const descricao = `[${this.tipoServico}] ${this.descricao.trim()}`;
+    this.enviando = true;
+    forkJoin(
+      this.serviceIds.length
+        ? this.serviceIds.map((serviceId) => this.catalog.solicitarOrcamento({ serviceId, description: descricao }))
+        : [of(null)],
+    )
+      .pipe(finalize(() => (this.enviando = false)))
+      .subscribe({
+        next: () => this.router.navigate(['/servicos/orcamentos']),
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível enviar a solicitação.';
+        },
+      });
   }
 
   voltar() {

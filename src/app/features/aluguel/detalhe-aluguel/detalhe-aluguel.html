@@ -1,0 +1,79 @@
+<div class="page-container">
+
+  <div class="da-header">
+    <button class="da-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="da-header__titulo">Aluguel</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="da-msg">Carregando…</p>
+    } @else if (erro && !produto) {
+      <p class="da-msg">{{ erro }}</p>
+    } @else if (produto) {
+
+      <div class="da-img">
+        @if (produto.imageUrl) {
+          <img [src]="produto.imageUrl" [alt]="produto.name" />
+        } @else {
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+          </svg>
+        }
+      </div>
+
+      <div class="da-info">
+        <h2 class="da-info__nome">{{ produto.name }}</h2>
+        <span class="da-info__preco">{{ formatarPreco(produto.price) }}</span>
+        <span class="da-info__categoria">{{ produto.category.name }}</span>
+        @if (produto.description) {
+          <p class="da-info__desc">{{ produto.description }}</p>
+        }
+      </div>
+
+      @if (sucesso) {
+        <p class="da-msg da-msg--ok">{{ sucesso }}</p>
+      } @else {
+        <div class="da-form">
+          <div class="da-field da-field--row">
+            <div class="da-field">
+              <label>Início</label>
+              <input type="date" [(ngModel)]="dataInicio" />
+            </div>
+            <div class="da-field">
+              <label>Fim</label>
+              <input type="date" [(ngModel)]="dataFim" />
+            </div>
+          </div>
+          <div class="da-field">
+            <label>Valor proposto (R$)</label>
+            <input type="number" [(ngModel)]="valor" />
+          </div>
+          <div class="da-field">
+            <label>Condições (opcional)</label>
+            <textarea rows="3" placeholder="Ex.: retirada no local" [(ngModel)]="condicoes"></textarea>
+          </div>
+          @if (erro) { <span class="da-erro">{{ erro }}</span> }
+        </div>
+      }
+    }
+  </div>
+
+  @if (produto && !sucesso) {
+    <div class="da-actions">
+      <button class="da-btn" (click)="solicitar()" [disabled]="processando">
+        {{ processando ? 'ENVIANDO…' : 'SOLICITAR ALUGUEL' }}
+      </button>
+    </div>
+  } @else if (sucesso) {
+    <div class="da-actions">
+      <button class="da-btn" (click)="verMeusAlugueis()">VER MEUS ALUGUÉIS</button>
+    </div>
+  }
+
+</div>

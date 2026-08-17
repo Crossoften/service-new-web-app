@@ -1,17 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { TrabalhosEntregador } from './trabalhos-entregador';
+import { TrabalhosEntregadorComponent } from './trabalhos-entregador';
 
-describe('TrabalhosEntregador', () => {
-  let component: TrabalhosEntregador;
-  let fixture: ComponentFixture<TrabalhosEntregador>;
+describe('TrabalhosEntregadorComponent', () => {
+  let component: TrabalhosEntregadorComponent;
+  let fixture: ComponentFixture<TrabalhosEntregadorComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TrabalhosEntregador],
+      imports: [TrabalhosEntregadorComponent],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(TrabalhosEntregador);
+    fixture = TestBed.createComponent(TrabalhosEntregadorComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

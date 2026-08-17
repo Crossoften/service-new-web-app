@@ -5,9 +5,16 @@
   </app-header-busca>
 
   <div class="page-content">
-    <app-categoria-grid
-      [items]="items"
-      tipo="aluguel">
-    </app-categoria-grid>
+    @if (carregando) {
+      <p class="ca-msg">Carregando categorias…</p>
+    } @else if (erro) {
+      <p class="ca-msg">{{ erro }}</p>
+    } @else {
+      <app-categoria-grid
+        [items]="items"
+        tipo="aluguel"
+        (itemSelecionado)="abrirCategoria($event)">
+      </app-categoria-grid>
+    }
   </div>
 </div>

@@ -1,0 +1,41 @@
+<div class="page-container">
+
+  <div class="vc-header">
+    <button class="vc-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="vc-header__titulo">Candidaturas</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="vc-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="vc-msg">{{ erro }}</p>
+    } @else if (candidaturas.length === 0) {
+      <p class="vc-msg">Nenhuma candidatura recebida.</p>
+    } @else {
+      <div class="vc-lista">
+        @for (c of candidaturas; track c.id) {
+          <div class="vc-card">
+            <div class="vc-card__top">
+              <span class="vc-card__nome">{{ c.applicant.name }}</span>
+              <span class="vc-status vc-status--{{ c.status.toLowerCase() }}">{{ statusLabel(c) }}</span>
+            </div>
+            @if (c.message) { <p class="vc-card__msg">{{ c.message }}</p> }
+            @if (c.status === 'Applied') {
+              <div class="vc-card__acoes">
+                <button class="vc-btn vc-btn--ghost" (click)="recusar(c)" [disabled]="processandoId === c.id">Recusar</button>
+                <button class="vc-btn" (click)="aceitar(c)" [disabled]="processandoId === c.id">Aceitar</button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

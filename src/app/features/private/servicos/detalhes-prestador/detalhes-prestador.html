@@ -86,6 +86,15 @@
         <h2 class="detalhes-descricao__titulo">Descrição</h2>
         <p class="detalhes-descricao__texto">{{ descricao }}</p>
       </div>
+
+      <!-- CTA -->
+      <div style="padding: 8px 16px 24px;">
+        <button
+          (click)="solicitarOrcamento()"
+          style="width:100%;padding:14px;border:none;border-radius:50px;background:var(--color-primary);color:#fff;font-size:15px;font-weight:700;cursor:pointer;">
+          SOLICITAR ORÇAMENTO
+        </button>
+      </div>
     }
 
   </div>

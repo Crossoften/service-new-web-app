@@ -1,27 +1,52 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
 import { HeaderBuscaComponent } from '../../../shared/components/header-busca/header-busca';
-import { CategoriaGridComponent, CategoriaItem } from '../../../shared/components/categoria-grid/categoria-grid';
+import {
+  CategoriaGridComponent,
+  CategoriaItem,
+} from '../../../shared/components/categoria-grid/categoria-grid';
+import { MarketplaceService } from '../../../core/services/marketplace';
+import { ApiError } from '../../../core/models/common';
 
 @Component({
   selector: 'app-categoria-compra-vender',
   imports: [HeaderBuscaComponent, CategoriaGridComponent],
   templateUrl: './categoria-compra-vender.html',
-  styleUrl: './categoria-compra-vender.scss'
+  styleUrl: './categoria-compra-vender.scss',
 })
-export class CategoriaCompraVenderComponent {
+export class CategoriaCompraVenderComponent implements OnInit {
+  private readonly marketplace = inject(MarketplaceService);
+  private readonly router = inject(Router);
 
-  items: CategoriaItem[] = [
-    { label: 'Eletrônicos',      icon: 'assets/categorias/compra-vender/eletronicos.png' },
-    { label: 'Móveis',           icon: 'assets/categorias/compra-vender/moveis.png' },
-    { label: 'Roupas',           icon: 'assets/categorias/compra-vender/roupas.png' },
-    { label: 'Calçados',         icon: 'assets/categorias/compra-vender/calcados.png' },
-    { label: 'Veículos',         icon: 'assets/categorias/compra-vender/veiculos.png' },
-    { label: 'Imóveis',          icon: 'assets/categorias/compra-vender/imoveis.png' },
-    { label: 'Esportes',         icon: 'assets/categorias/compra-vender/esportes.png' },
-    { label: 'Brinquedos',       icon: 'assets/categorias/compra-vender/brinquedos.png' },
-    { label: 'Livros',           icon: 'assets/categorias/compra-vender/livros.png' },
-    { label: 'Ferramentas',      icon: 'assets/categorias/compra-vender/ferramentas.png' },
-    { label: 'Eletrodomésticos', icon: 'assets/categorias/compra-vender/eletrodomesticos.png' },
-   // { label: 'Outros',           icon: 'assets/categorias/compra-vender/outros.png' },
-  ];
+  items: CategoriaItem[] = [];
+  carregando = false;
+  erro = '';
+
+  ngOnInit() {
+    this.carregando = true;
+    this.marketplace
+      .categorias()
+      .pipe(finalize(() => (this.carregando = false)))
+      .subscribe({
+        next: (categorias) => {
+          this.items = categorias.map((c) => ({
+            id: c.id,
+            label: c.name,
+            icon: c.iconUrl ?? '',
+          }));
+        },
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim()
+            ? err.message
+            : 'Não foi possível carregar as categorias.';
+        },
+      });
+  }
+
+  abrirCategoria(item: CategoriaItem) {
+    this.router.navigate(['/compra-vender/produtos'], {
+      queryParams: item.id ? { categoryId: item.id, categoria: item.label } : {},
+    });
+  }
 }

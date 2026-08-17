@@ -27,26 +27,6 @@
     </button>
   </div>
 
-  <!-- FATURAMENTO -->
-  @if (faturamento) {
-    <div class="te-faturamento">
-      <div class="te-faturamento__item">
-        <span class="te-faturamento__label">Dia</span>
-        <span class="te-faturamento__valor">{{ formatarPreco(faturamento.dia) }}</span>
-      </div>
-      <div class="te-faturamento__divider"></div>
-      <div class="te-faturamento__item">
-        <span class="te-faturamento__label">Semana</span>
-        <span class="te-faturamento__valor">{{ formatarPreco(faturamento.semana) }}</span>
-      </div>
-      <div class="te-faturamento__divider"></div>
-      <div class="te-faturamento__item">
-        <span class="te-faturamento__label">Mês</span>
-        <span class="te-faturamento__valor">{{ formatarPreco(faturamento.mes) }}</span>
-      </div>
-    </div>
-  }
-
   <!-- BUSCA -->
   <div class="te-busca">
     <div class="te-busca__input">
@@ -64,6 +44,11 @@
 
   <div class="page-content">
     <div class="te-lista">
+      @if (carregando) {
+        <div class="te-vazio"><p>Carregando…</p></div>
+      } @else if (erro) {
+        <div class="te-vazio"><p>{{ erro }}</p></div>
+      }
       @for (atividade of atividadesFiltradas; track atividade.id) {
         <div class="te-atividade">
           <span class="te-atividade__numero">#{{ atividade.numero }} — {{ atividade.restaurante }}</span>
@@ -77,7 +62,7 @@
         </div>
       }
 
-      @if (atividadesFiltradas.length === 0) {
+      @if (!carregando && !erro && atividadesFiltradas.length === 0) {
         <div class="te-vazio">
           <p>Nenhuma atividade encontrada.</p>
         </div>

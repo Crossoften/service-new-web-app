@@ -23,7 +23,7 @@
       <button
         class="of-tabs__item"
         [class.of-tabs__item--ativo]="tabAtiva === tab.id"
-        (click)="tabAtiva = tab.id">
+        (click)="trocarTab(tab.id)">
         {{ tab.label }}
       </button>
     }
@@ -60,6 +60,11 @@
 
   <div class="page-content">
     <div class="of-lista">
+      @if (carregando) {
+        <p style="text-align:center;color:var(--color-gray-600);font-size:14px;padding:24px 16px;">Carregando…</p>
+      } @else if (erro) {
+        <p style="text-align:center;color:var(--color-gray-600);font-size:14px;padding:24px 16px;">{{ erro }}</p>
+      }
       @for (orcamento of orcamentosFiltrados; track orcamento.id) {
         <div class="of-card" (click)="abrirOrcamento(orcamento)">
 

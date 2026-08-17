@@ -1,0 +1,56 @@
+.pv-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  padding-top: calc(16px + var(--safe-top));
+
+  &__voltar { background: none; border: none; color: var(--color-text); cursor: pointer; padding: 0; }
+  &__titulo { font-size: 16px; font-weight: 700; color: var(--color-text); }
+}
+
+.pv-form {
+  padding: 8px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label { font-size: 13px; font-weight: 600; color: var(--color-text); }
+
+  input, select, textarea {
+    border: 1px solid var(--color-gray-100);
+    background: var(--color-white);
+    border-radius: 10px;
+    padding: 11px 12px;
+    font-size: 14px;
+    color: var(--color-text);
+    font-family: inherit;
+  }
+
+  textarea { resize: vertical; }
+}
+
+.pv-erro { color: #d33; font-size: 13px; }
+
+.pv-actions { padding: 12px 16px calc(12px + var(--safe-bottom)); }
+
+.pv-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 50px;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.6; }
+  &:active { opacity: 0.85; }
+}

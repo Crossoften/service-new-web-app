@@ -46,6 +46,13 @@
 
   <div class="page-content">
     <div class="orcamentos-lista">
+      @if (carregando) {
+        <p style="text-align:center;color:var(--color-gray-600);font-size:14px;padding:24px 16px;">Carregando…</p>
+      } @else if (erro) {
+        <p style="text-align:center;color:var(--color-gray-600);font-size:14px;padding:24px 16px;">{{ erro }}</p>
+      } @else if (orcamentosFiltrados.length === 0) {
+        <p style="text-align:center;color:var(--color-gray-600);font-size:14px;padding:24px 16px;">Nenhum orçamento encontrado.</p>
+      }
       @for (orcamento of orcamentosFiltrados; track orcamento.id) {
         <div class="orcamento-card" (click)="abrirOrcamento(orcamento)">
 

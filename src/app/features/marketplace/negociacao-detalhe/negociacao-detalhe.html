@@ -1,0 +1,97 @@
+<div class="page-container">
+
+  <div class="nd-header">
+    <button class="nd-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="nd-header__titulo">Negociação</span>
+    @if (negociacao) {
+      <button class="nd-header__voltar" (click)="abrirChat()" aria-label="Abrir chat">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </button>
+    } @else {
+      <div style="width: 22px"></div>
+    }
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="nd-msg">Carregando…</p>
+    } @else if (erro && !negociacao) {
+      <p class="nd-msg">{{ erro }}</p>
+    } @else if (negociacao) {
+
+      <div class="nd-card">
+        <div class="nd-card__top">
+          <span class="nd-card__nome">{{ negociacao.product?.name || negociacao.title || 'Produto' }}</span>
+          <span class="nd-status nd-status--{{ negociacao.status.toLowerCase() }}">{{ statusLabel }}</span>
+        </div>
+
+        <div class="nd-linha">
+          <span>Valor solicitado</span>
+          <strong>{{ formatarPreco(negociacao.requestedAmount) }}</strong>
+        </div>
+        @if (negociacao.agreedAmount) {
+          <div class="nd-linha">
+            <span>Valor acordado</span>
+            <strong>{{ formatarPreco(negociacao.agreedAmount) }}</strong>
+          </div>
+        }
+        <div class="nd-linha">
+          <span>Comprador</span>
+          <strong>{{ negociacao.buyer.name }}</strong>
+        </div>
+        <div class="nd-linha">
+          <span>Vendedor</span>
+          <strong>{{ negociacao.seller.name }}</strong>
+        </div>
+        @if (negociacao.description) {
+          <p class="nd-desc">{{ negociacao.description }}</p>
+        }
+      </div>
+
+      <!-- MÉTODO DE PAGAMENTO (comprador, negociação aceita) -->
+      @if (podePagar) {
+        <div class="nd-metodos">
+          <span class="nd-metodos__label">Forma de pagamento</span>
+          <div class="nd-metodos__opcoes">
+            @for (m of metodos; track m.id) {
+              <button
+                class="nd-metodo"
+                [class.nd-metodo--ativo]="metodoSelecionado === m.id"
+                (click)="metodoSelecionado = m.id">
+                {{ m.label }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      @if (erro) { <p class="nd-msg nd-msg--erro">{{ erro }}</p> }
+
+    }
+  </div>
+
+  <!-- AÇÕES -->
+  @if (negociacao) {
+    <div class="nd-actions">
+      @if (podeResponder) {
+        <button class="nd-btn nd-btn--ghost" (click)="recusar()" [disabled]="processando">RECUSAR</button>
+        <button class="nd-btn" (click)="aceitar()" [disabled]="processando">ACEITAR</button>
+      } @else if (podePagar) {
+        <button class="nd-btn" (click)="pagar()" [disabled]="processando">
+          {{ processando ? 'PROCESSANDO…' : 'PAGAR' }}
+        </button>
+      } @else if (podeConcluir) {
+        <button class="nd-btn" (click)="concluir()" [disabled]="processando">CONCLUIR</button>
+      } @else if (podeCancelar) {
+        <button class="nd-btn nd-btn--ghost" (click)="cancelar()" [disabled]="processando">CANCELAR</button>
+      }
+    </div>
+  }
+
+</div>

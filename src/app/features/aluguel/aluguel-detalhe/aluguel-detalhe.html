@@ -1,0 +1,63 @@
+<div class="page-container">
+
+  <div class="ad-header">
+    <button class="ad-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="ad-header__titulo">Aluguel</span>
+    @if (aluguel) {
+      <button class="ad-header__voltar" (click)="abrirChat()" aria-label="Abrir chat">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      </button>
+    } @else {
+      <div style="width: 22px"></div>
+    }
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="ad-msg">Carregando…</p>
+    } @else if (erro && !aluguel) {
+      <p class="ad-msg">{{ erro }}</p>
+    } @else if (aluguel) {
+
+      <div class="ad-card">
+        <div class="ad-card__top">
+          <span class="ad-card__nome">{{ aluguel.product.name }}</span>
+          <span class="ad-status ad-status--{{ aluguel.status.toLowerCase() }}">{{ statusLabel }}</span>
+        </div>
+
+        <div class="ad-linha"><span>Valor</span><strong>{{ formatarPreco(aluguel.price) }}</strong></div>
+        <div class="ad-linha"><span>Início</span><strong>{{ aluguel.startDate | date: 'dd/MM/yyyy' }}</strong></div>
+        <div class="ad-linha"><span>Fim</span><strong>{{ aluguel.endDate | date: 'dd/MM/yyyy' }}</strong></div>
+        <div class="ad-linha"><span>Locatário</span><strong>{{ aluguel.requester.name }}</strong></div>
+        <div class="ad-linha"><span>Locador</span><strong>{{ aluguel.provider.name }}</strong></div>
+        @if (aluguel.conditions) {
+          <p class="ad-desc">{{ aluguel.conditions }}</p>
+        }
+      </div>
+
+      @if (erro) { <p class="ad-msg ad-msg--erro">{{ erro }}</p> }
+    }
+  </div>
+
+  @if (aluguel) {
+    <div class="ad-actions">
+      @if (podeResponder) {
+        <button class="ad-btn ad-btn--ghost" (click)="recusar()" [disabled]="processando">RECUSAR</button>
+        <button class="ad-btn" (click)="aceitar()" [disabled]="processando">ACEITAR</button>
+      } @else if (podeIniciar) {
+        <button class="ad-btn" (click)="iniciar()" [disabled]="processando">CONFIRMAR RETIRADA</button>
+      } @else if (podeDevolver) {
+        <button class="ad-btn" (click)="devolver()" [disabled]="processando">CONFIRMAR DEVOLUÇÃO</button>
+      } @else if (podeCancelar) {
+        <button class="ad-btn ad-btn--ghost" (click)="cancelar()" [disabled]="processando">CANCELAR</button>
+      }
+    </div>
+  }
+
+</div>
