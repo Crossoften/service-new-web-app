@@ -35,7 +35,7 @@
           </div>
 
           <div class="cadastro-field">
-            <label>Email</label>
+            <label>E-mail (opcional)</label>
             <input type="email" placeholder="seu@email.com" [(ngModel)]="email" autocomplete="email" inputmode="email" />
           </div>
 
@@ -89,7 +89,7 @@
           </div>
 
           <div class="cadastro-field">
-            <label>Email</label>
+            <label>E-mail (opcional)</label>
             <input type="email" placeholder="seu@email.com" [(ngModel)]="email" autocomplete="email" inputmode="email" />
           </div>
 
@@ -189,21 +189,29 @@
       </div>
     }
 
-    <!-- STEP 3 - CÓDIGO DE VERIFICAÇÃO (email) -->
+    <!-- STEP 3 - CÓDIGO DE VERIFICAÇÃO (SMS) -->
     @if (step === 3) {
       <div class="cadastro-content cadastro-content--centered">
         <h2 class="cadastro-titulo-step">Confirme sua conta</h2>
-        <p class="cadastro-descricao-step">Enviamos um código para o seu email. Digite-o abaixo para concluir o cadastro:</p>
+        <p class="cadastro-descricao-step">Enviamos um código de 6 dígitos por SMS. Digite-o abaixo para concluir o cadastro:</p>
 
         <div class="cadastro-form">
           <div class="cadastro-field">
             <label>Código de verificação</label>
-            <input type="text" placeholder="Digite o código" [(ngModel)]="codigoVerificacao" inputmode="numeric" autocomplete="one-time-code" />
+            <input type="tel" placeholder="000000" [(ngModel)]="codigoVerificacao" maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
           </div>
 
           @if (erro) {
             <span class="cadastro-erro">{{ erro }}</span>
           }
+          @if (reenvioMsg) {
+            <span class="cadastro-info">{{ reenvioMsg }}</span>
+          }
+
+          <button class="cadastro-link" (click)="reenviarCodigo()" [disabled]="reenvioSegundos > 0">
+            @if (reenvioSegundos > 0) { Reenviar código em {{ reenvioSegundos }}s }
+            @else { Não recebeu o código? Reenviar }
+          </button>
         </div>
       </div>
     }

@@ -13,8 +13,10 @@ import {
   REGISTER_PATHS,
   RegisterBaseDto,
   RegisterUserResponseDto,
+  ResendVerificationDto,
   ResetPasswordDto,
   ResponseLoginDto,
+  VerifyAccountDto,
   VerifyCodeDto,
 } from '../models/auth';
 
@@ -66,9 +68,22 @@ export class AuthService {
     return this.api.post<RegisterUserResponseDto>(`/no-auth/register/${REGISTER_PATHS[perfil]}`, dto);
   }
 
-  /** Confirma a conta com o código enviado por email — `POST /v1/no-auth/verify-code`. */
+  /** Confirma a **conta** com o código recebido por SMS — `POST /v1/no-auth/verify-account`. */
+  verifyAccount(dto: VerifyAccountDto): Observable<ApiMessage> {
+    return this.api.post<ApiMessage>('/no-auth/verify-account', dto);
+  }
+
+  /** Valida o código de **recuperação de senha** (opcional) — `POST /v1/no-auth/verify-code`. */
   verifyCode(dto: VerifyCodeDto): Observable<ApiMessage> {
     return this.api.post<ApiMessage>('/no-auth/verify-code', dto);
+  }
+
+  /**
+   * Reenvia o SMS de verificação de conta — `POST /v1/no-auth/resend-verification`.
+   * Responde `200` mesmo quando não há envio (conta inexistente/já verificada), de propósito.
+   */
+  resendVerification(dto: ResendVerificationDto): Observable<ApiMessage> {
+    return this.api.post<ApiMessage>('/no-auth/resend-verification', dto);
   }
 
   /** Envia o código de redefinição ao email. */

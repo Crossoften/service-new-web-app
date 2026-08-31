@@ -7,7 +7,7 @@
  */
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://homolog.crosoften.com:8029/v1',
+  apiBaseUrl: 'http://localhost:8000/v1',
   /**
    * Bypass TEMPORÁRIO da verificação de conta (verify-code).
    * Enquanto o back-end não envia o email com o código, builds de

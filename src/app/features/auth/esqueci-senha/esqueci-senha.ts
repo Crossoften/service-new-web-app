@@ -4,8 +4,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth';
 import { ApiError } from '../../../core/models/common';
+import { isValidBRPhone, maskBRPhone, phoneToE164 } from '../../../core/utils/phone';
 
-/** Solicita o código de redefinição por email — `POST /no-auth/forgot`. */
+/**
+ * Solicita o código de redefinição — `POST /no-auth/forgot`.
+ * Aceita e-mail OU telefone; com e-mail opcional, o **SMS é o caminho principal**.
+ */
 @Component({
   selector: 'app-esqueci-senha',
   imports: [CommonModule, FormsModule],
@@ -16,22 +20,46 @@ export class EsqueciSenhaComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
 
-  email = '';
+  identificador = '';
   erro = '';
   carregando = false;
 
+  onIdentificadorInput(valor: string) {
+    const t = (valor ?? '').trimStart();
+    const pareceTelefone = /^[\d(+]/.test(t) && !t.includes('@');
+    this.identificador = pareceTelefone ? maskBRPhone(t) : valor;
+  }
+
+  private get ehEmail(): boolean {
+    return this.identificador.includes('@');
+  }
+
   enviar() {
     this.erro = '';
-    const email = this.email.trim();
-    if (!email.includes('@')) {
-      this.erro = 'Informe um email válido.';
+    const v = this.identificador.trim();
+    if (!v) {
+      this.erro = 'Informe seu e-mail ou telefone.';
       return;
     }
+    if (this.ehEmail) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+        this.erro = 'Informe um e-mail válido.';
+        return;
+      }
+    } else if (!isValidBRPhone(v)) {
+      this.erro = 'Informe um telefone válido com DDD.';
+      return;
+    }
+
+    const channel: 'sms' | 'email' = this.ehEmail ? 'email' : 'sms';
+    const identifier = this.ehEmail ? v : phoneToE164(v);
+
     this.carregando = true;
-    this.auth.forgot({ email }).subscribe({
+    this.auth.forgot({ channel, identifier }).subscribe({
       next: () => {
         this.carregando = false;
-        this.router.navigate(['/redefinir-senha'], { state: { email } });
+        // Carrega o `identifier` normalizado para a tela de redefinição.
+        this.router.navigate(['/redefinir-senha'], { state: { identifier } });
       },
       error: (err: ApiError) => {
         this.carregando = false;

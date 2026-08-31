@@ -23,7 +23,14 @@ export class RevisaoPedidoComponent implements OnInit {
   }
 
   get formaPagamentoLabel(): string {
-    return this.pedido?.formaPagamento === 'pix' ? 'PIX' : 'Cartão de Crédito';
+    const labels: Record<string, string> = {
+      credito: 'Cartão de Crédito',
+      debito: 'Cartão de Débito',
+      pix: 'PIX',
+      boleto: 'Boleto',
+      dinheiro: 'Dinheiro',
+    };
+    return labels[this.pedido?.formaPagamento ?? 'credito'] ?? 'Cartão de Crédito';
   }
 
   finalizarPedido() {

@@ -63,8 +63,14 @@
             <span>Realizado em</span><span>{{ pedido.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
           </div>
           <div class="pedido-f-detalhes__linha">
-            <span>Pagamento</span><span>{{ pedido.paymentMethod }}</span>
+            <span>Pagamento</span><span>{{ formaPagamentoLabel }}</span>
           </div>
+          @if (pedido.paymentMethod === 'Cash') {
+            <div class="pedido-f-detalhes__linha">
+              <span>Status do pagamento</span>
+              <span>{{ pedido.paymentStatus === 'Paid' ? 'Recebido' : 'A receber' }}</span>
+            </div>
+          }
           <div class="pedido-f-detalhes__linha">
             <span>Itens</span><span>{{ fmt(pedido.itemsValue) }}</span>
           </div>
@@ -86,6 +92,11 @@
   <!-- AÇÕES -->
   @if (pedido) {
     <div class="pedido-f-actions">
+      @if (podeConfirmarPagamento) {
+        <button class="pedido-f-btn pedido-f-btn--primary" (click)="confirmarPagamento()" [disabled]="processando">
+          {{ processando ? 'CONFIRMANDO…' : 'CONFIRMAR PAGAMENTO EM DINHEIRO' }}
+        </button>
+      }
       @if (podeResponder) {
         <button class="pedido-f-btn pedido-f-btn--outline" (click)="recusar()" [disabled]="processando">RECUSAR</button>
         <button class="pedido-f-btn pedido-f-btn--primary" (click)="aceitar()" [disabled]="processando">ACEITAR</button>

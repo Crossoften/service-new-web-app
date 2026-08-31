@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,15 +6,15 @@ import { AuthService } from '../../../core/services/auth';
 import { SocialNetwork } from '../../../core/models/enums';
 import { CreateUserSocialMediaDto, Perfil, RegisterBaseDto } from '../../../core/models/auth';
 import { ApiError } from '../../../core/models/common';
-import { environment } from '../../../../environments/environment';
+import { isValidBRPhone, maskBRPhone, phoneToE164 } from '../../../core/utils/phone';
 
 /**
- * Fluxo de cadastro por perfil, integrado à API.
- * Todos os perfis: Dados → Senha → register → Sucesso → Login.
+ * Cadastro por perfil, integrado à API.
+ * Fluxo: Dados → Senha → register (conta nasce `Pending` + SMS) → Verificação (SMS) → Sucesso → Login.
  *
- * A assinatura do fornecedor (planos/`subscriptions`) foi movida para um passo
- * **pós-login** (onboarding), evitando login automático frágil no cadastro.
- * (A etapa de SMS não existe no web — o verify-code é exclusivo do mobile.)
+ * Telefone é a identidade principal (obrigatório, enviado em E.164). E-mail é opcional.
+ * A verificação de conta usa `verify-account` (código de 6 dígitos por SMS) — distinta da
+ * recuperação de senha. A assinatura do fornecedor segue como onboarding pós-login.
  */
 @Component({
   selector: 'app-cadastro',
@@ -22,7 +22,7 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './cadastro.html',
   styleUrl: './cadastro.scss',
 })
-export class CadastroComponent implements OnInit {
+export class CadastroComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
@@ -51,8 +51,13 @@ export class CadastroComponent implements OnInit {
   senhaVisivel = false;
   confirmarSenhaVisivel = false;
 
-  // Step 3 — Código de verificação (verify-code, enviado por email)
+  // Step 3 — Verificação (SMS)
   codigoVerificacao = '';
+  /** Telefone (E.164) da conta recém-criada — identifier para verify/resend. */
+  identifier = '';
+  reenvioSegundos = 0;
+  reenvioMsg = '';
+  private timer?: ReturnType<typeof setInterval>;
 
   erro = '';
   carregando = false;
@@ -63,21 +68,16 @@ export class CadastroComponent implements OnInit {
     this.referralCode = this.route.snapshot.queryParamMap.get('ref')?.trim() ?? '';
   }
 
+  ngOnDestroy() {
+    this.pararContador();
+  }
+
   get tituloPasso(): string {
     return 'CADASTRO';
   }
 
   formatarTelefone(event: Event) {
-    let valor = (event.target as HTMLInputElement).value.replace(/\D/g, '');
-    if (valor.length > 11) valor = valor.slice(0, 11);
-    if (valor.length > 6) {
-      valor = `(${valor.slice(0, 2)}) ${valor.slice(2, 7)}-${valor.slice(7)}`;
-    } else if (valor.length > 2) {
-      valor = `(${valor.slice(0, 2)}) ${valor.slice(2)}`;
-    } else if (valor.length > 0) {
-      valor = `(${valor}`;
-    }
-    this.telefone = valor;
+    this.telefone = maskBRPhone((event.target as HTMLInputElement).value);
   }
 
   toggleSenha() {
@@ -106,13 +106,14 @@ export class CadastroComponent implements OnInit {
         this.erro = 'Informe seu nome.';
         return;
       }
-      if (!this.email.trim().includes('@')) {
-        this.erro = 'Informe um email válido.';
+      // E-mail é opcional; valida apenas se preenchido.
+      const email = this.email.trim();
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        this.erro = 'Informe um e-mail válido ou deixe o campo em branco.';
         return;
       }
-      const phone = this.telefone.replace(/\D/g, '');
-      if (phone.length < 10 || phone.length > 11) {
-        this.erro = 'Informe um telefone válido no formato brasileiro.';
+      if (!isValidBRPhone(this.telefone)) {
+        this.erro = 'Informe um telefone válido com DDD.';
         return;
       }
       if (!this.termosAceitos) {
@@ -128,6 +129,10 @@ export class CadastroComponent implements OnInit {
         this.erro = 'A senha deve ter no mínimo 8 caracteres.';
         return;
       }
+      if (this.senha.length > 32) {
+        this.erro = 'A senha deve ter no máximo 32 caracteres.';
+        return;
+      }
       if (this.senha !== this.confirmarSenha) {
         this.erro = 'As senhas não conferem.';
         return;
@@ -137,7 +142,7 @@ export class CadastroComponent implements OnInit {
     }
 
     if (this.step === 3) {
-      this.verificarCodigo();
+      this.verificarConta();
       return;
     }
   }
@@ -148,77 +153,96 @@ export class CadastroComponent implements OnInit {
     this.carregando = true;
     this.auth.register(this.perfil, this.buildRegisterDto()).subscribe({
       next: () => {
-        // BYPASS TEMPORÁRIO (dev): enquanto o back-end não envia o email do
-        // código (BE-Q1), builds de desenvolvimento pulam a verificação e
-        // tentam autenticar direto. Em produção a flag é `false`.
-        if (!environment.production && environment.bypassVerifyCode) {
-          this.bypassVerificacao();
-          return;
-        }
         this.carregando = false;
-        // Conta criada (status Pending) + código enviado por email → etapa de verificação.
+        // Conta criada em `Pending` + SMS enviado → etapa de verificação.
+        this.identifier = phoneToE164(this.telefone);
+        this.codigoVerificacao = '';
         this.step = 3;
+        this.iniciarContador();
       },
       error: (err: ApiError) => {
         this.carregando = false;
+        if (err?.status === 503) {
+          // SMS não pôde ser enviado → NADA foi criado. Pode repetir sem risco de 409.
+          this.erro = 'Não foi possível enviar o SMS agora. Tente novamente.';
+          return;
+        }
+        if (err?.status === 409) {
+          // Genérico de propósito — não revelar se colidiu telefone ou e-mail.
+          this.erro = 'Já existe uma conta com os dados informados.';
+          return;
+        }
         this.erro = this.msg(err, 'Não foi possível concluir o cadastro.');
       },
     });
   }
 
-  /**
-   * Bypass de verificação (apenas dev): tenta login direto com as credenciais
-   * recém-criadas. Se o back-end exigir conta ativada, cai na etapa do código
-   * com uma mensagem clara — o bypass de front só resolve se o back permitir
-   * login de conta Pending.
-   */
-  private bypassVerificacao() {
-    this.auth.login({ email: this.email.trim(), password: this.senha }).subscribe({
-      next: (res) => {
-        this.carregando = false;
-        this.router.navigate([this.auth.homeRouteFor(res.profileType ?? null)]);
-      },
-      error: (err: ApiError) => {
-        this.carregando = false;
-        this.step = 3;
-        this.erro = this.msg(
-          err,
-          'Bypass indisponível: a conta exige ativação no back-end. Aguarde o código por email.',
-        );
-      },
-    });
-  }
-
-  /** Confirma a conta com o código recebido por email — `POST /no-auth/verify-code`. */
-  private verificarCodigo() {
+  /** Confirma a conta com o código de 6 dígitos recebido por SMS — `verify-account`. */
+  private verificarConta() {
     const code = this.codigoVerificacao.trim();
-    if (!code) {
-      this.erro = 'Informe o código enviado ao seu email.';
+    if (!/^\d{6}$/.test(code)) {
+      this.erro = 'Informe o código de 6 dígitos recebido por SMS.';
       return;
     }
     this.carregando = true;
-    this.auth.verifyCode({ code }).subscribe({
+    this.auth.verifyAccount({ identifier: this.identifier, code }).subscribe({
       next: () => {
         this.carregando = false;
+        this.pararContador();
         this.router.navigate(['/cadastro/sucesso']);
       },
       error: (err: ApiError) => {
         this.carregando = false;
-        this.erro = this.msg(err, 'Código inválido. Verifique e tente novamente.');
+        // `404` é sempre a mesma mensagem (código errado/expirado/já usado/conta já verificada).
+        this.erro = this.msg(err, 'Usuário ou código inválido.');
       },
     });
+  }
+
+  /** Reenvia o SMS de verificação (invalida o código anterior). */
+  reenviarCodigo() {
+    if (this.reenvioSegundos > 0 || !this.identifier) return;
+    this.reenvioMsg = '';
+    this.auth.resendVerification({ identifier: this.identifier }).subscribe({
+      next: () => {
+        this.reenvioMsg = 'Novo SMS enviado. O código anterior deixa de valer.';
+        this.iniciarContador();
+      },
+      error: (err: ApiError) => {
+        this.reenvioMsg = 'Se a conta estiver pendente, você receberá um novo SMS.';
+        this.iniciarContador();
+        void err;
+      },
+    });
+  }
+
+  private iniciarContador(segundos = 60) {
+    this.pararContador();
+    this.reenvioSegundos = segundos;
+    this.timer = setInterval(() => {
+      this.reenvioSegundos -= 1;
+      if (this.reenvioSegundos <= 0) this.pararContador();
+    }, 1000);
+  }
+
+  private pararContador() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = undefined;
+    }
+    this.reenvioSegundos = 0;
   }
 
   private buildRegisterDto(): RegisterBaseDto {
     const dto: RegisterBaseDto = {
       name: this.nome.trim(),
-      email: this.email.trim(),
+      phone: phoneToE164(this.telefone),
       password: this.senha,
       confirmPassword: this.confirmarSenha,
       acceptedTerms: this.termosAceitos,
     };
-    const phone = this.telefone.replace(/\D/g, '');
-    if (phone) dto.phone = phone;
+    const email = this.email.trim();
+    if (email) dto.email = email; // e-mail é opcional — omitido quando em branco.
     const invite = this.codigo.trim();
     if (invite) dto.inviteCode = invite;
     const referral = this.referralCode.trim();

@@ -32,7 +32,8 @@ export type WarrantyRequestStatus = 'Pending' | 'Approved' | 'Rejected';
 export type ReviewType = 'Positive' | 'Negative';
 
 // ── Pagamentos ───────────────────────────────────────────────────────────────
-export type PaymentMethod = 'CreditCard' | 'Pix' | 'BankSlip';
+/** `PaymentMethodEnum` do contrato (delivery Fase C incluiu DebitCard e Cash). */
+export type PaymentMethod = 'CreditCard' | 'DebitCard' | 'Pix' | 'BankSlip' | 'Cash';
 export type PaymentStatus = 'Pending' | 'Paid' | 'Cancelled';
 
 // ── Produtos / Negociações ───────────────────────────────────────────────────

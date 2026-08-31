@@ -1,4 +1,13 @@
-import { PaymentMethod } from './enums';
+import { PaymentMethod, PaymentStatus } from './enums';
+
+/** Rótulos em pt para os métodos de pagamento. */
+export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
+  CreditCard: 'Cartão de Crédito',
+  DebitCard: 'Cartão de Débito',
+  Pix: 'PIX',
+  BankSlip: 'Boleto',
+  Cash: 'Dinheiro',
+};
 
 /** Estados de um pedido de delivery (ResponseFoodOrderDto.status). */
 export type FoodOrderStatus =
@@ -18,11 +27,14 @@ export interface CreateFoodOrderItemDto {
   additionIds?: number[];
 }
 
-/** Corpo de `POST /v1/food-orders` (CreateFoodOrderDto). */
+/**
+ * Corpo de `POST /v1/food-orders` (CreateFoodOrderDto).
+ * `deliveryFee` foi **removido** na Fase C — o frete é calculado no servidor pela
+ * distância entre o restaurante e o endereço do cliente.
+ */
 export interface CreateFoodOrderDto {
   restaurantId: number;
   paymentMethod: PaymentMethod;
-  deliveryFee?: number;
   notes?: string;
   items: CreateFoodOrderItemDto[];
 }
@@ -71,6 +83,8 @@ export interface ResponseFoodOrderDto {
   platformFeeRate?: string;
   commissionAmount?: string;
   paymentMethod: PaymentMethod;
+  /** `Pending` até o provedor (ou o confirm-payment do Cash). */
+  paymentStatus?: PaymentStatus;
   notes?: string;
   cancelReason?: string;
   chatRoomId: number;

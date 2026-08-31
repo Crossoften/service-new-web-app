@@ -43,12 +43,50 @@
     <div class="restaurante-info">
       <h1 class="restaurante-info__nome">{{ restaurante?.nome }}</h1>
       <div class="restaurante-info__meta">
-        <span>⭐ {{ restaurante?.avaliacao }}</span>
+        @if (restaurante && restaurante.totalAvaliacoes > 0) {
+          <span>⭐ {{ restaurante.avaliacao.toFixed(1) }} ({{ restaurante.totalAvaliacoes }})</span>
+        } @else {
+          <span>Sem avaliações</span>
+        }
         <span>•</span>
         <span>🕐 {{ restaurante?.tempo }}</span>
         <span>•</span>
         <span class="restaurante-info__entrega">🛵 <strong>Entrega R$ {{ restaurante?.taxaEntrega?.toFixed(2) }}</strong></span>
       </div>
+
+      @if (avaliacaoMsg) {
+        <p class="restaurante-avaliacao__msg">{{ avaliacaoMsg }}</p>
+      } @else if (!jaAvaliou) {
+        <button class="restaurante-avaliacao__abrir" (click)="abrirAvaliacao()">Avaliar restaurante</button>
+      }
+
+      @if (mostrarAvaliacao) {
+        <div class="restaurante-avaliacao">
+          <div class="restaurante-avaliacao__estrelas">
+            @for (n of [1, 2, 3, 4, 5]; track n) {
+              <button
+                class="restaurante-avaliacao__estrela"
+                [class.restaurante-avaliacao__estrela--ativa]="n <= nota"
+                (click)="selecionarNota(n)">★</button>
+            }
+          </div>
+          <textarea
+            class="restaurante-avaliacao__comentario"
+            placeholder="Comentário (opcional)"
+            [(ngModel)]="comentario"
+            maxlength="2000"
+            rows="3"></textarea>
+          @if (avaliacaoErro) {
+            <span class="restaurante-avaliacao__erro">{{ avaliacaoErro }}</span>
+          }
+          <div class="restaurante-avaliacao__acoes">
+            <button class="restaurante-avaliacao__cancelar" (click)="fecharAvaliacao()">Cancelar</button>
+            <button class="restaurante-avaliacao__enviar" (click)="enviarAvaliacao()" [disabled]="enviandoAvaliacao">
+              {{ enviandoAvaliacao ? 'Enviando…' : 'Enviar avaliação' }}
+            </button>
+          </div>
+        </div>
+      }
     </div>
 
     <!-- TABS DE CATEGORIAS -->

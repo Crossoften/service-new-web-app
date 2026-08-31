@@ -2,12 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map, tap } from 'rxjs';
 import { ApiService } from './api';
 import {
+  CreateRestaurantReviewDto,
   ResponseFindAllRestaurantDto,
   ResponseMenuCategoryDto,
   ResponseMenuItemDto,
   ResponseRestaurantCategoryDto,
   ResponseRestaurantDto,
 } from '../models/restaurant';
+import { ApiMessage } from '../models/common';
 import {
   CreateFoodOrderDto,
   CreateFoodOrderResponseDto,
@@ -44,7 +46,8 @@ export interface CategoriaCardapio {
 export interface Restaurante {
   id: number;
   nome: string;
-  avaliacao: number; // (BE-D1) 0 até o back retornar
+  avaliacao: number; // média (ratingAverage); 0 quando ninguém avaliou
+  totalAvaliacoes: number; // ratingCount
   tempo: string; // (BE-D1)
   taxaEntrega: number; // (BE-D1)
   descricao: string;
@@ -65,7 +68,7 @@ export interface OpcaoEntrega {
   preco: number;
 }
 
-export type FormaPagamento = 'credito' | 'pix';
+export type FormaPagamento = 'credito' | 'debito' | 'pix' | 'boleto' | 'dinheiro';
 
 export type StatusPedido = 'recebido' | 'preparo' | 'caminho' | 'entregue';
 
@@ -117,6 +120,14 @@ export class DeliveryService {
   /** Restaurante + cardápio — `GET /v1/restaurants/{id}`. */
   getRestaurante(id: number): Observable<Restaurante> {
     return this.api.get<ResponseRestaurantDto>(`/restaurants/${id}`).pipe(map((r) => this.mapRestaurante(r)));
+  }
+
+  /**
+   * Avalia um restaurante — `POST /v1/restaurants/{id}/reviews`.
+   * Só quem tem pedido entregue pode avaliar (`403`); uma avaliação por cliente (`409`).
+   */
+  avaliarRestaurante(id: number, dto: CreateRestaurantReviewDto): Observable<ApiMessage> {
+    return this.api.post<ApiMessage>(`/restaurants/${id}/reviews`, dto);
   }
 
   /** Item específico dentro do cardápio do restaurante. */
@@ -175,9 +186,9 @@ export class DeliveryService {
   private buildCreateFoodOrderDto(): CreateFoodOrderDto {
     const itens = this.pedidoAtual.itens ?? [];
     return {
+      // `deliveryFee` não é mais enviado (Fase C): o servidor calcula o frete.
       restaurantId: this.pedidoAtual.restaurante?.id ?? 0,
       paymentMethod: this.paymentMethodApi(this.pedidoAtual.formaPagamento ?? 'credito'),
-      deliveryFee: this.pedidoAtual.opcaoEntrega?.preco ?? 0,
       items: itens.map((ip) => ({
         menuItemId: ip.item.id,
         quantity: ip.quantidade,
@@ -186,9 +197,20 @@ export class DeliveryService {
     };
   }
 
-  /** Mapeia a forma de pagamento do front para o enum da API (decisão: só Crédito/PIX). */
+  /** Mapeia a forma de pagamento do front para o `PaymentMethodEnum` da API (5 valores, Fase C). */
   private paymentMethodApi(forma: FormaPagamento): PaymentMethod {
-    return forma === 'pix' ? 'Pix' : 'CreditCard';
+    switch (forma) {
+      case 'debito':
+        return 'DebitCard';
+      case 'pix':
+        return 'Pix';
+      case 'boleto':
+        return 'BankSlip';
+      case 'dinheiro':
+        return 'Cash';
+      default:
+        return 'CreditCard';
+    }
   }
 
   // ── Acompanhamento (API) ──────────────────────────────────────────────────
@@ -216,7 +238,8 @@ export class DeliveryService {
     return {
       id: r.id,
       nome: r.name,
-      avaliacao: r.rating ?? 0,
+      avaliacao: r.ratingAverage ?? r.rating ?? 0,
+      totalAvaliacoes: r.ratingCount ?? 0,
       tempo: r.estimatedTime ?? '',
       taxaEntrega: r.deliveryFee ?? 0,
       descricao: r.description ?? '',

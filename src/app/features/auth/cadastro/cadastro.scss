@@ -176,6 +176,27 @@
   color: #DC2626;
 }
 
+.cadastro-info {
+  font-size: 12px;
+  color: #059669;
+}
+
+.cadastro-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  padding: 0;
+  text-align: left;
+
+  &:disabled {
+    color: #9CA3AF;
+    cursor: default;
+  }
+}
+
 .cadastro-titulo-step {
   font-size: 18px;
   font-weight: 700;

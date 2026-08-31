@@ -21,6 +21,7 @@ export class GerenciarCardapioComponent implements OnInit {
   itens: ItemCardapioFornecedor[] = [];
   carregando = false;
   erro = '';
+  aviso = '';
 
   ngOnInit() {
     this.carregar();
@@ -59,12 +60,21 @@ export class GerenciarCardapioComponent implements OnInit {
     this.router.navigate(['/fornecedor/cardapio/editar', item.id]);
   }
 
-  desativar(item: ItemCardapioFornecedor) {
+  excluir(item: ItemCardapioFornecedor) {
     this.erro = '';
-    this.fornecedorService.desativarItem(item.id).subscribe({
-      next: () => (this.itens = this.itens.filter((i) => i.id !== item.id)),
+    this.aviso = '';
+    this.fornecedorService.excluirItem(item.id).subscribe({
+      next: (res) => {
+        // Some do cardápio nos dois casos; a mensagem distingue apagado × desativado.
+        this.itens = this.itens.filter((i) => i.id !== item.id);
+        this.aviso = res.message?.trim()
+          ? res.message
+          : res.deleted
+            ? 'Item excluído.'
+            : 'Item desativado (já consta em pedidos) — deixa de aparecer no cardápio do cliente.';
+      },
       error: (err: ApiError) => {
-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível desativar o item.';
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível excluir o item.';
       },
     });
   }

@@ -1,76 +1,54 @@
-# Demandas de Back-end — STATUS pós-implementação
+# 🔧 Demandas de Back-end — Service App
 
-> Cruzamento das demandas (BE-01…BE-17) com o **Swagger atualizado**. O time de back-end implementou
-> a grande maioria. Este documento vira um **tracker de status**.
->
-> **Última atualização:** 2026-07-31 (Swagger novo).
+> Rastreamento das necessidades de API levantadas na auditoria/integração do front.
+> **O front não altera o back-end** — tudo aqui é registrado para o time de API.
+> Fontes: Swagger/`openapi.json` (`service-new-ws` @ `ajustes-gerais`) + `ORIENTACOESFRONT.md`.
 
-## Resumo
+## Núcleo (BE-01…BE-17) — implementadas no back
 
-| # | Demanda | Endpoint(s) entregues | Status |
-|---|---|---|---|
-| BE-01 | Delivery domínio | `/restaurants`, `/restaurants/menu-*`, `/food-orders` | ✅ Implementado |
-| BE-02 | Cobrança híbrida delivery | `billingType`, `/restaurants/me/payouts`, `commissionAmount` no pedido | ✅ Implementado |
-| BE-03 | Entregador + rastreamento | `/deliveries/*` (accept/reject/pickup/**location**/deliver) | ✅ Implementado |
-| BE-04 | Aluguel transacional | `/rentals/*` | ✅ Implementado |
-| BE-05 | Transporte pedido | `/transport-requests/*` | ✅ Implementado |
-| BE-06 | Hospedagem reserva | `/bookings/*` | ✅ Implementado |
-| BE-07 | Empregos | `/jobs/*` (+ apply, applications) | ✅ Implementado |
-| BE-08 | ChatContextType ampliado | +`Rental,TransportRequest,Booking,FoodOrder,Job` | ✅ Implementado |
-| BE-09 | Negociação além de Product | entidades próprias por vertical | ✅ Resolvido por design |
-| BE-10 | Indicações do usuário | `/referrals/me`, `/referrals/me/summary` | ✅ Implementado |
-| BE-11 | Partner × Influencer | `Partner` removido; Influencer é o perfil de indicação | ✅ Resolvido |
-| BE-12 | Login email × telefone | mantido email (decisão) | ✅ N/A |
-| BE-13 | Qualidade de contrato | `/logout` criado; reset `minLength 8/maxLength 32` | 🟡 Falta `birthDate` (ainda `type:object`) |
-| BE-14 | Autorização por `profileType` | 403 explícitos nas rotas de delivery/food-order/deliveries | ✅ Implementado |
-| BE-15 | Assinatura como pré-condição do fornecedor | **Confirmado**: sem assinatura, o fornecedor recebe `403 "É necessário ter uma assinatura ativa..."` — inclusive em **GETs** (`/restaurants/me`, `/restaurants/categories`), não só no `POST`. | ✅ Implementado (Front trata **globalmente** no `errorInterceptor` → redirect p/ `/fornecedor/assinatura`) |
-| BE-16 | Cobrança por vertical | delivery híbrido (payouts) | ✅ Implementado |
-| BE-17 | Repasse/ganhos do **entregador** | payouts (restaurante) + comissão (influencer); **entregador não tem endpoint** de ganhos (a Home do entregador mostra faturamento) | 🟡 Parcial — expor `GET /v1/deliveries/me/earnings` |
-
-## Pendências remanescentes (para o time de API)
-
-1. **BE-15 — Assinatura como pré-condição.** Confirmar se um `Supplier` sem assinatura ativa é bloqueado ao
-   publicar/receber demanda (checagem em `subscriptions/current`), com `403` + motivo para o Front orientar.
-2. **BE-17 — Repasse ao entregador.** Existe payout do restaurante (`/restaurants/me/payouts`) e comissão do
-   influencer (`/referrals/me/summary`), mas **não há** relatório/repasse de ganhos do **entregador**
-   (por entrega concluída). Sugerir `GET /v1/deliveries/me/earnings` ou incluir em `/balances/*`.
-3. **BE-13 (resíduo) — `birthDate`.** Ainda declarado como `type: object`; declarar `type: string, format: date`.
-
-## Delivery Cliente — gaps levantados na auditoria (BE-D1…BE-D4)
-
-| # | Gap | Status |
+| ID | Assunto | Situação |
 |---|---|---|
-| BE-D1 | `ResponseRestaurantDto` sem `avaliação`, `tempo de entrega`, `logo`, `taxa fixa` (a UI mostra) | ⚠️ decisão: incluir no back **ou** remover da UI |
-| BE-D2 | `POST /food-orders` não recebe endereço de entrega | ⚠️ confirmar uso do endereço do perfil / múltiplos endereços |
-| BE-D3 | `paymentMethod` só `CreditCard/Pix/BankSlip` (UI tem débito e dinheiro) | ⚠️ confirmar métodos válidos |
-| BE-D4 | `deliveryFee` é enviado pelo **cliente** no pedido | ⚠️ ideal o back calcular/validar o frete |
+| BE-01…BE-12 | Endpoints transacionais das verticais (serviços/orçamentos/trabalhos, produtos/negociações, aluguel, transporte, hospedagem, empregos, delivery, chat) | ✅ Implementados |
+| BE-13 | `birthDate` como `type: string, format: date` (era `type: object`) | ✅ Corrigido (`YYYY-MM-DD`) |
+| BE-14 | Autorização por `profileType` (403 nas rotas restritas) | ✅ Implementado |
+| BE-15 | Assinatura como pré-condição do fornecedor (403 sem assinatura, inclusive GETs) | ✅ Implementado (Front trata no `errorInterceptor` → `/fornecedor/assinatura`) |
+| BE-16 | Cobrança por vertical (delivery híbrido, payouts) | ✅ Implementado |
+| BE-17 | Repasse/ganhos do **entregador** (sem endpoint próprio) | 🟡 Parcial — expor `GET /v1/deliveries/me/earnings` |
 
-> Detalhes e mapeamentos em `docs/inventario-delivery-cliente.md`.
+## Delivery — gaps de auditoria (BE-D1…BE-D5)
 
-## Delivery Fornecedor — gaps levantados na auditoria (BE-D5, BE-F1, BE-F2)
-
-| # | Gap | Status |
+| ID | Assunto | Situação |
 |---|---|---|
-| BE-D5 | `GET /restaurants/categories` retorna sem `iconUrl` (grid do cliente sem ícone) | ⚠️ incluir `iconUrl` ou Front usa fallback local por `slug` |
-| BE-F1 | Sem `DELETE` de item/categoria/adicional de cardápio | ⚠️ expor DELETE **ou** confirmar soft-delete por `isActive` |
-| BE-F2 | Payout do restaurante é agregado (sem recorte por período) | ⚠️ opcional: `?period=day\|week\|month` |
+| BE-D1 | `ResponseRestaurantDto` sem avaliação/tempo/logo/taxa (a UI mostra) | ⚠️ **Parcialmente resolvido** — `ratingAverage`/`ratingCount` adicionados (Fase C). Faltam tempo de entrega/logo. |
+| BE-D2 | `POST /food-orders` não recebia endereço de entrega | ⚠️ Endereço vem do perfil; ver BE-Q7 (coordenadas) |
+| BE-D3 | `paymentMethod` só `CreditCard/Pix/BankSlip` (UI tinha débito/dinheiro) | ✅ **Resolvido** (Fase C: 5 métodos `+DebitCard/Cash`) |
+| BE-D4 | `deliveryFee` era enviado pelo cliente | ✅ **Resolvido** (Fase C: campo removido; servidor calcula) |
+| BE-D5 | `GET /restaurants/categories` sem `iconUrl` | ⚠️ Front usa fallback local por `slug` |
 
-> Detalhes em `docs/inventario-delivery-fornecedor.md`.
+## Delivery Fornecedor (BE-F1, BE-F2)
 
-## Dúvidas/ajustes — rodada de correções (BE-Q1…BE-Q3)
-
-| # | Ponto | Status |
+| ID | Assunto | Situação |
 |---|---|---|
-| BE-Q1 | **Confirmação de conta** via `verify-code` **É deste webapp** (a anotação "somente para mobile" refere-se a este app; "web" = portal administrativo). Fluxo: register → código por **email** → `verify-code`. **Faltam:** (a) rota de **reenvio** de código; (b) o **canal** (email) não está explícito no contrato; (c) a anotação do Swagger ("web não precisa consumir") gera ambiguidade. **⚠️ Em homolog o email do código não está sendo enviado** — bloqueia o cadastro. **Bypass no Front (só dev):** flag `environment.bypassVerifyCode` pula a verificação e faz login direto após o `register` (patch `fix-bypass-verify-code-dev.patch`); em produção a flag é `false`. **✅ Testado em homolog (03/08): conta recém-criada em status `Pending` consegue fazer login sem `verify-code`** → o bypass resolve o cadastro em dev/homolog. **🔒 Achado de segurança:** como o login **não exige** conta verificada, uma conta não-confirmada autentica e usa o app normalmente — a etapa `verify-code` está, na prática, **não imposta**. | ❗ (1) Confirmar se login de conta `Pending` é **intencional** (senão, bloquear login não-verificado); (2) corrigir envio do email do código em homolog; (3) expor **reenviar código**. |
-| BE-Q2 | **Telefone** passou a ser **obrigatório no Front** (cliente/fornecedor/etc.). No contrato, `phone` é opcional em `RegisterBaseDto`. | ❓ Confirmar se o back deve tornar `phone` obrigatório também (hoje valida formato quando enviado: "Informe um telefone válido no formato brasileiro."). |
-| BE-Q3 | **Assinatura do fornecedor** (planos + `POST /subscriptions`) foi movida para **onboarding pós-login** (o login automático no cadastro era frágil). Relaciona-se ao **BE-15** (assinatura como pré-condição). | ❓ Confirmar o momento/obrigatoriedade da assinatura (bloqueia publicar antes de assinar?). |
-| BE-Q5 | **Não há endpoint de listagem de chats do usuário (inbox).** O contrato só permite abrir chat por **contexto** (`GET /chats/context/{contextType}/{referenceId}`) ou por **id** (`GET /chats/{id}`). O Front abre o chat a partir do `chatRoomId` de cada negócio (negociação/aluguel/transporte/reserva/pedido). Uma **tela de "Conversas" (inbox)** agregando todos os chats do usuário depende de um endpoint novo. | ❗ Expor `GET /chats` (ou `/chats/me`) paginado, com último trecho, contraparte e não-lidas, para a inbox. |
-| BE-Q4 | **`/login` nem sempre retorna `profileType`.** Sem ele, o Front roteava todo mundo para a home de **cliente** e o `profileGuard` bloqueava as telas de fornecedor/entregador/parceiro (usuário "preso" como cliente). **Contornado no Front:** quando o `/login` não traz `profileType`, buscamos em `GET /my-self` e completamos a sessão (patch `fix-login-profiletype-logout.patch`). | ❗ Idealmente **incluir `profileType` no `ResponseLoginDto`** para evitar o round-trip extra. |
+| BE-F1 | `DELETE` de item de cardápio | ✅ **Resolvido** (Fase C: `DELETE /restaurants/menu-items/:id` → `{deleted}`) |
+| BE-F2 | Payout do restaurante sem recorte por período | ⚠️ Opcional: `?period=day\|week\|month` |
+
+## Dúvidas/ajustes (BE-Q1…BE-Q7)
+
+| ID | Assunto | Ação p/ o back |
+|---|---|---|
+| BE-Q1 | **Verificação de conta / login `Pending`.** Fluxo register → SMS → `verify-account`. Login de conta `Pending` cai em `401` genérico (conservador). | ✅ Em produção. Confirmar se `401` para `Pending` é intencional; front oferece link de reenvio como saída. |
+| BE-Q2 | **Telefone** agora obrigatório no front; `phone` era opcional no contrato. | ✅ Resolvido (contrato tornou `phone` obrigatório em `RegisterBaseDto`). |
+| BE-Q3 | **Assinatura do fornecedor** movida para onboarding pós-login. | ❓ Confirmar momento/obrigatoriedade. |
+| BE-Q4 | **`/login` nem sempre retornava `profileType`.** Contornado via `/my-self`. | 🟡 Idealmente incluir `profileType` no `ResponseLoginDto` (evita round-trip). |
+| BE-Q5 | **Sem endpoint de inbox de chats.** Só há chat por contexto/id. | ❗ Expor `GET /chats` (ou `/chats/me`) paginado p/ a tela "Conversas". |
+| BE-Q6 | **`POST /works/{id}/pay`** só aceita `CreditCard\|Pix\|BankSlip`; a tela de pagamento de serviço oferece 4 formas. Front mapeia Débito→`CreditCard`, Dinheiro→`BankSlip`. **Follow-up front:** falta UI de resposta de garantia do fornecedor (`PATCH /works/{id}/respond-warranty`) e upload de anexos — endpoints já no `WorkService`. | ⚠️ Confirmar métodos válidos (idem BE-D3); priorizar tela de resposta de garantia. |
+| BE-Q7 | **Endereço do cliente sem `latitude`/`longitude`.** A Fase C pede que o front envie coordenadas para o servidor calcular o frete por distância, mas o `openapi.json` **não tem** `latitude`/`longitude` em `UpdateAddressDto` nem em `CreateFoodOrderDto` (os únicos `lat/lng` são do GPS do entregador). Sem o campo, o frete cai na faixa base. | ❗ Adicionar `latitude`/`longitude` a `UpdateAddressDto` (e expor em `ResponseAddressDto`); confirmar se vai no endereço do perfil ou no corpo do pedido. |
 
 ## Observações
 
-- **Autorização por perfil (BE-14)** aparece nas rotas novas (ex.: "Apenas clientes podem realizar pedidos",
-  "Apenas o restaurante do pedido pode respondê-lo", "Apenas o entregador responsável..."). O Front deve
-  respeitar isso com os guards por `profileType`.
-- **Rastreamento em tempo real:** `/deliveries/{id}/location` é polling (PATCH lat/lng + `locationUpdatedAt`).
-  Não há WebSocket declarado — o Front fará polling do `/deliveries/{id}` / `/food-orders/{id}` para o mapa.
+- **Verificação de conta** (`verify-account`) e **recuperação de senha** (`verify-code`) são fluxos **separados**
+  (campos distintos no back; um não invalida o outro). Código = **6 dígitos**, expira em 4h; reenvio invalida o anterior.
+- **`503`** no cadastro = SMS não enviado e **nada gravado** (pode repetir sem risco de `409`).
+- Uploads e `food-orders`/`deliveries` exigem `Authorization` (interceptor global cobre).
+- Pagamentos de delivery por cartão/Pix/boleto ficam `paymentStatus: Pending` (não passam por gateway hoje);
+  só `Cash` é confirmado via `PATCH /food-orders/:id/confirm-payment`.

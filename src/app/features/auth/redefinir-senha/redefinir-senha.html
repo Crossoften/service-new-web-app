@@ -13,7 +13,9 @@
   <div class="rec-content">
 
     <h2 class="rec-titulo">Nova senha</h2>
-    <p class="rec-descricao">Digite o código que enviamos ao seu email e cadastre uma nova senha.</p>
+    <p class="rec-descricao">
+      Digite o código de 6 dígitos que enviamos@if (destinoExibicao) { para <strong>{{ destinoExibicao }}</strong> } e cadastre uma nova senha.
+    </p>
 
     <div class="rec-form">
       <div class="rec-field">
@@ -25,9 +27,9 @@
           </svg>
           <input
             type="tel"
-            placeholder="0000"
+            placeholder="000000"
             [(ngModel)]="codigo"
-            maxlength="4"
+            maxlength="6"
             inputmode="numeric"
           />
         </div>

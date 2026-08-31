@@ -15,8 +15,11 @@ export class SacolaComponent implements OnInit {
   formaSelecionada: FormaPagamento = 'credito';
 
   formasPagamento: { id: FormaPagamento; label: string; icone: string }[] = [
-    { id: 'credito', label: 'Cartão de Crédito', icone: 'card' },
-    { id: 'pix',     label: 'PIX',               icone: 'pix' },
+    { id: 'credito',  label: 'Cartão de Crédito', icone: 'card' },
+    { id: 'debito',   label: 'Cartão de Débito',  icone: 'card' },
+    { id: 'pix',      label: 'PIX',               icone: 'pix' },
+    { id: 'boleto',   label: 'Boleto',            icone: 'card' },
+    { id: 'dinheiro', label: 'Dinheiro',          icone: 'cash' },
   ];
 
   constructor(

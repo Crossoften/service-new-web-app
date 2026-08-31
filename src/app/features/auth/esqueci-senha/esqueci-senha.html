@@ -13,21 +13,22 @@
   <div class="rec-content">
 
     <h2 class="rec-titulo">Esqueceu a senha?</h2>
-    <p class="rec-descricao">Informe seu email e enviaremos um código para você redefinir a sua senha.</p>
+    <p class="rec-descricao">Informe seu e-mail ou telefone e enviaremos um código para você redefinir a sua senha.</p>
 
     <div class="rec-form">
       <div class="rec-field">
-        <label>Email</label>
+        <label>E-mail ou telefone</label>
         <div class="rec-field__input-wrapper">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="4" width="20" height="16" rx="2"/>
             <path d="m22 7-10 6L2 7"/>
           </svg>
           <input
-            type="email"
-            placeholder="seu@email.com"
-            [(ngModel)]="email"
-            autocomplete="email"
+            type="text"
+            placeholder="seu@email.com ou (34) 99870-1109"
+            [ngModel]="identificador"
+            (ngModelChange)="onIdentificadorInput($event)"
+            autocomplete="username"
             inputmode="email"
           />
         </div>

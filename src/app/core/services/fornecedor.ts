@@ -6,6 +6,7 @@ import {
   CreateMenuItemDto,
   CreateRestaurantDto,
   CreateRestaurantResponseDto,
+  DeleteMenuItemResponseDto,
   ResponseMenuCategoryDto,
   ResponseRestaurantDto,
   ResponseRestaurantPayoutDto,
@@ -151,6 +152,14 @@ export class FornecedorService {
     return this.api.patch(`/restaurants/menu-items/${id}`, { isActive: false });
   }
 
+  /**
+   * Exclui um item de cardápio — `DELETE /v1/restaurants/menu-items/{id}`.
+   * O back decide: `deleted:true` = apagado; `deleted:false` = desativado (item já usado em pedidos).
+   */
+  excluirItem(id: number): Observable<DeleteMenuItemResponseDto> {
+    return this.api.delete<DeleteMenuItemResponseDto>(`/restaurants/menu-items/${id}`);
+  }
+
   /** Achata `menuCategories→items` (ativos) do restaurante em view-models. */
   itensDe(r: ResponseRestaurantDto): ItemCardapioFornecedor[] {
     return (r.menuCategories ?? []).flatMap((c) =>
@@ -190,6 +199,15 @@ export class FornecedorService {
   /** Aceita ou recusa um pedido — `PATCH /v1/food-orders/{id}/respond`. */
   responderPedido(id: number, status: 'Accepted' | 'Cancelled'): Observable<ResponseFoodOrderDto> {
     return this.api.patch<ResponseFoodOrderDto>(`/food-orders/${id}/respond`, { status });
+  }
+
+  /**
+   * Confirma o recebimento de um pedido pago em **dinheiro** — `PATCH /food-orders/{id}/confirm-payment`.
+   * Só vale para `paymentMethod === 'Cash'`; idempotente. Chamável pelo dono do restaurante
+   * (ou pelo entregador designado). Outros meios respondem `400`.
+   */
+  confirmarPagamento(id: number): Observable<ResponseFoodOrderDto> {
+    return this.api.patch<ResponseFoodOrderDto>(`/food-orders/${id}/confirm-payment`, {});
   }
 
   /** Marca o pedido como em preparo — `PATCH /v1/food-orders/{id}/preparing`. */

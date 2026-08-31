@@ -51,11 +51,30 @@ export interface ResponseRestaurantDto {
   menuCategories?: ResponseMenuCategoryDto[];
   createdAt: string;
   updatedAt: string;
+  /** Média das avaliações — ausente quando ninguém avaliou (Fase C). */
+  ratingAverage?: number;
+  /** Total de avaliações recebidas (0 quando não há). */
+  ratingCount?: number;
   // (BE-D1) ainda não retornados pela API:
   rating?: number;
   estimatedTime?: string;
   logoUrl?: string;
   deliveryFee?: number;
+}
+
+/** Corpo de `POST /v1/restaurants/{id}/reviews` (CreateReviewDto). */
+export interface CreateRestaurantReviewDto {
+  /** Inteiro de 1 a 5. */
+  rating: number;
+  /** Comentário opcional (até 2000 caracteres). */
+  comment?: string;
+}
+
+/** Resposta de `DELETE /v1/restaurants/menu-items/{id}`. */
+export interface DeleteMenuItemResponseDto {
+  /** `true` = apagado de vez; `false` = desativado (item já usado em pedidos). */
+  deleted: boolean;
+  message?: string;
 }
 
 export interface ResponseFindAllRestaurantDto {
