@@ -25,48 +25,56 @@
 
   <div class="page-content">
 
+    @if (erro) {
+      <p class="solicitacao-erro">{{ erro }}</p>
+    }
+
     <!-- DETALHES -->
     <div class="solicitacao-detalhes">
       <h3 class="solicitacao-detalhes__titulo">Detalhes da solicitação</h3>
       <div class="solicitacao-detalhes__linha">
-        <span>Realizado em</span><span>00/00/0000</span>
+        <span>Realizado em</span><span>{{ solicitacao?.realizadoEm || '—' }}</span>
       </div>
       <div class="solicitacao-detalhes__linha">
-        <span>Valor serviço</span><span>R$ 00,00</span>
+        <span>Valor serviço</span><span>{{ works.formatarPreco(solicitacao?.valorServico || 0) }}</span>
       </div>
       <div class="solicitacao-detalhes__linha solicitacao-detalhes__linha--total">
-        <span>Total</span><span>R$ 00,00</span>
+        <span>Total</span><span>{{ works.formatarPreco(solicitacao?.total || 0) }}</span>
       </div>
     </div>
 
     <!-- PRESTADOR -->
     <div class="solicitacao-prestador">
       <div class="solicitacao-prestador__foto">
-        <div class="solicitacao-prestador__foto-placeholder">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-        </div>
+        @if (solicitacao?.prestador?.foto) {
+          <img [src]="solicitacao?.prestador?.foto" [alt]="solicitacao?.prestador?.nome" />
+        } @else {
+          <div class="solicitacao-prestador__foto-placeholder">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+        }
       </div>
       <div class="solicitacao-prestador__info">
-        <span class="solicitacao-prestador__nome">Prestador: {{ prestadorNome }}</span>
-        <span class="solicitacao-prestador__descricao">{{ prestadorDescricao }}</span>
+        <span class="solicitacao-prestador__nome">Prestador: {{ solicitacao?.prestador?.nome }}</span>
+        <span class="solicitacao-prestador__descricao">{{ solicitacao?.prestador?.descricao }}</span>
       </div>
     </div>
 
     <!-- ARQUIVOS -->
     <div class="solicitacao-arquivos">
-      @for (arquivo of arquivos; track arquivo.id) {
+      @for (arquivo of solicitacao?.arquivos ?? []; track arquivo.id) {
         <div class="solicitacao-arquivo">
           <span>{{ arquivo.nome }}</span>
-          <button class="solicitacao-arquivo__btn">
+          <a class="solicitacao-arquivo__btn" [href]="arquivo.url" target="_blank" rel="noopener">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
               <polyline points="8 12 12 16 16 12"/>
               <line x1="12" y1="8" x2="12" y2="16"/>
             </svg>
-          </button>
+          </a>
         </div>
       }
     </div>
@@ -107,27 +115,27 @@
         <div class="modal__detalhes">
           <h4>Detalhes da solicitação</h4>
           <div class="modal__linha">
-            <span>Realizado em</span><span>00/00/0000</span>
+            <span>Realizado em</span><span>{{ solicitacao?.realizadoEm || '—' }}</span>
           </div>
           <div class="modal__linha">
-            <span>Valor serviço</span><span>R$ 00,00</span>
+            <span>Valor serviço</span><span>{{ works.formatarPreco(solicitacao?.valorServico || 0) }}</span>
           </div>
           <div class="modal__linha">
-            <span>Extra:</span><span>R$ 00,00</span>
+            <span>Extra:</span><span>{{ works.formatarPreco(solicitacao?.extraValor || 0) }}</span>
           </div>
           <div class="modal__linha modal__linha--total">
-            <span>Total</span><span>R$ 00,00</span>
+            <span>Total</span><span>{{ works.formatarPreco((solicitacao?.total || 0) + (solicitacao?.extraValor || 0)) }}</span>
           </div>
         </div>
 
         <div class="modal__justificativa">
           <h4>Justificativa</h4>
-          <p>Lorem Ipsum Dolor Sit Amet, Consectetur Lorem Ipsum Dolor Sit Amet, Consectetur Lorem Ipsum Dolor Sit Amet, Consectetur Lorem Ipsum Dolor Sit Amet, Consectetur Lorem Ipsum Dolor Sit</p>
+          <p>{{ solicitacao?.extraDescricao || 'Sem justificativa informada.' }}</p>
         </div>
 
         <div class="modal__acoes">
-          <button class="solicitacao-btn solicitacao-btn--primary" (click)="confirmarModal()">CONFIRMAR</button>
-          <button class="solicitacao-btn solicitacao-btn--outline" (click)="cancelarModal()">CANCELAR</button>
+          <button class="solicitacao-btn solicitacao-btn--primary" (click)="confirmarModal()" [disabled]="processando">CONFIRMAR</button>
+          <button class="solicitacao-btn solicitacao-btn--outline" (click)="recusarModal()" [disabled]="processando">RECUSAR</button>
         </div>
       </div>
     </div>

@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FornecedorServicosService, TrabalhoFornecedor, StatusTrabalho } from '../../../../core/services/fornecedor-servicos';
+import { WorkService, TrabalhoFornecedor, StatusTrabalho } from '../../../../core/services/work';
+import { ApiError } from '../../../../core/models/common';
 import { BottomNavFornecedorServicosComponent } from '../../../../shared/components/bottom-nav-fornecedor-servicos/bottom-nav-fornecedor-servicos';
 
 type TabTrabalho = 'em_andamento' | 'finalizadas' | 'canceladas';
@@ -13,8 +14,12 @@ type TabTrabalho = 'em_andamento' | 'finalizadas' | 'canceladas';
   styleUrl: './trabalhos-fornecedor.scss'
 })
 export class TrabalhosFornecedorComponent implements OnInit {
+  private readonly works = inject(WorkService);
+
   trabalhos: TrabalhoFornecedor[] = [];
   tabAtiva: TabTrabalho = 'em_andamento';
+  carregando = false;
+  erro = '';
 
   tabs: { id: TabTrabalho; label: string }[] = [
     { id: 'em_andamento', label: 'Em Andamento' },
@@ -22,13 +27,20 @@ export class TrabalhosFornecedorComponent implements OnInit {
     { id: 'canceladas',   label: 'Canceladas' },
   ];
 
-  constructor(
-    public router: Router,
-    private fornecedorServicosService: FornecedorServicosService
-  ) {}
+  constructor(public router: Router) {}
 
   ngOnInit() {
-    this.trabalhos = this.fornecedorServicosService.getTrabalhos();
+    this.carregando = true;
+    this.works.trabalhos().subscribe({
+      next: (lista) => {
+        this.trabalhos = lista;
+        this.carregando = false;
+      },
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar os trabalhos.';
+        this.carregando = false;
+      },
+    });
   }
 
   get trabalhosFiltrados(): TrabalhoFornecedor[] {

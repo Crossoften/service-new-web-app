@@ -1,72 +1,68 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ServicosService, Solicitacao, StatusSolicitacao } from '../../../../core/services/servicos';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 
-type TabSolicitacao = 'em_andamento' | 'finalizadas' | 'canceladas';
+import { SolicitacoesComponent } from './solicitacoes';
 
-@Component({
-  selector: 'app-solicitacoes',
-  imports: [CommonModule, FormsModule],
-  templateUrl: './solicitacoes.html',
-  styleUrl: './solicitacoes.scss'
-})
-export class SolicitacoesComponent implements OnInit {
-  solicitacoes: Solicitacao[] = [];
-  tabAtiva: TabSolicitacao = 'em_andamento';
+describe('SolicitacoesComponent', () => {
+  let component: SolicitacoesComponent;
+  let fixture: ComponentFixture<SolicitacoesComponent>;
+  let httpMock: HttpTestingController;
 
-  tabs: { id: TabSolicitacao; label: string }[] = [
-    { id: 'em_andamento', label: 'Em Andamento' },
-    { id: 'finalizadas',  label: 'Finalizadas' },
-    { id: 'canceladas',   label: 'Canceladas' },
-  ];
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SolicitacoesComponent],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
 
-  constructor(
-    private router: Router,
-    private servicosService: ServicosService
-  ) {}
+    fixture = TestBed.createComponent(SolicitacoesComponent);
+    component = fixture.componentInstance;
+    httpMock = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+  });
 
-  ngOnInit() {
-    this.solicitacoes = this.servicosService.getSolicitacoes();
-  }
+  afterEach(() => httpMock.verify());
 
-  get solicitacoesFiltradas(): Solicitacao[] {
-    if (this.tabAtiva === 'em_andamento') {
-      return this.solicitacoes.filter(s =>
-        s.status === 'em_andamento' || s.status === 'em_garantia'
-      );
-    }
-    if (this.tabAtiva === 'finalizadas') {
-      return this.solicitacoes.filter(s => s.status === 'finalizada');
-    }
-    if (this.tabAtiva === 'canceladas') {
-      return this.solicitacoes.filter(s => s.status === 'cancelada');
-    }
-    return this.solicitacoes;
-  }
+  it('carrega as solicitações do cliente (GET /works/my-requests)', () => {
+    const req = httpMock.expectOne((r) => r.url.endsWith('/works/my-requests') && r.method === 'GET');
+    req.flush({
+      works: [
+        {
+          id: 1, status: 'InProgress', isUnderWarranty: false,
+          service: { id: 3, name: 'Reforma' }, budget: { id: 5 },
+          requester: { id: 2, name: 'Ana' }, provider: { id: 9, name: 'Joelson' },
+          serviceValue: '350.00', totalValue: '350.00', createdAt: '2026-03-16T10:00:00.000Z',
+        },
+      ],
+      currentPage: 1, totalPages: 1, totalRecords: 1,
+    });
 
-  statusLabel(status: StatusSolicitacao): string {
-    const labels: Record<StatusSolicitacao, string> = {
-      em_andamento: 'Em andamento',
-      em_garantia:  'Em garantia',
-      finalizada:   'Finalizada',
-      cancelada:    'Cancelada',
-    };
-    return labels[status];
-  }
+    expect(component.solicitacoes.length).toBe(1);
+    expect(component.solicitacoes[0].prestador.nome).toBe('Joelson');
+    expect(component.solicitacoes[0].status).toBe('em_andamento');
+    expect(component.solicitacoes[0].valorServico).toBe(350);
+  });
 
-  statusClass(status: StatusSolicitacao): string {
-    const classes: Record<StatusSolicitacao, string> = {
-      em_andamento: 'status--laranja',
-      em_garantia:  'status--verde',
-      finalizada:   'status--cinza',
-      cancelada:    'status--vermelho',
-    };
-    return classes[status];
-  }
+  it('mapeia Finished sob garantia para em_garantia', () => {
+    const req = httpMock.expectOne((r) => r.url.endsWith('/works/my-requests'));
+    req.flush({
+      works: [
+        {
+          id: 2, status: 'Finished', isUnderWarranty: true,
+          service: { id: 3, name: 'Reforma' }, budget: { id: 5 },
+          requester: { id: 2, name: 'Ana' }, provider: { id: 9, name: 'Joelson' },
+          warrantyExpiresAt: '2026-06-16T23:59:59.000Z', createdAt: '2026-03-16T10:00:00.000Z',
+        },
+      ],
+      currentPage: 1, totalPages: 1, totalRecords: 1,
+    });
 
-  voltar() {
-    history.back();
-  }
-}
+    component.tabAtiva = 'em_andamento';
+    expect(component.solicitacoesFiltradas.length).toBe(1);
+    expect(component.solicitacoes[0].status).toBe('em_garantia');
+  });
+});

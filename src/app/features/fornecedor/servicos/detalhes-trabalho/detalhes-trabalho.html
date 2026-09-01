@@ -102,6 +102,10 @@
 
     }
 
+    @if (erro) {
+      <p class="dt-erro">{{ erro }}</p>
+    }
+
   </div>
 
   <!-- BOTÕES POR STEP -->
@@ -140,7 +144,7 @@
           <input type="number" placeholder="00,00" [(ngModel)]="valorAcrescimo" />
         </div>
 
-        <button class="modal__btn" (click)="confirmarAcrescimo()">CONFIRMAR</button>
+        <button class="modal__btn" (click)="confirmarAcrescimo()" [disabled]="processando">CONFIRMAR</button>
       </div>
     </div>
   }

@@ -39,6 +39,25 @@ describe('CriarServicoComponent', () => {
     httpMock.expectNone((r) => r.url.endsWith('/services') && r.method === 'POST');
   });
 
+  it('exige nome quando ausente', () => {
+    component.categoryId = 3;
+    component.nome = '';
+    component.criarServico();
+    expect(component.erro).toContain('nome');
+    httpMock.expectNone((r) => r.url.endsWith('/services') && r.method === 'POST');
+  });
+
+  it('renderiza o campo de nome e faz o binding com o model', async () => {
+    const input: HTMLInputElement | null = fixture.nativeElement.querySelector(
+      'input[placeholder="Nome do serviço"]',
+    );
+    expect(input).toBeTruthy();
+    input!.value = 'Consultoria';
+    input!.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(component.nome).toBe('Consultoria');
+  });
+
   it('cria o serviço mapeando o tipo (Presencial → Presential)', () => {
     component.categoryId = 3;
     component.nome = 'Reforma';

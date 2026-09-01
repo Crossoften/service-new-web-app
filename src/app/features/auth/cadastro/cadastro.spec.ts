@@ -92,6 +92,22 @@ describe('CadastroComponent', () => {
     httpMock.expectNone((r) => r.url.endsWith('/no-auth/verify-account'));
   });
 
+  it('input OTP monta o código dígito a dígito e por colagem', () => {
+    component.step = 3;
+    // digitação
+    ['6', '3', '8', '5', '9', '3'].forEach((d, i) => {
+      component.onOtpInput({ target: { value: d } } as unknown as Event, i);
+    });
+    expect(component.codigoVerificacao).toBe('638593');
+    // colagem preenche tudo
+    component.digitos = ['', '', '', '', '', ''];
+    component.onOtpPaste({
+      preventDefault: () => {},
+      clipboardData: { getData: () => '112233' },
+    } as unknown as ClipboardEvent);
+    expect(component.codigoVerificacao).toBe('112233');
+  });
+
   it('reenviar chama resend-verification e inicia contador', () => {
     component.identifier = '+5534998701109';
     component.reenviarCodigo();

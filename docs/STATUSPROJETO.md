@@ -4,7 +4,8 @@
 > **leia este arquivo primeiro** — ele resume o que foi decidido, feito e o que falta.
 >
 > **Última atualização:** 2026-08-31 · **Fase atual:** 🎉 **Integração Front↔Swagger completa** —
-> todas as verticais + **Fase AJ** (telefone/auth + delivery Fase C) concluídas. Pendências só de back-end.
+> todas as verticais + **Fase AJ** (telefone/auth + delivery Fase C) concluídas. **Serviços 100% (S-1…S-5
+> aplicado na `integracao`).** Pendências só de back-end.
 >
 > **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao`.
 > **Back-end:** `service-new-ws` @ `ajustes-gerais`. **Base local:** `http://localhost:8000/v1`.
@@ -20,7 +21,8 @@
 
 > ⚠️ **Continuidade:** o container remoto é efêmero (re-clona o repo no start). Os patches entregues ficam com o
 > cliente; para retomar com precisão após um reset, o cliente deve manter a `integracao` **empurrada** ao remoto.
-> Em 2026-08-31 houve um re-provisionamento; `origin/integracao` (push de 2026-08-17) estava atrás (sem S-5/AJ).
+> Em 2026-08-31, após um re-provisionamento, o cliente empurrou a `integracao` (`727808f`) com **AJ-1…AJ-6** e
+> aplicou o **S-5** — o remoto passou a refletir o estado real, e as fatias novas são geradas sobre ele.
 
 ---
 
@@ -60,7 +62,7 @@
 | **Fase 0 — Fundação** (HttpClient, interceptors, session, guards, models, env) | ✅ | `fase-0-fundacao` |
 | **1 — Auth** (login, cadastro, recuperação) | ✅ | `auth-slice-1..3` (+ Fase AJ) |
 | **2 — Perfil** (`/profile/me`) | ✅ | `modulo-2-perfil` |
-| **3/4 — Serviços** (`/services`+`/budgets`+`/works`) | ✅ **S-1…S-5** | `servicos-s1..s5` |
+| **3/4 — Serviços** (`/services`+`/budgets`+`/works`) | ✅ **COMPLETO — S-1…S-5 aplicado** | `servicos-s1..s5` |
 | **5 — Delivery Cliente** (`/restaurants`,`/food-orders`) | ✅ DC-1/2/3 (+AJ-5/6) | `delivery-cliente-dc1..3` |
 | **6 — Delivery Fornecedor** (cardápio, pedidos, payout) | ✅ DF-1/2 (+AJ-5/6) | `delivery-fornecedor-df1/2` |
 | **7 — Entregador** (`/deliveries` + rastreio) | ✅ E-1/2 | `entregador-e1/e2` |
@@ -81,6 +83,9 @@
 | **S-3** | Fornecedor: meus serviços (`/services/my-services`), criar/editar | ✅ | `servicos-s3-fornecedor-servicos` |
 | **S-4** | Fornecedor: orçamentos recebidos (`scope=Received`), responder, pedir mais info | ✅ | `servicos-s4-fornecedor-orcamentos` |
 | **S-5** | **Trabalhos** (`/works`): cliente (confirmar chegada, garantia, cancelar, pagar) + fornecedor (iniciar, acréscimo, finalizar, cancelar). `WorkService` + `work.ts` | ✅ | `servicos-s5-trabalhos` |
+
+> ✅ **Módulo Serviços FECHADO** (S-1…S-5 aplicados na `integracao`, 2026-08-31). Ciclo completo integrado:
+> catálogo → orçamento → aprovação → trabalho → execução → pagamento → garantia, cliente e fornecedor.
 
 ---
 

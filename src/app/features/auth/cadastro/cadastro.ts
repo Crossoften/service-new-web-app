@@ -1,4 +1,12 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChildren,
+  inject,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -53,11 +61,15 @@ export class CadastroComponent implements OnInit, OnDestroy {
 
   // Step 3 — Verificação (SMS)
   codigoVerificacao = '';
+  /** Um dígito por caixa do input OTP (6 posições). */
+  digitos: string[] = ['', '', '', '', '', ''];
   /** Telefone (E.164) da conta recém-criada — identifier para verify/resend. */
   identifier = '';
   reenvioSegundos = 0;
   reenvioMsg = '';
   private timer?: ReturnType<typeof setInterval>;
+
+  @ViewChildren('otp') private otpInputs?: QueryList<ElementRef<HTMLInputElement>>;
 
   erro = '';
   carregando = false;
@@ -156,7 +168,7 @@ export class CadastroComponent implements OnInit, OnDestroy {
         this.carregando = false;
         // Conta criada em `Pending` + SMS enviado → etapa de verificação.
         this.identifier = phoneToE164(this.telefone);
-        this.codigoVerificacao = '';
+        this.limparCodigo();
         this.step = 3;
         this.iniciarContador();
       },
@@ -175,6 +187,41 @@ export class CadastroComponent implements OnInit, OnDestroy {
         this.erro = this.msg(err, 'Não foi possível concluir o cadastro.');
       },
     });
+  }
+
+  // ── Input OTP (código segmentado) ─────────────────────────────────────────
+
+  onOtpInput(event: Event, i: number) {
+    const input = event.target as HTMLInputElement;
+    const v = input.value.replace(/\D/g, '');
+    this.digitos[i] = v ? v[v.length - 1] : '';
+    input.value = this.digitos[i];
+    this.codigoVerificacao = this.digitos.join('');
+    if (this.digitos[i] && i < 5) this.focarDigito(i + 1);
+  }
+
+  onOtpKeydown(event: KeyboardEvent, i: number) {
+    if (event.key === 'Backspace' && !this.digitos[i] && i > 0) {
+      this.focarDigito(i - 1);
+    }
+  }
+
+  onOtpPaste(event: ClipboardEvent) {
+    event.preventDefault();
+    const texto = (event.clipboardData?.getData('text') ?? '').replace(/\D/g, '').slice(0, 6);
+    if (!texto) return;
+    for (let i = 0; i < 6; i++) this.digitos[i] = texto[i] ?? '';
+    this.codigoVerificacao = this.digitos.join('');
+    this.focarDigito(Math.min(texto.length, 5));
+  }
+
+  private focarDigito(i: number) {
+    this.otpInputs?.toArray()[i]?.nativeElement.focus();
+  }
+
+  private limparCodigo() {
+    this.digitos = ['', '', '', '', '', ''];
+    this.codigoVerificacao = '';
   }
 
   /** Confirma a conta com o código de 6 dígitos recebido por SMS — `verify-account`. */
@@ -205,6 +252,7 @@ export class CadastroComponent implements OnInit, OnDestroy {
     this.reenvioMsg = '';
     this.auth.resendVerification({ identifier: this.identifier }).subscribe({
       next: () => {
+        this.limparCodigo();
         this.reenvioMsg = 'Novo SMS enviado. O código anterior deixa de valer.';
         this.iniciarContador();
       },

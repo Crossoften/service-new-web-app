@@ -39,6 +39,19 @@ describe('RedefinirSenhaComponent', () => {
     req.flush({ message: 'ok' });
   });
 
+  it('input OTP monta o código (digitação e colagem)', () => {
+    ['1', '2', '3', '4', '5', '6'].forEach((d, i) => {
+      component.onOtpInput({ target: { value: d } } as unknown as Event, i);
+    });
+    expect(component.codigo).toBe('123456');
+    component.digitos = ['', '', '', '', '', ''];
+    component.onOtpPaste({
+      preventDefault: () => {},
+      clipboardData: { getData: () => '987654' },
+    } as unknown as ClipboardEvent);
+    expect(component.codigo).toBe('987654');
+  });
+
   it('rejeita código que não tem 6 dígitos', () => {
     component.identifier = '+5534998701109';
     component.codigo = '1234';

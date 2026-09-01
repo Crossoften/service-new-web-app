@@ -1,0 +1,28 @@
+<div class="hub-container">
+
+  <div class="hub-header">
+    <div>
+      <span class="hub-header__eyebrow">Painel do fornecedor</span>
+      <h1 class="hub-header__titulo">O que você quer gerenciar?</h1>
+    </div>
+    <button class="hub-header__perfil" (click)="irPerfil()" aria-label="Perfil">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+    </button>
+  </div>
+
+  <p class="hub-descricao">Sua conta pode atuar em várias categorias. Escolha uma para começar.</p>
+
+  <div class="hub-grid">
+    @for (vertical of verticais; track vertical.rota) {
+      <button class="hub-card" (click)="abrir(vertical)">
+        <span class="hub-card__icone">{{ vertical.icone }}</span>
+        <span class="hub-card__titulo">{{ vertical.titulo }}</span>
+        <span class="hub-card__descricao">{{ vertical.descricao }}</span>
+      </button>
+    }
+  </div>
+
+</div>

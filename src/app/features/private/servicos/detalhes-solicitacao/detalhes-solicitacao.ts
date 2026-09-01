@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { WorkService, Solicitacao } from '../../../../core/services/work';
+import { ApiError } from '../../../../core/models/common';
 
-export type StepSolicitacao = 'aguardando' | 'cancelavel' | 'em_andamento' | 'concluido';
+export type StepSolicitacao = 'aguardando' | 'cancelavel' | 'em_andamento' | 'concluido' | 'cancelado';
 
 @Component({
   selector: 'app-detalhes-solicitacao',
@@ -12,60 +14,142 @@ export type StepSolicitacao = 'aguardando' | 'cancelavel' | 'em_andamento' | 'co
   styleUrl: './detalhes-solicitacao.scss'
 })
 export class DetalhesSolicitacaoComponent implements OnInit {
-  solicitacaoId: number = 0;
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  readonly works = inject(WorkService);
+
+  solicitacaoId = 0;
+  solicitacao?: Solicitacao;
   stepAtual: StepSolicitacao = 'aguardando';
-  mostrarModal: boolean = false;
-
-  // Mock dados
-  prestadorNome: string = 'Ricardo Silva';
-  prestadorDescricao: string = 'Lorem Ipsum Dolor Sit Amet, Consectetur Lorem Ipsum Dolor Sit Amet, Consectetur Lorem Ipsum Dolor Sit Amet, Consectetur';
-
-  arquivos = [
-    { id: 1, nome: 'ARQUIVO.PDF', tipo: 'pdf' },
-    { id: 2, nome: 'ARQUIVO.MP3', tipo: 'mp3' },
-    { id: 3, nome: 'ARQUIVO.MP4', tipo: 'mp4' },
-  ];
-
-  steps: StepSolicitacao[] = ['aguardando', 'cancelavel', 'em_andamento', 'concluido'];
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router
-  ) {}
+  mostrarModal = false;
+  processando = false;
+  erro = '';
 
   ngOnInit() {
     this.solicitacaoId = Number(this.route.snapshot.paramMap.get('id'));
-    const step = this.route.snapshot.queryParamMap.get('step') as StepSolicitacao;
-    if (step) this.stepAtual = step;
+    const stepHint = this.route.snapshot.queryParamMap.get('step') as StepSolicitacao | null;
+    if (stepHint) this.stepAtual = stepHint;
+    this.carregar();
+  }
+
+  private carregar() {
+    this.works.solicitacao(this.solicitacaoId).subscribe({
+      next: (s) => {
+        this.solicitacao = s;
+        this.stepAtual = this.stepDe(s);
+        if (s.extraPendente) this.mostrarModal = true;
+      },
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar a solicitação.';
+      },
+    });
+  }
+
+  private stepDe(s: Solicitacao): StepSolicitacao {
+    switch (s.statusApi) {
+      case 'Pending':
+        return 'cancelavel';
+      case 'InProgress':
+        return 'em_andamento';
+      case 'Finished':
+        return 'concluido';
+      default: // Cancelled
+        return 'cancelado';
+    }
   }
 
   finalizar() {
-    this.mostrarModal = true;
+    // Reservado para responder ao acréscimo (quando houver pendência).
+    if (this.solicitacao?.extraPendente) this.mostrarModal = true;
   }
 
   revisao() {
-    // implementar depois
+    // Avaliação do serviço será implementada em fatia posterior.
   }
 
   cancelar() {
-    this.router.navigate(['/servicos/solicitacoes']);
+    if (this.processando) return;
+    this.processando = true;
+    this.erro = '';
+    this.works.cancelar(this.solicitacaoId, { cancelReason: 'Cancelado pelo cliente.' }).subscribe({
+      next: () => this.router.navigate(['/servicos/solicitacoes']),
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível cancelar a solicitação.';
+        this.processando = false;
+      },
+    });
   }
 
   confirmarChegada() {
-    this.stepAtual = 'concluido';
+    if (this.processando) return;
+    this.processando = true;
+    this.erro = '';
+    this.works.confirmarChegada(this.solicitacaoId).subscribe({
+      next: () => {
+        this.processando = false;
+        this.carregar();
+      },
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível confirmar a chegada.';
+        this.processando = false;
+      },
+    });
   }
 
   servicoConcluido() {
+    if (this.solicitacao?.pago) {
+      this.router.navigate(['/servicos/solicitacoes']);
+      return;
+    }
     this.router.navigate(['/servicos/pagamento', this.solicitacaoId]);
   }
 
   solicitarGarantia() {
-    // implementar depois
+    const description = window.prompt('Descreva o problema para solicitar a garantia:');
+    if (!description || !description.trim()) return;
+    this.processando = true;
+    this.erro = '';
+    this.works.solicitarGarantia(this.solicitacaoId, { description: description.trim() }).subscribe({
+      next: () => {
+        this.processando = false;
+        this.carregar();
+      },
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível solicitar a garantia.';
+        this.processando = false;
+      },
+    });
   }
 
   confirmarModal() {
-    this.mostrarModal = false;
-    this.router.navigate(['/servicos/pagamento', this.solicitacaoId]);
+    // Cliente aprova o acréscimo solicitado pelo fornecedor.
+    this.processando = true;
+    this.works.responderAcrescimo(this.solicitacaoId, { status: 'Approved' }).subscribe({
+      next: () => {
+        this.mostrarModal = false;
+        this.processando = false;
+        this.carregar();
+      },
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível responder ao acréscimo.';
+        this.processando = false;
+      },
+    });
+  }
+
+  recusarModal() {
+    this.processando = true;
+    this.works.responderAcrescimo(this.solicitacaoId, { status: 'Rejected' }).subscribe({
+      next: () => {
+        this.mostrarModal = false;
+        this.processando = false;
+        this.carregar();
+      },
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível responder ao acréscimo.';
+        this.processando = false;
+      },
+    });
   }
 
   cancelarModal() {
@@ -73,7 +157,8 @@ export class DetalhesSolicitacaoComponent implements OnInit {
   }
 
   abrirChat() {
-    this.router.navigate(['/servicos/chat', this.solicitacaoId]);
+    const chatId = this.solicitacao?.chatId;
+    if (chatId) this.router.navigate(['/chat', chatId]);
   }
 
   voltar() {

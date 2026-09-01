@@ -165,3 +165,30 @@
     border: 2px solid var(--color-primary);
   }
 }
+
+.rec-otp {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.rec-otp__box {
+  flex: 1 1 0;
+  min-width: 0;
+  aspect-ratio: 1 / 1;
+  max-width: 52px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: #111827;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary, #e5484d);
+    box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.15);
+  }
+}

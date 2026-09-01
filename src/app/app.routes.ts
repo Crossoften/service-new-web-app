@@ -42,6 +42,7 @@ import { MaisParceiroComponent } from './features/parceiro/mais-parceiro/mais-pa
 import { SaldoComponent } from './features/parceiro/saldo/saldo';
 import { NovoBancoComponent } from './features/parceiro/novo-banco/novo-banco';
 import { HomeFornecedorComponent } from './features/fornecedor/home-fornecedor/home-fornecedor';
+import { HubFornecedorComponent } from './features/fornecedor/hub-fornecedor/hub-fornecedor';
 import { RestauranteFornecedorComponent } from './features/fornecedor/restaurante-fornecedor/restaurante-fornecedor';
 import { AssinaturaFornecedorComponent } from './features/fornecedor/assinatura-fornecedor/assinatura-fornecedor';
 import { GerenciarCardapioComponent } from './features/fornecedor/gerenciar-cardapio/gerenciar-cardapio';
@@ -127,6 +128,9 @@ export const routes: Routes = [
   { path: 'parceiro/mais', component: MaisParceiroComponent, canActivate: [authGuard, profileGuard('Influencer')] },
   { path: 'parceiro/saldo', component: SaldoComponent, canActivate: [authGuard, profileGuard('Influencer')] },
   { path: 'parceiro/banco/novo', component: NovoBancoComponent, canActivate: [authGuard, profileGuard('Influencer')] },
+
+  // Fornecedor — Hub multi-vertical (landing do Supplier)
+  { path: 'fornecedor', component: HubFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
 
   // Fornecedor Delivery (Supplier)
   { path: 'fornecedor/home', component: HomeFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },

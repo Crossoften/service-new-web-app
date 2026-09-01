@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, QueryList, ViewChildren, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,12 +20,46 @@ export class RedefinirSenhaComponent {
   /** `identifier` (e-mail ou telefone E.164) carregado da tela anterior. */
   identifier: string = (history.state?.identifier as string) ?? '';
   codigo = '';
+  /** Um dígito por caixa do input OTP (6 posições). */
+  digitos: string[] = ['', '', '', '', '', ''];
   senha = '';
   confirmarSenha = '';
   senhaVisivel = false;
   confirmarSenhaVisivel = false;
   erro = '';
   carregando = false;
+
+  @ViewChildren('otp') private otpInputs?: QueryList<ElementRef<HTMLInputElement>>;
+
+  // ── Input OTP (código segmentado) ─────────────────────────────────────────
+
+  onOtpInput(event: Event, i: number) {
+    const input = event.target as HTMLInputElement;
+    const v = input.value.replace(/\D/g, '');
+    this.digitos[i] = v ? v[v.length - 1] : '';
+    input.value = this.digitos[i];
+    this.codigo = this.digitos.join('');
+    if (this.digitos[i] && i < 5) this.focarDigito(i + 1);
+  }
+
+  onOtpKeydown(event: KeyboardEvent, i: number) {
+    if (event.key === 'Backspace' && !this.digitos[i] && i > 0) {
+      this.focarDigito(i - 1);
+    }
+  }
+
+  onOtpPaste(event: ClipboardEvent) {
+    event.preventDefault();
+    const texto = (event.clipboardData?.getData('text') ?? '').replace(/\D/g, '').slice(0, 6);
+    if (!texto) return;
+    for (let i = 0; i < 6; i++) this.digitos[i] = texto[i] ?? '';
+    this.codigo = this.digitos.join('');
+    this.focarDigito(Math.min(texto.length, 5));
+  }
+
+  private focarDigito(i: number) {
+    this.otpInputs?.toArray()[i]?.nativeElement.focus();
+  }
 
   /** Exibição amigável do destino (telefone mascarado ou e-mail). */
   get destinoExibicao(): string {

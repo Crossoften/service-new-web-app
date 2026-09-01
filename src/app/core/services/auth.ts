@@ -23,7 +23,9 @@ import {
 /** Rota inicial por perfil após o login (usa o `profileType` do ResponseLoginDto). */
 const PROFILE_HOME_ROUTES: Record<UserProfileType, string> = {
   Client: '/home',
-  Supplier: '/fornecedor/home',
+  // `Supplier` é multi-vertical (o contrato não distingue tipo de fornecedor):
+  // a landing é o hub, que leva a cada vertical (delivery, serviços, hospedagem…).
+  Supplier: '/fornecedor',
   Delivery: '/entregador/home',
   Influencer: '/parceiro/home',
 };

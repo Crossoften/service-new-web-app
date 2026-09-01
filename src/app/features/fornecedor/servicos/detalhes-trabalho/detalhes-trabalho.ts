@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FornecedorServicosService, TrabalhoFornecedor, StatusTrabalho } from '../../../../core/services/fornecedor-servicos';
+import { of, switchMap } from 'rxjs';
+import { WorkService, TrabalhoFornecedor } from '../../../../core/services/work';
+import { ApiError } from '../../../../core/models/common';
 
 export type StepTrabalho = 'inicial' | 'em_andamento' | 'concluido';
 
@@ -13,73 +15,133 @@ export type StepTrabalho = 'inicial' | 'em_andamento' | 'concluido';
   styleUrl: './detalhes-trabalho.scss'
 })
 export class DetalhesTrabalhoComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly works = inject(WorkService);
+
+  trabalhoId = 0;
   trabalho?: TrabalhoFornecedor;
   stepAtual: StepTrabalho = 'inicial';
-  mostrarModalAcrescimo: boolean = false;
+  mostrarModalAcrescimo = false;
+  processando = false;
+  erro = '';
 
-  // Resposta do fornecedor
-  respostaDescricao: string = '';
-  respostaArquivos = [
-    { id: 1, nome: 'ARQUIVO.PDF', tipo: 'pdf' },
-    { id: 2, nome: 'ARQUIVO.MP3', tipo: 'mp3' },
-    { id: 3, nome: 'ARQUIVO.MP4', tipo: 'mp4' },
-  ];
+  // Resposta do fornecedor (descrição de conclusão)
+  respostaDescricao = '';
+  respostaArquivos: { id: number; nome: string; tipo: string }[] = [];
 
   // Modal acréscimo
-  justificativa: string = '';
-  valorAcrescimo: string = '';
-
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private fornecedorServicosService: FornecedorServicosService
-  ) {}
+  justificativa = '';
+  valorAcrescimo = '';
 
   ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.trabalho = this.fornecedorServicosService.getTrabalho(id);
+    this.trabalhoId = Number(this.route.snapshot.paramMap.get('id'));
+    this.carregar();
+  }
 
-    const step = this.route.snapshot.queryParamMap.get('step') as StepTrabalho;
-    if (step) this.stepAtual = step;
+  private carregar() {
+    this.works.trabalho(this.trabalhoId).subscribe({
+      next: (t) => {
+        this.trabalho = t;
+        this.stepAtual = this.stepDe(t);
+      },
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o trabalho.';
+      },
+    });
+  }
+
+  private stepDe(t: TrabalhoFornecedor): StepTrabalho {
+    switch (t.statusApi) {
+      case 'Pending':
+        return 'inicial';
+      case 'InProgress':
+        return 'em_andamento';
+      default: // Finished, Cancelled
+        return 'concluido';
+    }
   }
 
   iniciarServico() {
+    // Abre o modal que pergunta sobre acréscimo antes de iniciar.
     this.mostrarModalAcrescimo = true;
   }
 
   confirmarAcrescimo() {
-    this.mostrarModalAcrescimo = false;
-    this.stepAtual = 'em_andamento';
-    if (this.trabalho) {
-      this.fornecedorServicosService.atualizarStatusTrabalho(this.trabalho.id, 'em_andamento');
+    if (this.processando) return;
+    this.processando = true;
+    this.erro = '';
+    const valor = Number(this.valorAcrescimo);
+    const description = this.justificativa.trim();
+    const temAcrescimo = description.length > 0 && Number.isFinite(valor) && valor > 0;
+
+    this.works
+      .iniciar(this.trabalhoId)
+      .pipe(
+        switchMap(() =>
+          temAcrescimo
+            ? this.works.solicitarAcrescimo(this.trabalhoId, { description, value: valor })
+            : of(null),
+        ),
+      )
+      .subscribe({
+        next: () => {
+          this.mostrarModalAcrescimo = false;
+          this.processando = false;
+          this.carregar();
+        },
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível iniciar o serviço.';
+          this.processando = false;
+          this.mostrarModalAcrescimo = false;
+        },
+      });
+  }
+
+  /** Envia a conclusão do serviço (finish). */
+  enviarResposta() {
+    if (this.processando) return;
+    const completionDescription = this.respostaDescricao.trim();
+    if (!completionDescription) {
+      this.erro = 'Descreva o serviço executado para finalizar.';
+      return;
     }
+    this.processando = true;
+    this.erro = '';
+    this.works.finalizar(this.trabalhoId, { completionDescription }).subscribe({
+      next: () => this.router.navigate(['/fornecedor/servicos/trabalhos']),
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível finalizar o serviço.';
+        this.processando = false;
+      },
+    });
   }
 
   finalizarServico() {
-    if (this.trabalho) {
-      this.fornecedorServicosService.atualizarStatusTrabalho(this.trabalho.id, 'finalizado');
-    }
+    // Trabalho já concluído — retorna à lista.
     this.router.navigate(['/fornecedor/servicos/trabalhos']);
   }
 
   cancelar() {
-    if (this.trabalho) {
-      this.fornecedorServicosService.atualizarStatusTrabalho(this.trabalho.id, 'cancelado');
-    }
-    this.router.navigate(['/fornecedor/servicos/trabalhos']);
-  }
-
-  enviarResposta() {
-    // Futuramente: enviar resposta ao cliente
-    this.router.navigate(['/fornecedor/servicos/trabalhos']);
+    if (this.processando) return;
+    this.processando = true;
+    this.erro = '';
+    this.works.cancelar(this.trabalhoId, { cancelReason: 'Cancelado pelo fornecedor.' }).subscribe({
+      next: () => this.router.navigate(['/fornecedor/servicos/trabalhos']),
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível cancelar o trabalho.';
+        this.processando = false;
+      },
+    });
   }
 
   adicionarArquivo() {
-    // Futuramente: abrir file picker
+    // Upload de anexos de conclusão em fatia posterior.
   }
 
   abrirChat() {
-    this.router.navigate(['/servicos/chat', this.trabalho?.id]);
+    const chatId = this.trabalho?.chatId;
+    if (chatId) this.router.navigate(['/chat', chatId]);
   }
 
   voltar() {

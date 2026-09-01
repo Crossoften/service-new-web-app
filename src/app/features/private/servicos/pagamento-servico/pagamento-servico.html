@@ -49,21 +49,27 @@
     <div class="pagamento-detalhes">
       <h3 class="pagamento-detalhes__titulo">Detalhes da compra</h3>
       <div class="pagamento-detalhes__linha">
-        <span>Realizado em</span><span>00/00/0000</span>
+        <span>Realizado em</span><span>{{ solicitacao?.realizadoEm || '—' }}</span>
       </div>
       <div class="pagamento-detalhes__linha">
-        <span>Valor serviço</span><span>R$ 00,00</span>
+        <span>Valor serviço</span><span>{{ works.formatarPreco(solicitacao?.valorServico || 0) }}</span>
       </div>
       <div class="pagamento-detalhes__linha pagamento-detalhes__linha--total">
-        <span>Total</span><span>R$ 00,00</span>
+        <span>Total</span><span>{{ works.formatarPreco(solicitacao?.total || 0) }}</span>
       </div>
     </div>
+
+    @if (erro) {
+      <p class="pagamento-erro">{{ erro }}</p>
+    }
 
   </div>
 
   <!-- BOTÃO -->
   <div class="pagamento-actions">
-    <button class="pagamento-btn" (click)="efetuarPagamento()">EFETUAR PAGAMENTO</button>
+    <button class="pagamento-btn" (click)="efetuarPagamento()" [disabled]="processando">
+      {{ processando ? 'PROCESSANDO…' : 'EFETUAR PAGAMENTO' }}
+    </button>
   </div>
 
 </div>

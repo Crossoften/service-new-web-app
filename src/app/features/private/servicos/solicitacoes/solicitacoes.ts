@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ServicosService, Solicitacao, StatusSolicitacao } from '../../../../core/services/servicos';
+import { WorkService, Solicitacao, StatusSolicitacao } from '../../../../core/services/work';
+import { ApiError } from '../../../../core/models/common';
 
 type TabSolicitacao = 'em_andamento' | 'finalizadas' | 'canceladas';
 
@@ -13,8 +14,12 @@ type TabSolicitacao = 'em_andamento' | 'finalizadas' | 'canceladas';
   styleUrl: './solicitacoes.scss'
 })
 export class SolicitacoesComponent implements OnInit {
+  private readonly works = inject(WorkService);
+
   solicitacoes: Solicitacao[] = [];
   tabAtiva: TabSolicitacao = 'em_andamento';
+  carregando = false;
+  erro = '';
 
   tabs: { id: TabSolicitacao; label: string }[] = [
     { id: 'em_andamento', label: 'Em Andamento' },
@@ -22,13 +27,20 @@ export class SolicitacoesComponent implements OnInit {
     { id: 'canceladas',   label: 'Canceladas' },
   ];
 
-  constructor(
-    public router: Router,
-    private servicosService: ServicosService
-  ) {}
+  constructor(public router: Router) {}
 
   ngOnInit() {
-    this.solicitacoes = this.servicosService.getSolicitacoes();
+    this.carregando = true;
+    this.works.minhasSolicitacoes().subscribe({
+      next: (lista) => {
+        this.solicitacoes = lista;
+        this.carregando = false;
+      },
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar as solicitações.';
+        this.carregando = false;
+      },
+    });
   }
 
   get solicitacoesFiltradas(): Solicitacao[] {
@@ -67,17 +79,9 @@ export class SolicitacoesComponent implements OnInit {
   }
 
   abrirDetalhes(solicitacao: Solicitacao) {
-  const stepMap: Record<StatusSolicitacao, string> = {
-    em_andamento: 'em_andamento',
-    em_garantia:  'concluido',
-    finalizada:   'aguardando',
-    cancelada:    'cancelavel'
-  };
-  this.router.navigate(
-    ['/servicos/solicitacao', solicitacao.id],
-    { queryParams: { step: stepMap[solicitacao.status] } }
-  );
+    this.router.navigate(['/servicos/solicitacao', solicitacao.id]);
   }
+
   voltar() {
     history.back();
   }

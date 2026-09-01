@@ -20,10 +20,16 @@
         }
       </div>
 
+      <!-- NOME -->
+      <div class="cs-field">
+        <label>Nome</label>
+        <input type="text" placeholder="Nome do serviço" [(ngModel)]="nome" />
+      </div>
+
       <!-- CATEGORIA -->
       <div class="cs-field">
         <label>Categoria</label>
-        <select [(ngModel)]="categoryId" class="cs-field__disabled">
+        <select [(ngModel)]="categoryId" class="cs-field__categoria">
           <option [ngValue]="undefined" disabled>Selecione…</option>
           @for (c of categorias; track c.id) {
             <option [ngValue]="c.id">{{ c.name }}</option>
