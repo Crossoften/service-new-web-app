@@ -57,7 +57,7 @@ describe('CriarHospedagemComponent', () => {
   it('cadastra a hospedagem com o DTO correto', () => {
     component.categoryId = 3;
     component.nome = 'Pousada Sol';
-    component.preco = 320;
+    component.onPrecoInput('32000');
     component.quartos = 5;
     component.cidade = 'Uberlândia';
     component.salvar();

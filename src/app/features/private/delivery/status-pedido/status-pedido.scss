@@ -236,6 +236,16 @@
     border: 2px solid #dc2626;
     margin-bottom: 10px;
   }
+
+  &--pagar {
+    background: #16A34A;
+    margin-bottom: 10px;
+  }
+}
+
+.status-pago {
+  color: #16A34A;
+  font-weight: 700;
 }
 
 .status-loading,

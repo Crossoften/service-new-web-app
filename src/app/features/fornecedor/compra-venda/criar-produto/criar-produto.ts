@@ -8,6 +8,7 @@ import { ApiService } from '../../../../core/services/api';
 import { ProductCategoryDto } from '../../../../core/models/product';
 import { ProductTransactionType } from '../../../../core/models/enums';
 import { ApiError } from '../../../../core/models/common';
+import { formatBRL, maskBRL, parseBRL } from '../../../../core/utils/currency';
 
 @Component({
   selector: 'app-criar-produto',
@@ -23,6 +24,7 @@ export class CriarProdutoComponent implements OnInit {
 
   editId?: number;
   categorias: ProductCategoryDto[] = [];
+  categoriasCarregadas = false;
 
   categoryId?: number;
   /** Fixo em 'Sale' ao criar; preservado ao editar (ex.: RentAndSale). */
@@ -30,7 +32,7 @@ export class CriarProdutoComponent implements OnInit {
   nome = '';
   modelo = '';
   ano?: number;
-  preco?: number;
+  preco = '';
   descricao = '';
   imageUrl = '';
   imageKey = '';
@@ -45,8 +47,11 @@ export class CriarProdutoComponent implements OnInit {
     this.editId = id ? Number(id) : undefined;
 
     this.marketplace.categorias().subscribe({
-      next: (cats) => (this.categorias = cats),
-      error: () => {},
+      next: (cats) => {
+        this.categorias = cats;
+        this.categoriasCarregadas = true;
+      },
+      error: () => (this.categoriasCarregadas = true),
     });
 
     if (this.editId) {
@@ -61,7 +66,7 @@ export class CriarProdutoComponent implements OnInit {
             this.nome = p.name;
             this.modelo = p.model ?? '';
             this.ano = p.year;
-            this.preco = Number(p.price);
+            this.preco = formatBRL(Number(p.price));
             this.descricao = p.description ?? '';
             this.imageUrl = p.imageUrl ?? '';
             this.imageKey = p.imageKey ?? '';
@@ -71,6 +76,10 @@ export class CriarProdutoComponent implements OnInit {
           },
         });
     }
+  }
+
+  get semCategorias(): boolean {
+    return this.categoriasCarregadas && this.categorias.length === 0;
   }
 
   get titulo(): string {
@@ -101,6 +110,10 @@ export class CriarProdutoComponent implements OnInit {
       });
   }
 
+  onPrecoInput(valor: string) {
+    this.preco = maskBRL(valor);
+  }
+
   salvar() {
     if (this.salvando) return;
     this.erro = '';
@@ -112,7 +125,8 @@ export class CriarProdutoComponent implements OnInit {
       this.erro = 'Informe o nome do produto.';
       return;
     }
-    if (this.preco === undefined || this.preco === null || this.preco < 0) {
+    const precoNum = parseBRL(this.preco);
+    if (!precoNum || precoNum <= 0) {
       this.erro = 'Informe um preço válido.';
       return;
     }
@@ -123,7 +137,7 @@ export class CriarProdutoComponent implements OnInit {
       name: this.nome.trim(),
       model: this.modelo.trim() || undefined,
       year: this.ano || undefined,
-      price: this.preco,
+      price: precoNum,
       description: this.descricao.trim() || undefined,
       imageUrl: this.imageUrl || undefined,
       imageKey: this.imageKey || undefined,

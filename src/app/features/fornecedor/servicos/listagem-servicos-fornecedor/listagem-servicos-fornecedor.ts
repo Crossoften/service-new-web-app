@@ -54,6 +54,13 @@ export class ListagemServicosFornecedorComponent implements OnInit {
     this.carregarServicos();
   }
 
+  formatarPreco(valor: number): string {
+    return (Number.isFinite(valor) ? valor : 0).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
+  }
+
   adicionar() {
     this.router.navigate(['/fornecedor/servicos/criar']);
   }

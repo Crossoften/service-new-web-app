@@ -43,7 +43,8 @@
       <!-- VALOR -->
       <div class="add-field">
         <label>Valor (R$)</label>
-        <input type="number" placeholder="Valor (R$)" [(ngModel)]="valor" />
+        <input type="text" inputmode="numeric" placeholder="R$ 0,00"
+          [ngModel]="valor" (ngModelChange)="onValorInput($event)" />
       </div>
 
       <!-- CATEGORIA -->
@@ -78,16 +79,20 @@
       <!-- IMAGEM -->
       <div class="add-field">
         <label>Imagem</label>
-        <div class="add-field__arquivo" (click)="selecionarArquivo()">
-          <span>{{ arquivo || 'Arquivo' }}</span>
-          <button class="add-field__arquivo-btn">
+        <label class="add-field__arquivo">
+          @if (arquivo) {
+            <img class="add-field__preview" [src]="arquivo" alt="Imagem do item" />
+          }
+          <span>{{ enviandoFoto ? 'Enviando…' : (arquivo ? 'Trocar imagem' : 'Escolher imagem') }}</span>
+          <span class="add-field__arquivo-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
               <polyline points="8 12 12 16 16 12"/>
               <line x1="12" y1="8" x2="12" y2="16"/>
             </svg>
-          </button>
-        </div>
+          </span>
+          <input type="file" accept="image/png,image/jpeg" (change)="selecionarArquivo($event)" hidden />
+        </label>
       </div>
 
       @if (erro) {

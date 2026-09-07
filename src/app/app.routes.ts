@@ -66,6 +66,8 @@ import { ListagemTransporteFornecedorComponent } from './features/fornecedor/tra
 import { CriarTransporteComponent } from './features/fornecedor/transporte/criar-transporte/criar-transporte';
 import { ListagemAluguelFornecedorComponent } from './features/fornecedor/aluguel/listagem-aluguel-fornecedor/listagem-aluguel-fornecedor';
 import { CriarAluguelFornecedorComponent } from './features/fornecedor/aluguel/criar-aluguel-fornecedor/criar-aluguel-fornecedor';
+import { MercadoPagoFornecedorComponent } from './features/fornecedor/mercado-pago/mercado-pago-fornecedor/mercado-pago-fornecedor';
+import { MercadoPagoCallbackComponent } from './features/fornecedor/mercado-pago/mercado-pago-callback/mercado-pago-callback';
 import { NegociacoesComponent } from './features/marketplace/negociacoes/negociacoes';
 import { NegociacaoDetalheComponent } from './features/marketplace/negociacao-detalhe/negociacao-detalhe';
 import { ListagemAluguelComponent } from './features/aluguel/listagem-aluguel/listagem-aluguel';
@@ -169,6 +171,10 @@ export const routes: Routes = [
   // Fornecedor Aluguel (produtos com transactionType Rent / RentAndSale)
   { path: 'fornecedor/aluguel', component: ListagemAluguelFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/aluguel/criar', component: CriarAluguelFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+
+  // Fornecedor — conta de recebimento (Mercado Pago OAuth)
+  { path: 'fornecedor/mercado-pago', component: MercadoPagoFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/mercado-pago/callback', component: MercadoPagoCallbackComponent, canActivate: [authGuard, profileGuard('Supplier')] },
 
   // Fornecedor Compra e Venda
   //{ path: 'fornecedor/compra-venda/produtos', component: ListagemProdutosComponent },

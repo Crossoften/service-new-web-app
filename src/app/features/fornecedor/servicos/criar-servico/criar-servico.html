@@ -69,7 +69,8 @@
       <!-- VALOR -->
       <div class="cs-field">
         <label>Valor</label>
-        <input type="number" placeholder="00,00" [(ngModel)]="valor" />
+        <input type="text" inputmode="numeric" placeholder="R$ 0,00"
+          [ngModel]="valor" (ngModelChange)="onValorInput($event)" />
       </div>
 
       <!-- DESCRIÇÃO -->

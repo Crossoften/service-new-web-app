@@ -1,22 +1,29 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
 
-import { BottomNavFornecedorServicos } from './bottom-nav-fornecedor-servicos';
+import { BottomNavFornecedorServicosComponent } from './bottom-nav-fornecedor-servicos';
 
-describe('BottomNavFornecedorServicos', () => {
-  let component: BottomNavFornecedorServicos;
-  let fixture: ComponentFixture<BottomNavFornecedorServicos>;
+describe('BottomNavFornecedorServicosComponent', () => {
+  let component: BottomNavFornecedorServicosComponent;
+  let fixture: ComponentFixture<BottomNavFornecedorServicosComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [BottomNavFornecedorServicos],
+      imports: [BottomNavFornecedorServicosComponent],
+      providers: [provideRouter([])],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(BottomNavFornecedorServicos);
+    fixture = TestBed.createComponent(BottomNavFornecedorServicosComponent);
     component = fixture.componentInstance;
-    await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('Categorias leva ao hub do fornecedor (/fornecedor)', () => {
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component.navegar('categorias');
+    expect(nav).toHaveBeenCalledWith(['/fornecedor']);
   });
 });

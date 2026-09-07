@@ -45,20 +45,27 @@
             } @else {
               <div class="lsf-card__foto-placeholder">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
                 </svg>
               </div>
             }
           </div>
 
           <div class="lsf-card__info">
-            <span class="lsf-card__nome">Joelson Silva</span>
-            <span class="lsf-card__categoria">● Cliente</span>
-            <span class="lsf-card__descricao">{{ servico.descricao }}</span>
+            <span class="lsf-card__nome">{{ servico.nome }}</span>
+            <span class="lsf-card__categoria">● {{ servico.categoria }} · {{ servico.tipo }}</span>
+            @if (servico.descricao) {
+              <span class="lsf-card__descricao">{{ servico.descricao }}</span>
+            }
+            <span class="lsf-card__preco">{{ formatarPreco(servico.valor) }}</span>
             <div class="lsf-card__stats">
-              <span class="lsf-card__stat lsf-card__stat--like">👍 80</span>
-              <span class="lsf-card__stat lsf-card__stat--dislike">👎 20</span>
+              <span class="lsf-card__stat lsf-card__stat--like">👍 {{ servico.avaliacoesPositivas }}</span>
+              <span class="lsf-card__stat lsf-card__stat--dislike">👎 {{ servico.avaliacoesNegativas }}</span>
+              @if (servico.trabalhosConcluidos) {
+                <span class="lsf-card__stat">✅ {{ servico.trabalhosConcluidos }}</span>
+              }
             </div>
           </div>
 

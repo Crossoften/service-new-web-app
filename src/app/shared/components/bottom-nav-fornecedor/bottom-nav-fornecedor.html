@@ -17,13 +17,13 @@
     <span>Cardápio</span>
   </div>
 
-  <div class="nav-item" [class.nav-item--ativo]="tabAtiva === 'pedidos'" (click)="navegar('pedidos')">
+  <div class="nav-item" [class.nav-item--ativo]="tabAtiva === 'restaurante'" (click)="navegar('restaurante')">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-      <line x1="3" y1="6" x2="21" y2="6"/>
-      <path d="M16 10a4 4 0 0 1-8 0"/>
+      <path d="M3 9l1-5h16l1 5"/>
+      <path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/>
+      <path d="M9 21v-6h6v6"/>
     </svg>
-    <span>Pedidos</span>
+    <span>Restaurante</span>
   </div>
 
   <div class="nav-item" [class.nav-item--ativo]="tabAtiva === 'perfil'" (click)="navegar('perfil')">
@@ -34,12 +34,12 @@
     <span>Perfil</span>
   </div>
 
-  <div class="nav-item" [class.nav-item--ativo]="tabAtiva === 'mais'" (click)="navegar('mais')">
+  <div class="nav-item" [class.nav-item--ativo]="tabAtiva === 'categorias'" (click)="navegar('categorias')">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
       <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
     </svg>
-    <span>Mais</span>
+    <span>Categorias</span>
   </div>
 
 </div>

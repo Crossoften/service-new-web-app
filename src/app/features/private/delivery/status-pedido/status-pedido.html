@@ -104,6 +104,12 @@
           <span>Total</span>
           <span>{{ fmt(pedido.totalValue) }}</span>
         </div>
+        @if (pagamentoLabel) {
+          <div class="status-detalhes__linha">
+            <span>Pagamento</span>
+            <span [class.status-pago]="pedido.paymentStatus === 'Paid'">{{ pagamentoLabel }}</span>
+          </div>
+        }
       </div>
 
       @if (erro) {
@@ -116,6 +122,11 @@
 
   <!-- AÇÕES -->
   <div class="status-actions">
+    @if (podePagar) {
+      <button class="status-btn status-btn--pagar" (click)="pagar()" [disabled]="pagando">
+        {{ pagando ? 'REDIRECIONANDO…' : 'PAGAR AGORA' }}
+      </button>
+    }
     @if (podeCancelar) {
       <button class="status-btn status-btn--cancel" (click)="cancelar()" [disabled]="cancelando">
         {{ cancelando ? 'CANCELANDO…' : 'CANCELAR PEDIDO' }}

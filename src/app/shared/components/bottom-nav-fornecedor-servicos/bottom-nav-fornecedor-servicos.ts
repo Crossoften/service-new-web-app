@@ -2,7 +2,7 @@ import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
-export type TabFornecedorServicos = 'home' | 'trabalhos' | 'orcamentos' | 'perfil' | 'mais';
+export type TabFornecedorServicos = 'home' | 'trabalhos' | 'orcamentos' | 'perfil' | 'categorias';
 
 @Component({
   selector: 'app-bottom-nav-fornecedor-servicos',
@@ -21,7 +21,7 @@ export class BottomNavFornecedorServicosComponent {
       trabalhos:  '/fornecedor/servicos/trabalhos',
       orcamentos: '/fornecedor/servicos/orcamentos',
       perfil:     '/fornecedor/servicos/perfil',
-      mais:       '/fornecedor/servicos/mais',
+      categorias: '/fornecedor',
     };
     this.router.navigate([rotas[tab]]);
   }

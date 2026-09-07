@@ -6,7 +6,9 @@ import {
   CategoriaCardapioFornecedor,
   FornecedorService,
 } from '../../../core/services/fornecedor';
+import { ApiService } from '../../../core/services/api';
 import { ApiError } from '../../../core/models/common';
+import { formatBRL, maskBRL, parseBRL } from '../../../core/utils/currency';
 
 @Component({
   selector: 'app-add-cardapio',
@@ -18,6 +20,7 @@ export class AddCardapioComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fornecedorService = inject(FornecedorService);
+  private readonly api = inject(ApiService);
 
   modoEdicao = false;
   itemId?: number;
@@ -28,6 +31,7 @@ export class AddCardapioComponent implements OnInit {
   arquivo = '';
   erro = '';
   salvando = false;
+  enviandoFoto = false;
 
   categorias: CategoriaCardapioFornecedor[] = [];
   categoriaSelecionadaId: number | null = null;
@@ -53,7 +57,7 @@ export class AddCardapioComponent implements OnInit {
           if (item) {
             this.nome = item.nome;
             this.descricao = item.descricao;
-            this.valor = item.valor.toString();
+            this.valor = formatBRL(Number(item.valor));
             this.categoriaSelecionadaId = item.categoriaId ?? this.categoriaSelecionadaId;
             this.arquivo = item.imagem;
           }
@@ -75,8 +79,27 @@ export class AddCardapioComponent implements OnInit {
     this.categoriaAberta = false;
   }
 
-  selecionarArquivo() {
-    // Futuramente: upload via /upload/one-file → imageUrl/imageKey
+  /** Máscara de moeda enquanto o usuário digita (trata a entrada como centavos). */
+  onValorInput(valor: string) {
+    this.valor = maskBRL(valor);
+  }
+
+  selecionarArquivo(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.enviandoFoto = true;
+    this.erro = '';
+    this.api.uploadOne(file).subscribe({
+      next: (res) => {
+        this.enviandoFoto = false;
+        this.arquivo = res.fileUrl;
+      },
+      error: (err: ApiError) => {
+        this.enviandoFoto = false;
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível enviar a imagem.';
+      },
+    });
   }
 
   salvar() {
@@ -89,7 +112,8 @@ export class AddCardapioComponent implements OnInit {
       this.erro = 'Informe a descrição.';
       return;
     }
-    if (!this.valor || isNaN(Number(this.valor))) {
+    const valorNum = parseBRL(this.valor);
+    if (!valorNum || valorNum <= 0) {
       this.erro = 'Informe um valor válido.';
       return;
     }
@@ -103,21 +127,21 @@ export class AddCardapioComponent implements OnInit {
     this.salvando = true;
     if (nova) {
       this.fornecedorService.criarCategoria({ name: nova }).subscribe({
-        next: (cat) => this.persistirItem(cat.id),
+        next: (cat) => this.persistirItem(cat.id, valorNum),
         error: (err: ApiError) => this.falhar(err, 'Não foi possível criar a categoria.'),
       });
     } else {
-      this.persistirItem(this.categoriaSelecionadaId as number);
+      this.persistirItem(this.categoriaSelecionadaId as number, valorNum);
     }
   }
 
-  private persistirItem(categoriaId: number) {
+  private persistirItem(categoriaId: number, valor: number) {
     this.fornecedorService
       .salvarItem({
         id: this.itemId,
         nome: this.nome.trim(),
         descricao: this.descricao.trim(),
-        valor: Number(this.valor),
+        valor,
         categoriaId,
         imagem: this.arquivo || undefined,
       })

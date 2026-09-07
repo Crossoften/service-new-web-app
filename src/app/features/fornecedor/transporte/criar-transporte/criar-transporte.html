@@ -25,6 +25,9 @@
               <option [ngValue]="c.id">{{ c.name }}</option>
             }
           </select>
+          @if (semCategorias) {
+            <span class="ct-erro">Nenhuma categoria disponível no momento. Contate o administrador.</span>
+          }
         </div>
 
         <!-- NOME -->
@@ -60,7 +63,8 @@
         <!-- VALOR -->
         <div class="ct-field">
           <label>Valor (R$)</label>
-          <input type="number" placeholder="0,00" [(ngModel)]="preco" />
+          <input type="text" inputmode="numeric" placeholder="R$ 0,00"
+              [ngModel]="preco" (ngModelChange)="onPrecoInput($event)" />
         </div>
 
         <!-- DESCRIÇÃO -->

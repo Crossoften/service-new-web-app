@@ -10,6 +10,7 @@ import {
   TransportationCategoryDto,
 } from '../../../../core/models/transportation';
 import { ApiError } from '../../../../core/models/common';
+import { formatBRL, maskBRL, parseBRL } from '../../../../core/utils/currency';
 
 @Component({
   selector: 'app-criar-transporte',
@@ -25,10 +26,11 @@ export class CriarTransporteComponent implements OnInit {
 
   editId?: number;
   categorias: TransportationCategoryDto[] = [];
+  categoriasCarregadas = false;
 
   categoryId?: number;
   nome = '';
-  preco?: number;
+  preco = '';
   modelo = '';
   ano?: number;
   quilometragem?: number;
@@ -45,8 +47,11 @@ export class CriarTransporteComponent implements OnInit {
 
   ngOnInit() {
     this.service.categorias().subscribe({
-      next: (cats) => (this.categorias = cats),
-      error: () => {},
+      next: (cats) => {
+        this.categorias = cats;
+        this.categoriasCarregadas = true;
+      },
+      error: () => (this.categoriasCarregadas = true),
     });
 
     const id = this.route.snapshot.queryParamMap.get('id');
@@ -60,7 +65,7 @@ export class CriarTransporteComponent implements OnInit {
           next: (t) => {
             this.categoryId = t.categoryId;
             this.nome = t.name;
-            this.preco = Number(t.price);
+            this.preco = formatBRL(Number(t.price));
             this.modelo = t.model ?? '';
             this.ano = t.year;
             this.quilometragem = t.mileageKm;
@@ -75,6 +80,10 @@ export class CriarTransporteComponent implements OnInit {
           },
         });
     }
+  }
+
+  get semCategorias(): boolean {
+    return this.categoriasCarregadas && this.categorias.length === 0;
   }
 
   get titulo(): string {
@@ -101,6 +110,10 @@ export class CriarTransporteComponent implements OnInit {
       });
   }
 
+  onPrecoInput(valor: string) {
+    this.preco = maskBRL(valor);
+  }
+
   salvar() {
     if (this.salvando) return;
     this.erro = '';
@@ -112,7 +125,8 @@ export class CriarTransporteComponent implements OnInit {
       this.erro = 'Informe o nome do transporte.';
       return;
     }
-    if (this.preco === undefined || this.preco === null || isNaN(Number(this.preco)) || Number(this.preco) < 0) {
+    const precoNum = parseBRL(this.preco);
+    if (!precoNum || precoNum <= 0) {
       this.erro = 'Informe um valor válido.';
       return;
     }
@@ -120,7 +134,7 @@ export class CriarTransporteComponent implements OnInit {
     const dto: CreateTransportationDto = {
       categoryId: this.categoryId,
       name: this.nome.trim(),
-      price: Number(this.preco),
+      price: precoNum,
       model: this.modelo.trim() || undefined,
       year: this.ano ?? undefined,
       mileageKm: this.quilometragem ?? undefined,

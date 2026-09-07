@@ -1,0 +1,16 @@
+<div class="page-container">
+  <div class="mpc-content">
+    @if (processando) {
+      <div class="mpc-box">
+        <div class="mpc-spinner"></div>
+        <p class="mpc-texto">Conectando sua conta do Mercado Pago…</p>
+      </div>
+    } @else if (erro) {
+      <div class="mpc-box">
+        <div class="mpc-icone mpc-icone--erro">!</div>
+        <p class="mpc-texto">{{ erro }}</p>
+        <button class="mpc-btn" (click)="tentarNovamente()">VOLTAR</button>
+      </div>
+    }
+  </div>
+</div>

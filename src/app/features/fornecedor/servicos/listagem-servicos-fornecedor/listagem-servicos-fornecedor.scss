@@ -79,9 +79,9 @@
   &:active { opacity: 0.8; }
 
   &__foto {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
     overflow: hidden;
     background: var(--color-gray-100);
     flex-shrink: 0;
@@ -120,6 +120,13 @@
   &__descricao {
     font-size: 12px;
     color: var(--color-gray-600);
+  }
+
+  &__preco {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-top: 2px;
   }
 
   &__stats {

@@ -57,7 +57,7 @@ describe('CriarTransporteComponent', () => {
   it('cadastra o transporte com o DTO correto', () => {
     component.categoryId = 3;
     component.nome = 'Caminhão baú';
-    component.preco = 85000;
+    component.onPrecoInput('8500000');
     component.modelo = 'Delivery 11.180';
     component.ano = 2016;
     component.capacidade = 8;

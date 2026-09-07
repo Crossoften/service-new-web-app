@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 
@@ -22,5 +22,11 @@ describe('PerfilComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('irContaRecebimento() leva ao vínculo do Mercado Pago', () => {
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component.irContaRecebimento();
+    expect(nav).toHaveBeenCalledWith(['/fornecedor/mercado-pago']);
   });
 });

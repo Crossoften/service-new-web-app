@@ -44,7 +44,7 @@ describe('CriarAluguelFornecedorComponent', () => {
     setup();
     component.categoryId = 3;
     component.nome = 'Furadeira';
-    component.preco = 50;
+    component.onPrecoInput('5000');
     component.salvar();
     const req = httpMock.expectOne((r) => r.url.endsWith('/products') && r.method === 'POST');
     expect(req.request.body.transactionType).toBe('Rent');

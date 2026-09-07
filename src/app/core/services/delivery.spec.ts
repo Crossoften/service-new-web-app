@@ -48,4 +48,11 @@ describe('DeliveryService', () => {
     expect(req.request.body.paymentMethod).toBe('DebitCard');
     req.flush({ message: 'ok', foodOrder: { id: 2 } });
   });
+
+  it('pagarPedido chama POST /food-orders/:id/pay', () => {
+    service.pagarPedido(9, 'cliente@example.com').subscribe();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/food-orders/9/pay') && r.method === 'POST');
+    expect(req.request.body.payerEmail).toBe('cliente@example.com');
+    req.flush({ message: 'ok', checkoutUrl: 'https://mp/checkout', foodOrder: { id: 9 } });
+  });
 });

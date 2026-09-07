@@ -61,7 +61,7 @@ describe('CriarServicoComponent', () => {
   it('cria o serviço mapeando o tipo (Presencial → Presential)', () => {
     component.categoryId = 3;
     component.nome = 'Reforma';
-    component.valor = '150';
+    component.onValorInput('15000');
     component.tipo = 'Presencial';
     component.criarServico();
     const req = httpMock.expectOne((r) => r.url.endsWith('/services') && r.method === 'POST');

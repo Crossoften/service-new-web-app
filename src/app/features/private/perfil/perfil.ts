@@ -220,6 +220,10 @@ export class PerfilComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
+  irContaRecebimento() {
+    this.router.navigate(['/fornecedor/mercado-pago']);
+  }
+
   voltar() {
     history.back();
   }

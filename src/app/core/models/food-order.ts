@@ -105,6 +105,13 @@ export interface CreateFoodOrderResponseDto {
   foodOrder: ResponseFoodOrderDto;
 }
 
+/** Retorno de `POST /v1/food-orders/{id}/pay` (checkout Mercado Pago). */
+export interface PayFoodOrderResponseDto {
+  message: string;
+  checkoutUrl: string;
+  foodOrder: ResponseFoodOrderDto;
+}
+
 /** Retorno paginado de `GET /v1/food-orders`. */
 export interface ResponseFindAllFoodOrderDto {
   foodOrders: ResponseFoodOrderDto[];

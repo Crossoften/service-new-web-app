@@ -41,11 +41,18 @@ describe('CriarProdutoComponent', () => {
     httpMock.expectNone((r) => r.url.endsWith('/products'));
   });
 
+  it('sinaliza ausência de categorias (semCategorias)', () => {
+    setup(); // o setup faz flush de [] em /products/categories
+    expect(component.semCategorias).toBe(true);
+    component.categorias = [{ id: 1, name: 'Veículos' } as never];
+    expect(component.semCategorias).toBe(false);
+  });
+
   it('envia CreateProductDto travado em Venda (Sale) no POST /products', () => {
     setup();
     component.categoryId = 3;
     component.nome = 'Fiat';
-    component.preco = 45000;
+    component.onPrecoInput('4500000');
     component.salvar();
     const req = httpMock.expectOne((r) => r.url.endsWith('/products') && r.method === 'POST');
     expect(req.request.body.categoryId).toBe(3);

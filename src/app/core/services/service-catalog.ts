@@ -28,6 +28,9 @@ export interface ServicoFornecedor {
   imageKey?: string;
   ativo: boolean;
   bloqueado: boolean;
+  avaliacoesPositivas: number;
+  avaliacoesNegativas: number;
+  trabalhosConcluidos: number;
 }
 
 /** Rótulos pt ↔ ServiceType da API. */
@@ -149,6 +152,9 @@ export class ServiceCatalogService {
       imageKey: (s as ServiceDto).imageKey,
       ativo: s.isActive,
       bloqueado: false,
+      avaliacoesPositivas: s.positiveReviews ?? 0,
+      avaliacoesNegativas: s.negativeReviews ?? 0,
+      trabalhosConcluidos: s.completedWorks ?? 0,
     };
   }
 

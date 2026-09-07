@@ -4,6 +4,11 @@ import { CommonModule } from '@angular/common';
 import { DeliveryService, Pedido } from '../../../../core/services/delivery';
 import { ApiError } from '../../../../core/models/common';
 
+/** Identifica o 400 de "restaurante ainda não vinculou o Mercado Pago". */
+function restauranteSemMercadoPago(err: ApiError): boolean {
+  return err?.status === 400 && /mercado\s*pago|vinculou/i.test(err?.message ?? '');
+}
+
 @Component({
   selector: 'app-revisao-pedido',
   imports: [CommonModule],
@@ -17,6 +22,8 @@ export class RevisaoPedidoComponent implements OnInit {
   pedido?: Partial<Pedido>;
   enviando = false;
   erro = '';
+  /** Restaurante não aceita pagamento online → oferecer finalizar em dinheiro. */
+  sugerirDinheiro = false;
 
   ngOnInit() {
     this.pedido = this.deliveryService.getPedidoAtual();
@@ -40,6 +47,7 @@ export class RevisaoPedidoComponent implements OnInit {
       return;
     }
     this.erro = '';
+    this.sugerirDinheiro = false;
     this.enviando = true;
     this.deliveryService.criarPedido().subscribe({
       next: (res) => {
@@ -48,9 +56,23 @@ export class RevisaoPedidoComponent implements OnInit {
       },
       error: (err: ApiError) => {
         this.enviando = false;
-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível finalizar o pedido.';
+        if (restauranteSemMercadoPago(err) && this.pedido?.formaPagamento !== 'dinheiro') {
+          // O restaurante ainda não aceita pagamento online. Ofereça a saída em dinheiro.
+          this.sugerirDinheiro = true;
+          this.erro = 'Este restaurante ainda não aceita pagamento online. Você pode finalizar pagando em dinheiro na entrega.';
+        } else {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível finalizar o pedido.';
+        }
       },
     });
+  }
+
+  /** Troca a forma para dinheiro e refaz o pedido — saída para o restaurante sem Mercado Pago. */
+  pagarEmDinheiro() {
+    this.deliveryService.setFormaPagamento('dinheiro');
+    this.sugerirDinheiro = false;
+    this.erro = '';
+    this.finalizarPedido();
   }
 
   voltar() {

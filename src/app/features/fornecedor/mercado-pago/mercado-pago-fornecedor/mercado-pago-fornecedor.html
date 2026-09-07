@@ -1,0 +1,50 @@
+<div class="page-container">
+
+  <div class="mp-header">
+    <button class="mp-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="mp-header__titulo">Conta de recebimento</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="mp-msg">Verificando vínculo…</p>
+    } @else {
+      <div class="mp-box">
+        <div class="mp-box__icone">💳</div>
+
+        @if (status?.isLinked) {
+          <span class="mp-box__badge mp-box__badge--ok">● Conta conectada</span>
+          <p class="mp-box__texto">
+            Sua conta do Mercado Pago está vinculada. Você já pode receber pagamentos online dos
+            pedidos dos clientes.
+          </p>
+          @if (status?.mpUserId) {
+            <p class="mp-box__detalhe">ID do vendedor: <strong>{{ status?.mpUserId }}</strong></p>
+          }
+          @if (status?.linkedAt) {
+            <p class="mp-box__detalhe">Vinculada em {{ status?.linkedAt | date: 'dd/MM/yyyy' }}</p>
+          }
+        } @else {
+          <span class="mp-box__badge mp-box__badge--off">● Não conectada</span>
+          <p class="mp-box__texto">
+            Conecte sua conta do Mercado Pago para receber pagamentos online (cartão, Pix e boleto).
+            A plataforma apenas intermedia — nenhum dado do seu cartão é armazenado aqui.
+          </p>
+          <button class="mp-btn" (click)="conectar()" [disabled]="conectando">
+            {{ conectando ? 'REDIRECIONANDO…' : 'CONECTAR MERCADO PAGO' }}
+          </button>
+        }
+
+        @if (erro) {
+          <span class="mp-erro">{{ erro }}</span>
+        }
+      </div>
+    }
+  </div>
+
+</div>

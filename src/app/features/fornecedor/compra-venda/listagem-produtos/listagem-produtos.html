@@ -8,15 +8,7 @@
       </svg>
     </button>
     <span class="lp-header__titulo">{{ titulo }}</span>
-    @if (mine) {
-      <button class="lp-header__novo" (click)="novoProduto()" aria-label="Novo produto">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-      </button>
-    } @else {
-      <div style="width: 22px"></div>
-    }
+    <div style="width: 22px"></div>
   </div>
 
   <!-- BUSCA -->
@@ -66,5 +58,14 @@
       </div>
     }
   </div>
+
+  <!-- FAB (padrão das demais categorias) -->
+  @if (mine) {
+    <button class="lp-fab" (click)="novoProduto()" aria-label="Novo produto">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  }
 
 </div>

@@ -42,6 +42,7 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
   carregando = true;
   erro = '';
   cancelando = false;
+  pagando = false;
 
   etapas: EtapaStatus[] = [
     { id: 'recebido', label: 'Pedido recebido' },
@@ -112,6 +113,52 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
 
   get rastreando(): boolean {
     return this.status === 'OnTheWay' && !!this.pedido?.delivery?.currentLat;
+  }
+
+  /** Pagamento online só faz sentido para pedido não-dinheiro ainda pendente e não cancelado. */
+  get podePagar(): boolean {
+    return (
+      !!this.pedido &&
+      this.pedido.paymentMethod !== 'Cash' &&
+      this.pedido.paymentStatus === 'Pending' &&
+      !this.cancelado
+    );
+  }
+
+  get pagamentoLabel(): string {
+    switch (this.pedido?.paymentStatus) {
+      case 'Paid':
+        return 'Pago';
+      case 'Cancelled':
+        return 'Pagamento cancelado';
+      case 'Pending':
+        return this.pedido?.paymentMethod === 'Cash' ? 'Na entrega' : 'Aguardando pagamento';
+      default:
+        return '';
+    }
+  }
+
+  pagar() {
+    if (this.pagando || !this.podePagar) return;
+    this.pagando = true;
+    this.erro = '';
+    this.deliveryService.pagarPedido(this.pedidoId).subscribe({
+      next: (res) => {
+        // Leva o cliente ao checkout do Mercado Pago. A confirmação chega por webhook;
+        // ao voltar, o polling reconsulta o pedido e o paymentStatus vira `Paid`.
+        window.location.href = res.checkoutUrl;
+      },
+      error: (err: ApiError) => {
+        this.pagando = false;
+        // Travas do back (checkout em aberto, já pago, cancelado, restaurante sem MP):
+        // mostra a mensagem da API e reconsulta para atualizar o estado da tela.
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível iniciar o pagamento.';
+        this.deliveryService.getPedido(this.pedidoId).subscribe({
+          next: (p) => (this.pedido = p),
+          error: () => {},
+        });
+      },
+    });
   }
 
   cancelar() {

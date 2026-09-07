@@ -13,6 +13,7 @@ import { ApiMessage } from '../models/common';
 import {
   CreateFoodOrderDto,
   CreateFoodOrderResponseDto,
+  PayFoodOrderResponseDto,
   ResponseFindAllFoodOrderDto,
   ResponseFoodOrderDto,
 } from '../models/food-order';
@@ -225,6 +226,18 @@ export class DeliveryService {
     return this.api
       .get<ResponseFindAllFoodOrderDto>('/food-orders', { status: status ?? null, take: 50 })
       .pipe(map((res) => res.foodOrders ?? []));
+  }
+
+  /**
+   * Gera o checkout de pagamento (Mercado Pago) de um pedido não-dinheiro —
+   * `POST /v1/food-orders/{id}/pay`. A confirmação vem depois, via webhook: o
+   * front leva o cliente à `checkoutUrl` e reconsulta o pedido para ver `Paid`.
+   */
+  pagarPedido(id: number, payerEmail?: string): Observable<PayFoodOrderResponseDto> {
+    return this.api.post<PayFoodOrderResponseDto>(
+      `/food-orders/${id}/pay`,
+      payerEmail ? { payerEmail } : {},
+    );
   }
 
   /** Cancela um pedido — `PATCH /v1/food-orders/{id}/cancel`. */

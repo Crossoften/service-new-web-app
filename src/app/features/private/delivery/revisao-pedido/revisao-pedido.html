@@ -130,9 +130,15 @@
     @if (erro) {
       <span class="revisao-erro">{{ erro }}</span>
     }
-    <button class="revisao-btn" (click)="finalizarPedido()" [disabled]="enviando">
-      {{ enviando ? 'FINALIZANDO…' : 'FINALIZAR PEDIDO' }}
-    </button>
+    @if (sugerirDinheiro) {
+      <button class="revisao-btn revisao-btn--dinheiro" (click)="pagarEmDinheiro()" [disabled]="enviando">
+        {{ enviando ? 'FINALIZANDO…' : 'PAGAR EM DINHEIRO NA ENTREGA' }}
+      </button>
+    } @else {
+      <button class="revisao-btn" (click)="finalizarPedido()" [disabled]="enviando">
+        {{ enviando ? 'FINALIZANDO…' : 'FINALIZAR PEDIDO' }}
+      </button>
+    }
   </div>
 
 </div>

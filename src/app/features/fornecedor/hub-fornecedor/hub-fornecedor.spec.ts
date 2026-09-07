@@ -46,4 +46,5 @@ describe('HubFornecedorComponent', () => {
     component.irPerfil();
     expect(nav).toHaveBeenCalledWith(['/fornecedor/perfil']);
   });
+
 });

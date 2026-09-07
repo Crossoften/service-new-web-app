@@ -7,6 +7,7 @@ import { ServiceCatalogService } from '../../../../core/services/service-catalog
 import { ApiService } from '../../../../core/services/api';
 import { ServiceCategoryDto } from '../../../../core/models/service';
 import { ApiError } from '../../../../core/models/common';
+import { formatBRL, maskBRL, parseBRL } from '../../../../core/utils/currency';
 
 @Component({
   selector: 'app-criar-servico',
@@ -56,7 +57,7 @@ export class CriarServicoComponent implements OnInit {
           this.nome = s.nome;
           this.tipo = s.tipo;
           this.registro = s.registro;
-          this.valor = String(s.valor);
+          this.valor = formatBRL(Number(s.valor));
           this.descricao = s.descricao;
           this.imagem = s.imagem;
           this.imageKey = s.imageKey ?? '';
@@ -97,6 +98,10 @@ export class CriarServicoComponent implements OnInit {
       });
   }
 
+  onValorInput(valor: string) {
+    this.valor = maskBRL(valor);
+  }
+
   criarServico() {
     if (this.salvando) return;
     this.erro = '';
@@ -108,7 +113,8 @@ export class CriarServicoComponent implements OnInit {
       this.erro = 'Informe o nome do serviço.';
       return;
     }
-    if (!this.valor || isNaN(Number(this.valor))) {
+    const valorNum = parseBRL(this.valor);
+    if (!valorNum || valorNum <= 0) {
       this.erro = 'Informe um valor válido.';
       return;
     }
@@ -117,7 +123,7 @@ export class CriarServicoComponent implements OnInit {
       name: this.nome.trim(),
       type: this.catalog.tipoApi(this.tipo),
       registrationCode: this.registro.trim() || undefined,
-      price: Number(this.valor),
+      price: valorNum,
       description: this.descricao.trim() || undefined,
       imageUrl: this.imagem || undefined,
       imageKey: this.imageKey || undefined,

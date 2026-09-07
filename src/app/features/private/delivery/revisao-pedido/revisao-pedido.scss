@@ -271,4 +271,8 @@
   transition: opacity 0.2s;
 
   &:active { opacity: 0.85; }
+
+  &:disabled { opacity: 0.6; cursor: default; }
+
+  &--dinheiro { background: #16A34A; }
 }

@@ -147,3 +147,23 @@
     margin-top: 2px;
   }
 }
+
+.lp-fab {
+  position: fixed;
+  bottom: calc(16px + var(--safe-bottom));
+  right: 20px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(107, 33, 214, 0.4);
+  z-index: 10;
+  transition: opacity 0.2s;
+
+  &:active { opacity: 0.85; }
+}
