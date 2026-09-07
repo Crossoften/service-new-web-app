@@ -6,7 +6,7 @@
 > **Última atualização:** 2026-09-07 · **Fase atual:** 🎉 Integração completa + verticais do fornecedor (FV-1…FV-5)
 > + **Mercado Pago** (MP-1…MP-3) + ajustes de UX/navegação (CD-1, NAV-1, AJ-A). Pendências só de back-end.
 >
-> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `a0e8b8c`, +MP/ajustes locais).
+> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `3f84e35`).
 > **Back-end:** `service-new-ws` @ `ajustes-gerais` (@ `b60afd0`, com Mercado Pago). **Base local:** `http://localhost:8000/v1`.
 
 ---
@@ -166,6 +166,16 @@
 | **PZ-1** | **Padronização dos cadastros** — **máscara de moeda** (via `currency.ts`) no valor dos **5** formulários (serviço, produto, aluguel, hospedagem, transporte); criar-produto alinhado ao padrão gray-bg. **Aplica após CD-1.** | ✅ (18 specs) | `PZ-1-padronizacao-cadastros-fornecedor` |
 | **CV-1** | **Compra e Venda — botão adicionar** fora do padrão (era "+" no header) → **FAB flutuante** igual às demais categorias (só no modo "meus produtos"). | ✅ | `CV-1-compra-venda-fab` |
 | **CV-2** | **Aviso "nenhuma categoria disponível"** nos 4 cadastros afetados pela BE-Q9 (produto, aluguel, hospedagem, transporte) — evita dropdown vazio silencioso. **Aplica após CD-1+PZ-1.** | ✅ (spec em criar-produto) | `CV-2-aviso-sem-categoria` |
+| **CV-3** | **Listagem de produtos com dados reais** — card enriquecido no padrão do de serviços (SV-1): **categoria** + **avaliações reais** (`positiveReviews/negativeReviews` do DTO). Sem mock; já usava nome/tipo/preço reais. | ✅ | `CV-3-listagem-produtos-dados-reais` |
+| **PF-1** | **Perfil — usabilidade ver/editar** — seções **Dados** e **Endereço** começam em **modo leitura** (campos desabilitados, valor limpo); botão **Editar** abre o formulário com **Salvar/Cancelar** (Cancelar descarta e recarrega). Email segue read-only; Cobrança/Conta de recebimento mantidos. | ✅ (6 specs) | `PF-1-perfil-ver-editar` |
+| **PF-2** | **Perfil — scroll** — `.perfil-container` usava `min-height:100dvh` (conteúdo cortado); trocado para `height:100dvh` + `overflow:hidden` e `.perfil-content` rolável (`overflow-y:auto` + touch + safe-bottom), alinhado ao padrão global `.page-container/.page-content`. | ✅ (só SCSS) | `PF-2-perfil-scroll` |
+
+> **Perfil × dados bancários:** a tela `perfil` **não** gerencia conta bancária (isso fica no fluxo Parceiro/Entregador via `/bank-accounts`). O padrão ver/editar do PF-1 pode ser estendido lá se desejado (não solicitado ainda).
+
+> **Categorias (BE-Q9) — seed pronto:** entregue `catalog-categories.seeds.ts` (drop-in do **back-end**) que semeia
+> `ProductCategory`/`AccommodationCategory`/`TransportationCategory` (idempotente, padrão do seed de serviço).
+> Não dá para "categoria só no front": `POST /products` valida o `categoryId` no banco e não há rota de criar
+> categoria — a correção é semear no back. Aplicado o seed, o dropdown popula e o cadastro funciona nas 3 verticais.
 
 ---
 
@@ -175,7 +185,9 @@ Fundação → Auth (1..3) → Perfil → Delivery (DC/DF) + fixes → Entregado
 Transporte → Hospedagem/Empregos → Chat → Serviços (S-1..S-5) → **Fase AJ (AJ-1..AJ-6)** → Hub fornecedor →
 correções criar-serviço (nome, categoria) → **verticais do fornecedor (FV-1..FV-5)** →
 **Mercado Pago (MP-1..MP-3)** → **UX/nav: CD-1, NAV-1, MP-1→AJ-A** (CD-1/NAV-1 independentes; AJ-A depois do MP-1) →
-**SV-1** (indep.) · **CV-1** (indep.) · **CD-1→PZ-1** (mask nos 5 forms) · **CD-1+PZ-1→CV-2** (aviso sem categoria).
+**SV-1** (indep.) · **CV-1** (indep.) · **CD-1→PZ-1** (mask nos 5 forms) · **CD-1+PZ-1→CV-2** (aviso sem categoria) ·
+**CV-3** (indep.) — aplicados e empurrados até `origin/integracao` @ `3f84e35`. Pendentes de aplicação:
+**CV-3** · **PF-1** (perfil ver/editar, indep.) · **PF-2** (scroll do perfil, indep.; convive com PF-1).
 
 > Cada fatia foi entregue como patch individual. A `integracao` do cliente é a fonte da verdade do estado aplicado.
 > **Demandas de back-end recentes:** **BE-Q8** (upload `500` — S3 sem credencial/sem fallback) e **BE-Q9**

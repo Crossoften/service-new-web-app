@@ -38,7 +38,7 @@ describe('ListagemProdutosComponent', () => {
   it('carrega a vitrine filtrando por categoria', () => {
     const req = httpMock.expectOne((r) => r.url.endsWith('/products'));
     expect(req.request.params.get('categoryId')).toBe('3');
-    req.flush({ products: [{ id: 1, name: 'Fiat', price: '45000.00', transactionType: 'Sale' }], currentPage: 1, totalPages: 1, totalRecords: 1 });
+    req.flush({ products: [{ id: 1, name: 'Fiat', price: '45000.00', transactionType: 'Sale', category: { id: 3, name: 'Veículos', slug: 'veiculos' }, positiveReviews: 0, negativeReviews: 0 }], currentPage: 1, totalPages: 1, totalRecords: 1 });
     expect(component.produtos.length).toBe(1);
     expect(component.produtos[0].name).toBe('Fiat');
   });
@@ -75,9 +75,9 @@ describe('ListagemProdutosComponent (meus produtos)', () => {
     const req = httpMock.expectOne((r) => r.url.endsWith('/products/my-products'));
     req.flush({
       products: [
-        { id: 1, name: 'Notebook', transactionType: 'Sale' },
-        { id: 2, name: 'Furadeira', transactionType: 'Rent' },
-        { id: 3, name: 'Betoneira', transactionType: 'RentAndSale' },
+        { id: 1, name: 'Notebook', transactionType: 'Sale', category: { id: 3, name: 'Veículos', slug: 'veiculos' }, positiveReviews: 0, negativeReviews: 0 },
+        { id: 2, name: 'Furadeira', transactionType: 'Rent', category: { id: 3, name: 'Veículos', slug: 'veiculos' }, positiveReviews: 0, negativeReviews: 0 },
+        { id: 3, name: 'Betoneira', transactionType: 'RentAndSale', category: { id: 3, name: 'Veículos', slug: 'veiculos' }, positiveReviews: 0, negativeReviews: 0 },
       ],
       currentPage: 1,
       totalPages: 1,

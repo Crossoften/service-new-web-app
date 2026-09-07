@@ -43,8 +43,13 @@
             </div>
             <div class="lp-card__body">
               <span class="lp-card__nome">{{ p.name }}</span>
+              <span class="lp-card__cat">{{ p.category.name }}</span>
               <span class="lp-card__tipo">{{ tipoLabel(p) }}</span>
               <span class="lp-card__preco">{{ formatarPreco(p.price) }}</span>
+              <div class="lp-card__stats">
+                <span class="lp-card__stat lp-card__stat--like">👍 {{ p.positiveReviews }}</span>
+                <span class="lp-card__stat lp-card__stat--dislike">👎 {{ p.negativeReviews }}</span>
+              </div>
             </div>
             @if (mine) {
               <button class="lp-card__excluir" (click)="excluir(p.id, $event)" aria-label="Excluir">

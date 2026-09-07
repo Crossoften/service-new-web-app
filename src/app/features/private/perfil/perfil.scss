@@ -1,10 +1,10 @@
 .perfil-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   padding-top: var(--safe-top);
-  padding-bottom: var(--safe-bottom);
   background: var(--color-white);
 }
 
@@ -38,8 +38,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 8px 24px 32px;
+  padding: 8px 24px calc(32px + var(--safe-bottom));
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .perfil-loading {
@@ -150,10 +151,47 @@
       color: var(--color-gray-400);
     }
 
+    /* Modo leitura: sem "cara" de campo, valor legível. */
     &:disabled {
-      color: var(--color-gray-400);
+      background: transparent;
+      color: var(--color-text);
+      padding-left: 0;
+      padding-right: 0;
+      cursor: default;
+
+      &::placeholder { color: var(--color-gray-400); }
     }
   }
+}
+
+.perfil-secao__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.perfil-editar {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 0;
+}
+
+.perfil-secao__acoes {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+
+  .perfil-btn { flex: 1; }
+}
+
+.perfil-btn--ghost {
+  background: transparent;
+  color: var(--color-gray-600);
+  border: 1px solid var(--color-gray-100);
 }
 
 .perfil-erro {

@@ -50,11 +50,16 @@
 
       <!-- DADOS -->
       <div class="perfil-secao">
-        <span class="perfil-secao__titulo">Dados</span>
+        <div class="perfil-secao__head">
+          <span class="perfil-secao__titulo">Dados</span>
+          @if (!editandoDados) {
+            <button class="perfil-editar" (click)="editarDados()">Editar</button>
+          }
+        </div>
 
         <div class="perfil-field">
           <label>Nome</label>
-          <input type="text" [(ngModel)]="nome" placeholder="Seu nome" />
+          <input type="text" [(ngModel)]="nome" placeholder="Seu nome" [disabled]="!editandoDados" />
         </div>
 
         <div class="perfil-field">
@@ -64,63 +69,82 @@
 
         <div class="perfil-field">
           <label>Telefone</label>
-          <input type="tel" [(ngModel)]="telefone" placeholder="(00) 00000-0000" />
+          <input type="tel" [(ngModel)]="telefone" placeholder="(00) 00000-0000" [disabled]="!editandoDados" />
         </div>
 
         <div class="perfil-field">
           <label>Documento</label>
-          <input type="text" [(ngModel)]="documento" placeholder="CPF/CNPJ" />
+          <input type="text" [(ngModel)]="documento" placeholder="CPF/CNPJ" [disabled]="!editandoDados" />
         </div>
 
         <div class="perfil-field">
           <label>Biografia</label>
-          <textarea rows="3" [(ngModel)]="biografia" placeholder="Fale um pouco sobre você"></textarea>
+          <textarea rows="3" [(ngModel)]="biografia" placeholder="Fale um pouco sobre você" [disabled]="!editandoDados"></textarea>
         </div>
 
-        <button class="perfil-btn perfil-btn--primary" (click)="salvarDados()" [disabled]="salvandoDados">
-          {{ salvandoDados ? 'SALVANDO…' : 'SALVAR DADOS' }}
-        </button>
+        @if (editandoDados) {
+          <div class="perfil-secao__acoes">
+            <button class="perfil-btn perfil-btn--primary" (click)="salvarDados()" [disabled]="salvandoDados">
+              {{ salvandoDados ? 'SALVANDO…' : 'SALVAR' }}
+            </button>
+            <button class="perfil-btn perfil-btn--ghost" (click)="cancelarDados()" [disabled]="salvandoDados">
+              CANCELAR
+            </button>
+          </div>
+        }
       </div>
 
       <!-- ENDEREÇO -->
       <div class="perfil-secao">
-        <span class="perfil-secao__titulo">Endereço</span>
+        <div class="perfil-secao__head">
+          <span class="perfil-secao__titulo">Endereço</span>
+          @if (!editandoEndereco) {
+            <button class="perfil-editar" (click)="editarEndereco()">Editar</button>
+          }
+        </div>
 
         <div class="perfil-field">
           <label>CEP</label>
-          <input type="tel" [(ngModel)]="cep" placeholder="00000-000" />
+          <input type="tel" [(ngModel)]="cep" placeholder="00000-000" [disabled]="!editandoEndereco" />
         </div>
 
         <div class="perfil-field">
           <label>Rua</label>
-          <input type="text" [(ngModel)]="rua" placeholder="Rua / Avenida" />
+          <input type="text" [(ngModel)]="rua" placeholder="Rua / Avenida" [disabled]="!editandoEndereco" />
         </div>
 
         <div class="perfil-form__row">
           <div class="perfil-field">
             <label>Número</label>
-            <input type="text" [(ngModel)]="numero" placeholder="Nº" />
+            <input type="text" [(ngModel)]="numero" placeholder="Nº" [disabled]="!editandoEndereco" />
           </div>
           <div class="perfil-field">
             <label>Bairro</label>
-            <input type="text" [(ngModel)]="bairro" placeholder="Bairro" />
+            <input type="text" [(ngModel)]="bairro" placeholder="Bairro" [disabled]="!editandoEndereco" />
           </div>
         </div>
 
         <div class="perfil-form__row">
           <div class="perfil-field">
             <label>Cidade</label>
-            <input type="text" [(ngModel)]="cidade" placeholder="Cidade" />
+            <input type="text" [(ngModel)]="cidade" placeholder="Cidade" [disabled]="!editandoEndereco" />
           </div>
           <div class="perfil-field perfil-field--uf">
             <label>UF</label>
-            <input type="text" [(ngModel)]="estado" placeholder="UF" maxlength="2" />
+            <input type="text" [(ngModel)]="estado" placeholder="UF" maxlength="2" [disabled]="!editandoEndereco" />
           </div>
         </div>
 
-        <button class="perfil-btn perfil-btn--outline" (click)="salvarEndereco()" [disabled]="salvandoEndereco">
-          {{ salvandoEndereco ? 'SALVANDO…' : 'SALVAR ENDEREÇO' }}
-        </button>
+        @if (editandoEndereco) {
+          <div class="perfil-secao__acoes">
+            <button class="perfil-btn perfil-btn--primary" (click)="salvarEndereco()" [disabled]="salvandoEndereco">
+              {{ salvandoEndereco ? 'SALVANDO…' : 'SALVAR' }}
+            </button>
+            <button class="perfil-btn perfil-btn--ghost" (click)="cancelarEndereco()" [disabled]="salvandoEndereco">
+              CANCELAR
+            </button>
+          </div>
+        }
       </div>
 
       <!-- COBRANÇA (fornecedor) -->

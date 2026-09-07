@@ -55,6 +55,10 @@ export class PerfilComponent implements OnInit {
   erro = '';
   aviso = '';
 
+  // Modo edição por seção (padrão: só leitura).
+  editandoDados = false;
+  editandoEndereco = false;
+
   ngOnInit() {
     this.carregar();
   }
@@ -96,6 +100,18 @@ export class PerfilComponent implements OnInit {
     this.billingType = p.billingType ?? 'None';
   }
 
+  editarDados() {
+    this.erro = '';
+    this.aviso = '';
+    this.editandoDados = true;
+  }
+
+  cancelarDados() {
+    if (this.perfil) this.aplicar(this.perfil);
+    this.erro = '';
+    this.editandoDados = false;
+  }
+
   salvarDados() {
     if (!this.nome.trim()) {
       this.erro = 'Informe seu nome.';
@@ -115,6 +131,7 @@ export class PerfilComponent implements OnInit {
         next: (p) => {
           this.salvandoDados = false;
           this.aplicar(p);
+          this.editandoDados = false;
           this.aviso = 'Dados atualizados.';
         },
         error: (err: ApiError) => {
@@ -122,6 +139,18 @@ export class PerfilComponent implements OnInit {
           this.erro = this.msg(err, 'Não foi possível salvar os dados.');
         },
       });
+  }
+
+  editarEndereco() {
+    this.erro = '';
+    this.aviso = '';
+    this.editandoEndereco = true;
+  }
+
+  cancelarEndereco() {
+    if (this.perfil) this.aplicar(this.perfil);
+    this.erro = '';
+    this.editandoEndereco = false;
   }
 
   salvarEndereco() {
@@ -140,6 +169,7 @@ export class PerfilComponent implements OnInit {
       .subscribe({
         next: () => {
           this.salvandoEndereco = false;
+          this.editandoEndereco = false;
           this.aviso = 'Endereço atualizado.';
         },
         error: (err: ApiError) => {
