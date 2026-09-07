@@ -64,3 +64,22 @@ export interface AccommodationQuery {
   take?: number;
   skip?: number;
 }
+
+/** Corpo de `POST /v1/accommodations` (CreateAccommodationDto). `price` é number. */
+export interface CreateAccommodationDto {
+  categoryId: number;
+  name: string;
+  price: number;
+  roomsQuantity?: number;
+  street?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  description?: string;
+  imageUrl?: string;
+  imageKey?: string;
+  isActive?: boolean;
+}
+
+/** Corpo de `PATCH /v1/accommodations/{id}` (UpdateAccommodationDto). */
+export type UpdateAccommodationDto = Partial<CreateAccommodationDto>;

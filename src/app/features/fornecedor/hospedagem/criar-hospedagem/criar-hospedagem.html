@@ -1,0 +1,116 @@
+<div class="page-container">
+
+  <div class="ch-header">
+    <button class="ch-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="ch-header__titulo">{{ titulo }}</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="ch-msg">Carregando…</p>
+    } @else {
+      <div class="ch-form">
+
+        <!-- CATEGORIA -->
+        <div class="ch-field">
+          <label>Categoria</label>
+          <select [(ngModel)]="categoryId" class="ch-field__select">
+            <option [ngValue]="undefined" disabled>Selecione…</option>
+            @for (c of categorias; track c.id) {
+              <option [ngValue]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- NOME -->
+        <div class="ch-field">
+          <label>Nome</label>
+          <input type="text" placeholder="Nome da hospedagem" [(ngModel)]="nome" />
+        </div>
+
+        <!-- PREÇO / QUARTOS -->
+        <div class="ch-field ch-field--row">
+          <div class="ch-field">
+            <label>Valor (R$)</label>
+            <input type="number" placeholder="0,00" [(ngModel)]="preco" />
+          </div>
+          <div class="ch-field">
+            <label>Quartos</label>
+            <input type="number" placeholder="Opcional" [(ngModel)]="quartos" />
+          </div>
+        </div>
+
+        <!-- RUA -->
+        <div class="ch-field">
+          <label>Rua</label>
+          <input type="text" placeholder="Opcional" [(ngModel)]="rua" />
+        </div>
+
+        <!-- BAIRRO -->
+        <div class="ch-field">
+          <label>Bairro</label>
+          <input type="text" placeholder="Opcional" [(ngModel)]="bairro" />
+        </div>
+
+        <!-- CIDADE / ESTADO -->
+        <div class="ch-field ch-field--row">
+          <div class="ch-field">
+            <label>Cidade</label>
+            <input type="text" placeholder="Opcional" [(ngModel)]="cidade" />
+          </div>
+          <div class="ch-field">
+            <label>Estado</label>
+            <input type="text" placeholder="Opcional" [(ngModel)]="estado" />
+          </div>
+        </div>
+
+        <!-- DESCRIÇÃO -->
+        <div class="ch-field">
+          <label>Descrição</label>
+          <textarea rows="4" placeholder="Detalhes da hospedagem" [(ngModel)]="descricao"></textarea>
+        </div>
+
+        <!-- ATIVA -->
+        <label class="ch-toggle">
+          <input type="checkbox" [(ngModel)]="ativa" />
+          <span>Hospedagem ativa (visível no catálogo)</span>
+        </label>
+
+        <!-- IMAGEM -->
+        <div class="ch-imagem">
+          <div class="ch-imagem__preview">
+            @if (imageUrl) {
+              <img [src]="imageUrl" alt="Foto da hospedagem" />
+            } @else {
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+              </svg>
+            }
+          </div>
+          <label class="ch-imagem__btn">
+            {{ enviandoFoto ? 'Enviando…' : 'Escolher imagem' }}
+            <input type="file" accept="image/png,image/jpeg" (change)="adicionarImagem($event)" hidden />
+          </label>
+        </div>
+
+        @if (erro) {
+          <span class="ch-erro">{{ erro }}</span>
+        }
+      </div>
+    }
+  </div>
+
+  @if (!carregando) {
+    <div class="ch-actions">
+      <button class="ch-btn" (click)="salvar()" [disabled]="salvando || enviandoFoto">
+        {{ salvando ? 'SALVANDO…' : 'SALVAR' }}
+      </button>
+    </div>
+  }
+
+</div>

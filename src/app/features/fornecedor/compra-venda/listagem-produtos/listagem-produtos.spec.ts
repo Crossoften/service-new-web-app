@@ -43,3 +43,46 @@ describe('ListagemProdutosComponent', () => {
     expect(component.produtos[0].name).toBe('Fiat');
   });
 });
+
+describe('ListagemProdutosComponent (meus produtos)', () => {
+  let component: ListagemProdutosComponent;
+  let fixture: ComponentFixture<ListagemProdutosComponent>;
+  let httpMock: HttpTestingController;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [ListagemProdutosComponent],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: convertToParamMap({}), data: { mine: true } } },
+        },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ListagemProdutosComponent);
+    component = fixture.componentInstance;
+    httpMock = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+  });
+
+  afterEach(() => httpMock.verify());
+
+  it('mostra apenas Venda e Venda e aluguel na gestão do fornecedor', () => {
+    const req = httpMock.expectOne((r) => r.url.endsWith('/products/my-products'));
+    req.flush({
+      products: [
+        { id: 1, name: 'Notebook', transactionType: 'Sale' },
+        { id: 2, name: 'Furadeira', transactionType: 'Rent' },
+        { id: 3, name: 'Betoneira', transactionType: 'RentAndSale' },
+      ],
+      currentPage: 1,
+      totalPages: 1,
+      totalRecords: 3,
+    });
+    expect(component.produtos.map((p) => p.id)).toEqual([1, 3]);
+  });
+});

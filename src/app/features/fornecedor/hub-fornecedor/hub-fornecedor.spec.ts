@@ -25,6 +25,14 @@ describe('HubFornecedorComponent', () => {
     expect(rotas).toContain('/fornecedor/servicos'); // serviços
   });
 
+  it('aponta hospedagem, transporte e aluguel para as telas do fornecedor', () => {
+    const rotaDe = (titulo: string) =>
+      component.verticais.find((v) => v.titulo === titulo)?.rota;
+    expect(rotaDe('Hospedagem')).toBe('/fornecedor/hospedagem');
+    expect(rotaDe('Transporte')).toBe('/fornecedor/transporte');
+    expect(rotaDe('Aluguel')).toBe('/fornecedor/aluguel');
+  });
+
   it('abrir() navega para a rota da vertical', () => {
     const router = TestBed.inject(Router);
     const nav = vi.spyOn(router, 'navigate');

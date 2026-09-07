@@ -1,0 +1,80 @@
+<div class="page-container">
+
+  <div class="lhf-header">
+    <button class="lhf-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="lhf-header__titulo">Hospedagem</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="lhf-tabs">
+    @for (tab of tabs; track tab.id) {
+      <button
+        class="lhf-tabs__item"
+        [class.lhf-tabs__item--ativo]="tabAtiva === tab.id"
+        (click)="trocarTab(tab.id)">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="lhf-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="lhf-msg lhf-msg--erro">{{ erro }}</p>
+    } @else {
+      <div class="lhf-lista">
+        @for (a of acomodacoes; track a.id) {
+          <div class="lhf-card" (click)="abrir(a)">
+
+            <div class="lhf-card__foto">
+              @if (a.imageUrl) {
+                <img [src]="a.imageUrl" [alt]="a.name" />
+              } @else {
+                <div class="lhf-card__foto-placeholder">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
+                </div>
+              }
+            </div>
+
+            <div class="lhf-card__info">
+              <span class="lhf-card__nome">{{ a.name }}</span>
+              <span class="lhf-card__categoria">● {{ a.category.name }}</span>
+              @if (local(a)) {
+                <span class="lhf-card__local">{{ local(a) }}</span>
+              }
+              <span class="lhf-card__preco">{{ formatarPreco(a.price) }}</span>
+              <div class="lhf-card__stats">
+                <span class="lhf-card__stat lhf-card__stat--like">👍 {{ a.positiveReviews }}</span>
+                <span class="lhf-card__stat lhf-card__stat--dislike">👎 {{ a.negativeReviews }}</span>
+              </div>
+            </div>
+
+          </div>
+        }
+
+        @if (acomodacoes.length === 0) {
+          <div class="lhf-vazio">
+            <p>Nenhuma hospedagem {{ tabAtiva === 'ativas' ? 'ativa' : 'inativa' }} encontrada.</p>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- FAB -->
+  <button class="lhf-fab" (click)="adicionar()" aria-label="Cadastrar hospedagem">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  </button>
+
+</div>

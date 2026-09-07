@@ -2,11 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from './api';
 import { Page } from '../models/pagination';
+import { ApiMessage } from '../models/common';
 import {
   AccommodationCategoryDto,
   AccommodationDto,
   AccommodationListItemDto,
   AccommodationQuery,
+  CreateAccommodationDto,
+  UpdateAccommodationDto,
 } from '../models/accommodation';
 import {
   BookingDto,
@@ -34,6 +37,11 @@ interface ResponseFindAllBookingDto {
 interface CreateBookingResponseDto {
   message: string;
   booking: BookingDto;
+}
+
+interface CreateAccommodationResponseDto {
+  message: string;
+  accommodation: AccommodationDto;
 }
 
 /** Hospedagens (`/accommodations`) e reservas (`/bookings`). */
@@ -66,12 +74,49 @@ export class AccommodationService {
       );
   }
 
+  /** Hospedagens do fornecedor autenticado — `GET /v1/accommodations/my-accommodations`. */
+  minhasAcomodacoes(query: AccommodationQuery = {}): Observable<Page<AccommodationListItemDto>> {
+    return this.api
+      .get<ResponseFindAllAccommodationDto>('/accommodations/my-accommodations', {
+        search: query.search,
+        categoryId: query.categoryId,
+        isActive: query.isActive,
+        take: query.take,
+        skip: query.skip,
+      })
+      .pipe(
+        map((r) => ({
+          items: r.accommodations ?? [],
+          currentPage: r.currentPage,
+          totalPages: r.totalPages,
+          totalRecords: r.totalRecords,
+        })),
+      );
+  }
+
   categorias(): Observable<AccommodationCategoryDto[]> {
     return this.api.get<AccommodationCategoryDto[]>('/accommodations/categories');
   }
 
   acomodacao(id: number): Observable<AccommodationDto> {
     return this.api.get<AccommodationDto>(`/accommodations/${id}`);
+  }
+
+  /** Cadastra uma hospedagem (fornecedor) — `POST /v1/accommodations`. */
+  criar(dto: CreateAccommodationDto): Observable<AccommodationDto> {
+    return this.api
+      .post<CreateAccommodationResponseDto>('/accommodations', dto)
+      .pipe(map((r) => r.accommodation));
+  }
+
+  /** Edita uma hospedagem — `PATCH /v1/accommodations/{id}`. */
+  atualizar(id: number, dto: UpdateAccommodationDto): Observable<AccommodationDto> {
+    return this.api.patch<AccommodationDto>(`/accommodations/${id}`, dto);
+  }
+
+  /** Remove uma hospedagem — `DELETE /v1/accommodations/{id}`. */
+  remover(id: number): Observable<ApiMessage> {
+    return this.api.delete<ApiMessage>(`/accommodations/${id}`);
   }
 
   // ── Reservas ───────────────────────────────────────────────────────────

@@ -60,6 +60,12 @@ import { StatusEntregaComponent } from './features/entregador/status-entrega/sta
 import { ListagemProdutosComponent } from './features/fornecedor/compra-venda/listagem-produtos/listagem-produtos';
 import { CriarProdutoComponent } from './features/fornecedor/compra-venda/criar-produto/criar-produto';
 import { DetalheVendaComponent } from './features/fornecedor/compra-venda/detalhe-venda/detalhe-venda';
+import { ListagemHospedagemFornecedorComponent } from './features/fornecedor/hospedagem/listagem-hospedagem-fornecedor/listagem-hospedagem-fornecedor';
+import { CriarHospedagemComponent } from './features/fornecedor/hospedagem/criar-hospedagem/criar-hospedagem';
+import { ListagemTransporteFornecedorComponent } from './features/fornecedor/transporte/listagem-transporte-fornecedor/listagem-transporte-fornecedor';
+import { CriarTransporteComponent } from './features/fornecedor/transporte/criar-transporte/criar-transporte';
+import { ListagemAluguelFornecedorComponent } from './features/fornecedor/aluguel/listagem-aluguel-fornecedor/listagem-aluguel-fornecedor';
+import { CriarAluguelFornecedorComponent } from './features/fornecedor/aluguel/criar-aluguel-fornecedor/criar-aluguel-fornecedor';
 import { NegociacoesComponent } from './features/marketplace/negociacoes/negociacoes';
 import { NegociacaoDetalheComponent } from './features/marketplace/negociacao-detalhe/negociacao-detalhe';
 import { ListagemAluguelComponent } from './features/aluguel/listagem-aluguel/listagem-aluguel';
@@ -151,6 +157,18 @@ export const routes: Routes = [
   { path: 'fornecedor/servicos/trabalhos', component: TrabalhosFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/servicos/trabalho/:id', component: DetalhesTrabalhoComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/servicos/perfil', component: PerfilComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+
+  // Fornecedor Hospedagem
+  { path: 'fornecedor/hospedagem', component: ListagemHospedagemFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/hospedagem/criar', component: CriarHospedagemComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+
+  // Fornecedor Transporte
+  { path: 'fornecedor/transporte', component: ListagemTransporteFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/transporte/criar', component: CriarTransporteComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+
+  // Fornecedor Aluguel (produtos com transactionType Rent / RentAndSale)
+  { path: 'fornecedor/aluguel', component: ListagemAluguelFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/aluguel/criar', component: CriarAluguelFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
 
   // Fornecedor Compra e Venda
   //{ path: 'fornecedor/compra-venda/produtos', component: ListagemProdutosComponent },

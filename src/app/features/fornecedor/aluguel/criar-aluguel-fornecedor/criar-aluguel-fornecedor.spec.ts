@@ -6,57 +6,57 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 
-import { CriarProdutoComponent } from './criar-produto';
+import { CriarAluguelFornecedorComponent } from './criar-aluguel-fornecedor';
 
-describe('CriarProdutoComponent', () => {
-  let component: CriarProdutoComponent;
-  let fixture: ComponentFixture<CriarProdutoComponent>;
+describe('CriarAluguelFornecedorComponent', () => {
+  let component: CriarAluguelFornecedorComponent;
+  let fixture: ComponentFixture<CriarAluguelFornecedorComponent>;
   let httpMock: HttpTestingController;
 
-  function setup(params: Record<string, string> = {}) {
+  function setup(queryParams: Record<string, string> = {}) {
     TestBed.configureTestingModule({
-      imports: [CriarProdutoComponent],
+      imports: [CriarAluguelFornecedorComponent],
       providers: [
         provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap(params) } } },
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
       ],
     });
-
-    fixture = TestBed.createComponent(CriarProdutoComponent);
+    fixture = TestBed.createComponent(CriarAluguelFornecedorComponent);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
-    // ngOnInit carrega as categorias.
     httpMock.expectOne((r) => r.url.endsWith('/products/categories')).flush([]);
   }
 
   afterEach(() => httpMock.verify());
 
-  it('valida campos obrigatórios antes de enviar', () => {
+  it('exige nome', () => {
     setup();
+    component.categoryId = 2;
     component.salvar();
-    expect(component.erro).toContain('categoria');
-    httpMock.expectNone((r) => r.url.endsWith('/products'));
+    expect(component.erro).toContain('nome');
+    httpMock.expectNone((r) => r.url.endsWith('/products') && r.method === 'POST');
   });
 
-  it('envia CreateProductDto travado em Venda (Sale) no POST /products', () => {
+  it('cadastra o item travado em Rent', () => {
     setup();
     component.categoryId = 3;
-    component.nome = 'Fiat';
-    component.preco = 45000;
+    component.nome = 'Furadeira';
+    component.preco = 50;
     component.salvar();
     const req = httpMock.expectOne((r) => r.url.endsWith('/products') && r.method === 'POST');
-    expect(req.request.body.categoryId).toBe(3);
-    expect(req.request.body.price).toBe(45000);
-    expect(req.request.body.transactionType).toBe('Sale');
+    expect(req.request.body.transactionType).toBe('Rent');
+    expect(req.request.body.name).toBe('Furadeira');
+    expect(req.request.body.price).toBe(50);
     req.flush({ message: 'ok', product: { id: 1 } });
   });
 
-  it('preserva RentAndSale ao editar um produto existente', () => {
+  it('preserva RentAndSale ao editar um item existente', () => {
     setup({ id: '9' });
-    httpMock.expectOne((r) => r.url.endsWith('/products/9') && r.method === 'GET').flush({
+    const get = httpMock.expectOne((r) => r.url.endsWith('/products/9') && r.method === 'GET');
+    get.flush({
       id: 9,
       name: 'Betoneira',
       transactionType: 'RentAndSale',

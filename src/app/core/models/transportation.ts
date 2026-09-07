@@ -62,3 +62,21 @@ export interface TransportationQuery {
   take?: number;
   skip?: number;
 }
+
+/** Corpo de `POST /v1/transportations` (CreateTransportationDto). `price` é number. */
+export interface CreateTransportationDto {
+  categoryId: number;
+  name: string;
+  price: number;
+  model?: string;
+  mileageKm?: number;
+  capacity?: number;
+  year?: number;
+  description?: string;
+  imageUrl?: string;
+  imageKey?: string;
+  isActive?: boolean;
+}
+
+/** Corpo de `PATCH /v1/transportations/{id}` (UpdateTransportationDto). */
+export type UpdateTransportationDto = Partial<CreateTransportationDto>;

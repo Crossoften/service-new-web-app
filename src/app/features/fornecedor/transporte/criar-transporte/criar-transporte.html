@@ -1,0 +1,110 @@
+<div class="page-container">
+
+  <div class="ct-header">
+    <button class="ct-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="ct-header__titulo">{{ titulo }}</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="ct-msg">Carregando…</p>
+    } @else {
+      <div class="ct-form">
+
+        <!-- CATEGORIA -->
+        <div class="ct-field">
+          <label>Categoria</label>
+          <select [(ngModel)]="categoryId" class="ct-field__select">
+            <option [ngValue]="undefined" disabled>Selecione…</option>
+            @for (c of categorias; track c.id) {
+              <option [ngValue]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- NOME -->
+        <div class="ct-field">
+          <label>Nome</label>
+          <input type="text" placeholder="Nome do transporte" [(ngModel)]="nome" />
+        </div>
+
+        <!-- MODELO / ANO -->
+        <div class="ct-field ct-field--row">
+          <div class="ct-field">
+            <label>Modelo</label>
+            <input type="text" placeholder="Opcional" [(ngModel)]="modelo" />
+          </div>
+          <div class="ct-field">
+            <label>Ano</label>
+            <input type="number" placeholder="Opcional" [(ngModel)]="ano" />
+          </div>
+        </div>
+
+        <!-- QUILOMETRAGEM / CAPACIDADE -->
+        <div class="ct-field ct-field--row">
+          <div class="ct-field">
+            <label>Quilometragem (km)</label>
+            <input type="number" placeholder="Opcional" [(ngModel)]="quilometragem" />
+          </div>
+          <div class="ct-field">
+            <label>Capacidade</label>
+            <input type="number" placeholder="Opcional" [(ngModel)]="capacidade" />
+          </div>
+        </div>
+
+        <!-- VALOR -->
+        <div class="ct-field">
+          <label>Valor (R$)</label>
+          <input type="number" placeholder="0,00" [(ngModel)]="preco" />
+        </div>
+
+        <!-- DESCRIÇÃO -->
+        <div class="ct-field">
+          <label>Descrição</label>
+          <textarea rows="4" placeholder="Detalhes do transporte" [(ngModel)]="descricao"></textarea>
+        </div>
+
+        <!-- ATIVO -->
+        <label class="ct-toggle">
+          <input type="checkbox" [(ngModel)]="ativo" />
+          <span>Transporte ativo (visível no catálogo)</span>
+        </label>
+
+        <!-- IMAGEM -->
+        <div class="ct-imagem">
+          <div class="ct-imagem__preview">
+            @if (imageUrl) {
+              <img [src]="imageUrl" alt="Foto do transporte" />
+            } @else {
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+              </svg>
+            }
+          </div>
+          <label class="ct-imagem__btn">
+            {{ enviandoFoto ? 'Enviando…' : 'Escolher imagem' }}
+            <input type="file" accept="image/png,image/jpeg" (change)="adicionarImagem($event)" hidden />
+          </label>
+        </div>
+
+        @if (erro) {
+          <span class="ct-erro">{{ erro }}</span>
+        }
+      </div>
+    }
+  </div>
+
+  @if (!carregando) {
+    <div class="ct-actions">
+      <button class="ct-btn" (click)="salvar()" [disabled]="salvando || enviandoFoto">
+        {{ salvando ? 'SALVANDO…' : 'SALVAR' }}
+      </button>
+    </div>
+  }
+
+</div>

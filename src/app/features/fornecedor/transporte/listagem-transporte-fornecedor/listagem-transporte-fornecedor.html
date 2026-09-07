@@ -1,0 +1,81 @@
+<div class="page-container">
+
+  <div class="ltf-header">
+    <button class="ltf-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="ltf-header__titulo">Transporte</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="ltf-tabs">
+    @for (tab of tabs; track tab.id) {
+      <button
+        class="ltf-tabs__item"
+        [class.ltf-tabs__item--ativo]="tabAtiva === tab.id"
+        (click)="trocarTab(tab.id)">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="ltf-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="ltf-msg ltf-msg--erro">{{ erro }}</p>
+    } @else {
+      <div class="ltf-lista">
+        @for (t of transportes; track t.id) {
+          <div class="ltf-card" (click)="abrir(t)">
+
+            <div class="ltf-card__foto">
+              @if (t.imageUrl) {
+                <img [src]="t.imageUrl" [alt]="t.name" />
+              } @else {
+                <div class="ltf-card__foto-placeholder">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="1" y="3" width="15" height="13"/>
+                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                    <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                  </svg>
+                </div>
+              }
+            </div>
+
+            <div class="ltf-card__info">
+              <span class="ltf-card__nome">{{ t.name }}</span>
+              <span class="ltf-card__categoria">● {{ t.category.name }}</span>
+              @if (detalhe(t)) {
+                <span class="ltf-card__detalhe">{{ detalhe(t) }}</span>
+              }
+              <span class="ltf-card__preco">{{ formatarPreco(t.price) }}</span>
+              <div class="ltf-card__stats">
+                <span class="ltf-card__stat ltf-card__stat--like">👍 {{ t.positiveReviews }}</span>
+                <span class="ltf-card__stat ltf-card__stat--dislike">👎 {{ t.negativeReviews }}</span>
+              </div>
+            </div>
+
+          </div>
+        }
+
+        @if (transportes.length === 0) {
+          <div class="ltf-vazio">
+            <p>Nenhum transporte {{ tabAtiva === 'ativos' ? 'ativo' : 'inativo' }} encontrado.</p>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- FAB -->
+  <button class="ltf-fab" (click)="adicionar()" aria-label="Cadastrar transporte">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  </button>
+
+</div>

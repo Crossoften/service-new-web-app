@@ -2,11 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from './api';
 import { Page } from '../models/pagination';
+import { ApiMessage } from '../models/common';
 import {
+  CreateTransportationDto,
   TransportationCategoryDto,
   TransportationDto,
   TransportationListItemDto,
   TransportationQuery,
+  UpdateTransportationDto,
 } from '../models/transportation';
 import {
   CancelTransportRequestDto,
@@ -37,6 +40,11 @@ interface CreateTransportRequestResponseDto {
   transportRequest: TransportRequestDto;
 }
 
+interface CreateTransportationResponseDto {
+  message: string;
+  transportation: TransportationDto;
+}
+
 /** Transporte: catálogo (`/transportations`) e pedidos (`/transport-requests`). */
 @Injectable({ providedIn: 'root' })
 export class TransportService {
@@ -65,12 +73,49 @@ export class TransportService {
       );
   }
 
+  /** Transportes do fornecedor autenticado — `GET /v1/transportations/my-transportations`. */
+  meusTransportes(query: TransportationQuery = {}): Observable<Page<TransportationListItemDto>> {
+    return this.api
+      .get<ResponseFindAllTransportationDto>('/transportations/my-transportations', {
+        search: query.search,
+        categoryId: query.categoryId,
+        isActive: query.isActive,
+        take: query.take,
+        skip: query.skip,
+      })
+      .pipe(
+        map((r) => ({
+          items: r.transportations ?? [],
+          currentPage: r.currentPage,
+          totalPages: r.totalPages,
+          totalRecords: r.totalRecords,
+        })),
+      );
+  }
+
   categorias(): Observable<TransportationCategoryDto[]> {
     return this.api.get<TransportationCategoryDto[]>('/transportations/categories');
   }
 
   transporte(id: number): Observable<TransportationDto> {
     return this.api.get<TransportationDto>(`/transportations/${id}`);
+  }
+
+  /** Cadastra um transporte (fornecedor) — `POST /v1/transportations`. */
+  criar(dto: CreateTransportationDto): Observable<TransportationDto> {
+    return this.api
+      .post<CreateTransportationResponseDto>('/transportations', dto)
+      .pipe(map((r) => r.transportation));
+  }
+
+  /** Edita um transporte — `PATCH /v1/transportations/{id}`. */
+  atualizar(id: number, dto: UpdateTransportationDto): Observable<TransportationDto> {
+    return this.api.patch<TransportationDto>(`/transportations/${id}`, dto);
+  }
+
+  /** Remove um transporte — `DELETE /v1/transportations/{id}`. */
+  remover(id: number): Observable<ApiMessage> {
+    return this.api.delete<ApiMessage>(`/transportations/${id}`);
   }
 
   // ── Pedidos ────────────────────────────────────────────────────────────

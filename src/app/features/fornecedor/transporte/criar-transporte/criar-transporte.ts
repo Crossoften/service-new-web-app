@@ -3,37 +3,40 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
-import { MarketplaceService } from '../../../../core/services/marketplace';
+import { TransportService } from '../../../../core/services/transport';
 import { ApiService } from '../../../../core/services/api';
-import { ProductCategoryDto } from '../../../../core/models/product';
-import { ProductTransactionType } from '../../../../core/models/enums';
+import {
+  CreateTransportationDto,
+  TransportationCategoryDto,
+} from '../../../../core/models/transportation';
 import { ApiError } from '../../../../core/models/common';
 
 @Component({
-  selector: 'app-criar-produto',
+  selector: 'app-criar-transporte',
   imports: [CommonModule, FormsModule],
-  templateUrl: './criar-produto.html',
-  styleUrl: './criar-produto.scss',
+  templateUrl: './criar-transporte.html',
+  styleUrl: './criar-transporte.scss',
 })
-export class CriarProdutoComponent implements OnInit {
-  private readonly marketplace = inject(MarketplaceService);
-  private readonly api = inject(ApiService);
+export class CriarTransporteComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly service = inject(TransportService);
+  private readonly api = inject(ApiService);
 
   editId?: number;
-  categorias: ProductCategoryDto[] = [];
+  categorias: TransportationCategoryDto[] = [];
 
   categoryId?: number;
-  /** Fixo em 'Sale' ao criar; preservado ao editar (ex.: RentAndSale). */
-  transactionType: ProductTransactionType = 'Sale';
   nome = '';
+  preco?: number;
   modelo = '';
   ano?: number;
-  preco?: number;
+  quilometragem?: number;
+  capacidade?: number;
   descricao = '';
   imageUrl = '';
   imageKey = '';
+  ativo = true;
 
   carregando = false;
   salvando = false;
@@ -41,47 +44,44 @@ export class CriarProdutoComponent implements OnInit {
   erro = '';
 
   ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
-    this.editId = id ? Number(id) : undefined;
-
-    this.marketplace.categorias().subscribe({
+    this.service.categorias().subscribe({
       next: (cats) => (this.categorias = cats),
       error: () => {},
     });
 
-    if (this.editId) {
+    const id = this.route.snapshot.queryParamMap.get('id');
+    if (id) {
+      this.editId = Number(id);
       this.carregando = true;
-      this.marketplace
-        .produto(this.editId)
+      this.service
+        .transporte(this.editId)
         .pipe(finalize(() => (this.carregando = false)))
         .subscribe({
-          next: (p) => {
-            this.categoryId = p.categoryId;
-            this.transactionType = p.transactionType;
-            this.nome = p.name;
-            this.modelo = p.model ?? '';
-            this.ano = p.year;
-            this.preco = Number(p.price);
-            this.descricao = p.description ?? '';
-            this.imageUrl = p.imageUrl ?? '';
-            this.imageKey = p.imageKey ?? '';
+          next: (t) => {
+            this.categoryId = t.categoryId;
+            this.nome = t.name;
+            this.preco = Number(t.price);
+            this.modelo = t.model ?? '';
+            this.ano = t.year;
+            this.quilometragem = t.mileageKm;
+            this.capacidade = t.capacity;
+            this.descricao = t.description ?? '';
+            this.imageUrl = t.imageUrl ?? '';
+            this.imageKey = t.imageKey ?? '';
+            this.ativo = t.isActive;
           },
           error: (err: ApiError) => {
-            this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o produto.';
+            this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o transporte.';
           },
         });
     }
   }
 
   get titulo(): string {
-    return this.editId ? 'Editar produto' : 'Novo produto';
+    return this.editId ? 'Editar transporte' : 'Novo transporte';
   }
 
-  get tipoLabel(): string {
-    return this.marketplace.tipoLabel(this.transactionType);
-  }
-
-  selecionarFoto(event: Event) {
+  adicionarImagem(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -105,39 +105,41 @@ export class CriarProdutoComponent implements OnInit {
     if (this.salvando) return;
     this.erro = '';
     if (!this.categoryId) {
-      this.erro = 'Selecione uma categoria.';
+      this.erro = 'Selecione a categoria.';
       return;
     }
     if (!this.nome.trim()) {
-      this.erro = 'Informe o nome do produto.';
+      this.erro = 'Informe o nome do transporte.';
       return;
     }
-    if (this.preco === undefined || this.preco === null || this.preco < 0) {
-      this.erro = 'Informe um preço válido.';
+    if (this.preco === undefined || this.preco === null || isNaN(Number(this.preco)) || Number(this.preco) < 0) {
+      this.erro = 'Informe um valor válido.';
       return;
     }
 
-    const dto = {
+    const dto: CreateTransportationDto = {
       categoryId: this.categoryId,
-      transactionType: this.transactionType,
       name: this.nome.trim(),
+      price: Number(this.preco),
       model: this.modelo.trim() || undefined,
-      year: this.ano || undefined,
-      price: this.preco,
+      year: this.ano ?? undefined,
+      mileageKm: this.quilometragem ?? undefined,
+      capacity: this.capacidade ?? undefined,
       description: this.descricao.trim() || undefined,
       imageUrl: this.imageUrl || undefined,
       imageKey: this.imageKey || undefined,
+      isActive: this.ativo,
     };
 
     this.salvando = true;
     const req$ = this.editId
-      ? this.marketplace.atualizar(this.editId, dto)
-      : this.marketplace.criar(dto);
+      ? this.service.atualizar(this.editId, dto)
+      : this.service.criar(dto);
 
     req$.pipe(finalize(() => (this.salvando = false))).subscribe({
-      next: () => this.router.navigate(['/compra-vender/meus-produtos']),
+      next: () => this.router.navigate(['/fornecedor/transporte']),
       error: (err: ApiError) => {
-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível salvar o produto.';
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível salvar o transporte.';
       },
     });
   }

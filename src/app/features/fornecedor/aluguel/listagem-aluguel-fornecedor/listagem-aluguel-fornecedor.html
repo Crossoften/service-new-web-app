@@ -1,0 +1,78 @@
+<div class="page-container">
+
+  <div class="laf-header">
+    <button class="laf-header__voltar" (click)="voltar()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="laf-header__titulo">Aluguel</span>
+    <div style="width: 22px"></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="laf-tabs">
+    @for (tab of tabs; track tab.id) {
+      <button
+        class="laf-tabs__item"
+        [class.laf-tabs__item--ativo]="tabAtiva === tab.id"
+        (click)="trocarTab(tab.id)">
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <div class="page-content">
+    @if (carregando) {
+      <p class="laf-msg">Carregando…</p>
+    } @else if (erro) {
+      <p class="laf-msg laf-msg--erro">{{ erro }}</p>
+    } @else {
+      <div class="laf-lista">
+        @for (p of itens; track p.id) {
+          <div class="laf-card" (click)="abrir(p)">
+
+            <div class="laf-card__foto">
+              @if (p.imageUrl) {
+                <img [src]="p.imageUrl" [alt]="p.name" />
+              } @else {
+                <div class="laf-card__foto-placeholder">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                    <line x1="7" y1="7" x2="7.01" y2="7"/>
+                  </svg>
+                </div>
+              }
+            </div>
+
+            <div class="laf-card__info">
+              <span class="laf-card__nome">{{ p.name }}</span>
+              <span class="laf-card__categoria">● {{ p.category.name }}</span>
+              <span class="laf-card__tipo">{{ tipoLabel(p.transactionType) }}</span>
+              <span class="laf-card__preco">{{ formatarPreco(p.price) }}</span>
+              <div class="laf-card__stats">
+                <span class="laf-card__stat laf-card__stat--like">👍 {{ p.positiveReviews }}</span>
+                <span class="laf-card__stat laf-card__stat--dislike">👎 {{ p.negativeReviews }}</span>
+              </div>
+            </div>
+
+          </div>
+        }
+
+        @if (itens.length === 0) {
+          <div class="laf-vazio">
+            <p>Nenhum item de aluguel {{ tabAtiva === 'ativos' ? 'ativo' : 'inativo' }} encontrado.</p>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- FAB -->
+  <button class="laf-fab" (click)="adicionar()" aria-label="Cadastrar item de aluguel">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  </button>
+
+</div>

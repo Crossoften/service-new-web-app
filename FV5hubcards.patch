@@ -1,0 +1,37 @@
+diff --git a/src/app/features/fornecedor/hub-fornecedor/hub-fornecedor.spec.ts b/src/app/features/fornecedor/hub-fornecedor/hub-fornecedor.spec.ts
+index 2ab24b9..2fc22ca 100644
+--- a/src/app/features/fornecedor/hub-fornecedor/hub-fornecedor.spec.ts
++++ b/src/app/features/fornecedor/hub-fornecedor/hub-fornecedor.spec.ts
+@@ -25,6 +25,14 @@ describe('HubFornecedorComponent', () => {
+     expect(rotas).toContain('/fornecedor/servicos'); // serviços
+   });
+ 
++  it('aponta hospedagem, transporte e aluguel para as telas do fornecedor', () => {
++    const rotaDe = (titulo: string) =>
++      component.verticais.find((v) => v.titulo === titulo)?.rota;
++    expect(rotaDe('Hospedagem')).toBe('/fornecedor/hospedagem');
++    expect(rotaDe('Transporte')).toBe('/fornecedor/transporte');
++    expect(rotaDe('Aluguel')).toBe('/fornecedor/aluguel');
++  });
++
+   it('abrir() navega para a rota da vertical', () => {
+     const router = TestBed.inject(Router);
+     const nav = vi.spyOn(router, 'navigate');
+diff --git a/src/app/features/fornecedor/hub-fornecedor/hub-fornecedor.ts b/src/app/features/fornecedor/hub-fornecedor/hub-fornecedor.ts
+index 5366bf4..2530a9e 100644
+--- a/src/app/features/fornecedor/hub-fornecedor/hub-fornecedor.ts
++++ b/src/app/features/fornecedor/hub-fornecedor/hub-fornecedor.ts
+@@ -29,10 +29,10 @@ export class HubFornecedorComponent {
+     { icone: '🛵', titulo: 'Delivery', descricao: 'Restaurante, cardápio e pedidos', rota: '/fornecedor/home' },
+     { icone: '🔧', titulo: 'Serviços', descricao: 'Serviços, orçamentos e trabalhos', rota: '/fornecedor/servicos' },
+     { icone: '🛒', titulo: 'Compra e Venda', descricao: 'Anuncie e gerencie produtos', rota: '/compra-vender/meus-produtos' },
+-    { icone: '🏠', titulo: 'Hospedagem', descricao: 'Acomodações e reservas', rota: '/hospedagem/reservas' },
+-    { icone: '🚚', titulo: 'Transporte', descricao: 'Veículos e pedidos', rota: '/transporte/meus' },
++    { icone: '🏠', titulo: 'Hospedagem', descricao: 'Cadastre e gerencie acomodações', rota: '/fornecedor/hospedagem' },
++    { icone: '🚚', titulo: 'Transporte', descricao: 'Cadastre e gerencie veículos', rota: '/fornecedor/transporte' },
+     { icone: '💼', titulo: 'Empregos', descricao: 'Publique vagas e veja candidaturas', rota: '/empregos/vaga/nova' },
+-    { icone: '🏘️', titulo: 'Aluguel', descricao: 'Itens para locação', rota: '/aluguel/meus' },
++    { icone: '🏘️', titulo: 'Aluguel', descricao: 'Cadastre e gerencie itens para locação', rota: '/fornecedor/aluguel' },
+   ];
+ 
+   abrir(vertical: VerticalCard) {

@@ -45,14 +45,10 @@
           </select>
         </div>
 
-        <!-- TIPO -->
-        <div class="cp-field">
-          <label>Tipo de negociação</label>
-          <select [(ngModel)]="transactionType">
-            @for (t of tipos; track t.id) {
-              <option [ngValue]="t.id">{{ t.label }}</option>
-            }
-          </select>
+        <!-- TIPO (somente leitura) -->
+        <div class="cp-tipo">
+          <span class="cp-tipo__label">Negociação</span>
+          <span class="cp-tipo__valor">{{ tipoLabel }}</span>
         </div>
 
         <!-- NOME -->

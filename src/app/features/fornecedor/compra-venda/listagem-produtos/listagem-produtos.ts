@@ -5,7 +5,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { MarketplaceService } from '../../../../core/services/marketplace';
 import { ProductListItemDto } from '../../../../core/models/product';
+import { ProductTransactionType } from '../../../../core/models/enums';
 import { ApiError } from '../../../../core/models/common';
+
+/** Tipos de negociação exibidos na vertical de compra e venda do fornecedor. */
+const TIPOS_VENDA: ProductTransactionType[] = ['Sale', 'RentAndSale'];
 
 @Component({
   selector: 'app-listagem-produtos',
@@ -43,7 +47,12 @@ export class ListagemProdutosComponent implements OnInit {
     const query = { categoryId: this.categoryId, search: this.busca.trim() || undefined };
     const req$ = this.mine ? this.marketplace.meusProdutos(query) : this.marketplace.produtos(query);
     req$.pipe(finalize(() => (this.carregando = false))).subscribe({
-      next: (page) => (this.produtos = page.items),
+      // Na gestão do fornecedor, compra e venda mostra apenas Venda e Venda e aluguel;
+      // itens só de aluguel (Rent) ficam na vertical de aluguel. A vitrine pública é inalterada.
+      next: (page) =>
+        (this.produtos = this.mine
+          ? page.items.filter((p) => TIPOS_VENDA.includes(p.transactionType))
+          : page.items),
       error: (err: ApiError) => {
         this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar os produtos.';
       },

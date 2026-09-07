@@ -1,0 +1,254 @@
+diff --git a/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.html b/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.html
+index ad90454..f34d5c5 100644
+--- a/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.html
++++ b/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.html
+@@ -45,14 +45,10 @@
+           </select>
+         </div>
+ 
+-        <!-- TIPO -->
+-        <div class="cp-field">
+-          <label>Tipo de negociação</label>
+-          <select [(ngModel)]="transactionType">
+-            @for (t of tipos; track t.id) {
+-              <option [ngValue]="t.id">{{ t.label }}</option>
+-            }
+-          </select>
++        <!-- TIPO (somente leitura) -->
++        <div class="cp-tipo">
++          <span class="cp-tipo__label">Negociação</span>
++          <span class="cp-tipo__valor">{{ tipoLabel }}</span>
+         </div>
+ 
+         <!-- NOME -->
+diff --git a/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.scss b/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.scss
+index 08d94a8..5d79f8d 100644
+--- a/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.scss
++++ b/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.scss
+@@ -94,6 +94,27 @@
+   textarea { resize: vertical; }
+ }
+ 
++.cp-tipo {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  padding: 12px;
++  border: 1px solid var(--color-gray-100);
++  border-radius: 10px;
++  background: var(--color-white);
++
++  &__label {
++    font-size: 13px;
++    color: var(--color-gray-600);
++  }
++
++  &__valor {
++    font-size: 14px;
++    font-weight: 700;
++    color: var(--color-primary);
++  }
++}
++
+ .cp-erro {
+   color: #d33;
+   font-size: 13px;
+diff --git a/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.spec.ts b/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.spec.ts
+index 00db771..2a4162c 100644
+--- a/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.spec.ts
++++ b/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.spec.ts
+@@ -13,34 +13,36 @@ describe('CriarProdutoComponent', () => {
+   let fixture: ComponentFixture<CriarProdutoComponent>;
+   let httpMock: HttpTestingController;
+ 
+-  beforeEach(async () => {
+-    await TestBed.configureTestingModule({
++  function setup(params: Record<string, string> = {}) {
++    TestBed.configureTestingModule({
+       imports: [CriarProdutoComponent],
+       providers: [
+         provideRouter([]),
+         provideHttpClient(),
+         provideHttpClientTesting(),
+-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({}) } } },
++        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap(params) } } },
+       ],
+-    }).compileComponents();
++    });
+ 
+     fixture = TestBed.createComponent(CriarProdutoComponent);
+     component = fixture.componentInstance;
+     httpMock = TestBed.inject(HttpTestingController);
+     fixture.detectChanges();
+-    // ngOnInit carrega as categorias (modo criação, sem id).
++    // ngOnInit carrega as categorias.
+     httpMock.expectOne((r) => r.url.endsWith('/products/categories')).flush([]);
+-  });
++  }
+ 
+   afterEach(() => httpMock.verify());
+ 
+   it('valida campos obrigatórios antes de enviar', () => {
++    setup();
+     component.salvar();
+     expect(component.erro).toContain('categoria');
+     httpMock.expectNone((r) => r.url.endsWith('/products'));
+   });
+ 
+-  it('envia CreateProductDto no POST /products', () => {
++  it('envia CreateProductDto travado em Venda (Sale) no POST /products', () => {
++    setup();
+     component.categoryId = 3;
+     component.nome = 'Fiat';
+     component.preco = 45000;
+@@ -48,6 +50,26 @@ describe('CriarProdutoComponent', () => {
+     const req = httpMock.expectOne((r) => r.url.endsWith('/products') && r.method === 'POST');
+     expect(req.request.body.categoryId).toBe(3);
+     expect(req.request.body.price).toBe(45000);
++    expect(req.request.body.transactionType).toBe('Sale');
+     req.flush({ message: 'ok', product: { id: 1 } });
+   });
++
++  it('preserva RentAndSale ao editar um produto existente', () => {
++    setup({ id: '9' });
++    httpMock.expectOne((r) => r.url.endsWith('/products/9') && r.method === 'GET').flush({
++      id: 9,
++      name: 'Betoneira',
++      transactionType: 'RentAndSale',
++      price: '120.00',
++      categoryId: 4,
++      isActive: true,
++    });
++    expect(component.transactionType).toBe('RentAndSale');
++    expect(component.tipoLabel).toBe('Venda e aluguel');
++
++    component.salvar();
++    const req = httpMock.expectOne((r) => r.url.endsWith('/products/9') && r.method === 'PATCH');
++    expect(req.request.body.transactionType).toBe('RentAndSale');
++    req.flush({ id: 9 });
++  });
+ });
+diff --git a/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.ts b/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.ts
+index f17de19..638a0d6 100644
+--- a/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.ts
++++ b/src/app/features/fornecedor/compra-venda/criar-produto/criar-produto.ts
+@@ -9,11 +9,6 @@ import { ProductCategoryDto } from '../../../../core/models/product';
+ import { ProductTransactionType } from '../../../../core/models/enums';
+ import { ApiError } from '../../../../core/models/common';
+ 
+-interface TipoOpcao {
+-  id: ProductTransactionType;
+-  label: string;
+-}
+-
+ @Component({
+   selector: 'app-criar-produto',
+   imports: [CommonModule, FormsModule],
+@@ -29,13 +24,8 @@ export class CriarProdutoComponent implements OnInit {
+   editId?: number;
+   categorias: ProductCategoryDto[] = [];
+ 
+-  tipos: TipoOpcao[] = [
+-    { id: 'Sale', label: 'Venda' },
+-    { id: 'Rent', label: 'Aluguel' },
+-    { id: 'RentAndSale', label: 'Venda e aluguel' },
+-  ];
+-
+   categoryId?: number;
++  /** Fixo em 'Sale' ao criar; preservado ao editar (ex.: RentAndSale). */
+   transactionType: ProductTransactionType = 'Sale';
+   nome = '';
+   modelo = '';
+@@ -87,6 +77,10 @@ export class CriarProdutoComponent implements OnInit {
+     return this.editId ? 'Editar produto' : 'Novo produto';
+   }
+ 
++  get tipoLabel(): string {
++    return this.marketplace.tipoLabel(this.transactionType);
++  }
++
+   selecionarFoto(event: Event) {
+     const input = event.target as HTMLInputElement;
+     const file = input.files?.[0];
+diff --git a/src/app/features/fornecedor/compra-venda/listagem-produtos/listagem-produtos.spec.ts b/src/app/features/fornecedor/compra-venda/listagem-produtos/listagem-produtos.spec.ts
+index 5863d00..f9f9ad4 100644
+--- a/src/app/features/fornecedor/compra-venda/listagem-produtos/listagem-produtos.spec.ts
++++ b/src/app/features/fornecedor/compra-venda/listagem-produtos/listagem-produtos.spec.ts
+@@ -43,3 +43,46 @@ describe('ListagemProdutosComponent', () => {
+     expect(component.produtos[0].name).toBe('Fiat');
+   });
+ });
++
++describe('ListagemProdutosComponent (meus produtos)', () => {
++  let component: ListagemProdutosComponent;
++  let fixture: ComponentFixture<ListagemProdutosComponent>;
++  let httpMock: HttpTestingController;
++
++  beforeEach(async () => {
++    await TestBed.configureTestingModule({
++      imports: [ListagemProdutosComponent],
++      providers: [
++        provideRouter([]),
++        provideHttpClient(),
++        provideHttpClientTesting(),
++        {
++          provide: ActivatedRoute,
++          useValue: { snapshot: { queryParamMap: convertToParamMap({}), data: { mine: true } } },
++        },
++      ],
++    }).compileComponents();
++
++    fixture = TestBed.createComponent(ListagemProdutosComponent);
++    component = fixture.componentInstance;
++    httpMock = TestBed.inject(HttpTestingController);
++    fixture.detectChanges();
++  });
++
++  afterEach(() => httpMock.verify());
++
++  it('mostra apenas Venda e Venda e aluguel na gestão do fornecedor', () => {
++    const req = httpMock.expectOne((r) => r.url.endsWith('/products/my-products'));
++    req.flush({
++      products: [
++        { id: 1, name: 'Notebook', transactionType: 'Sale' },
++        { id: 2, name: 'Furadeira', transactionType: 'Rent' },
++        { id: 3, name: 'Betoneira', transactionType: 'RentAndSale' },
++      ],
++      currentPage: 1,
++      totalPages: 1,
++      totalRecords: 3,
++    });
++    expect(component.produtos.map((p) => p.id)).toEqual([1, 3]);
++  });
++});
+diff --git a/src/app/features/fornecedor/compra-venda/listagem-produtos/listagem-produtos.ts b/src/app/features/fornecedor/compra-venda/listagem-produtos/listagem-produtos.ts
+index f81202c..571bef7 100644
+--- a/src/app/features/fornecedor/compra-venda/listagem-produtos/listagem-produtos.ts
++++ b/src/app/features/fornecedor/compra-venda/listagem-produtos/listagem-produtos.ts
+@@ -5,8 +5,12 @@ import { ActivatedRoute, Router } from '@angular/router';
+ import { finalize } from 'rxjs';
+ import { MarketplaceService } from '../../../../core/services/marketplace';
+ import { ProductListItemDto } from '../../../../core/models/product';
++import { ProductTransactionType } from '../../../../core/models/enums';
+ import { ApiError } from '../../../../core/models/common';
+ 
++/** Tipos de negociação exibidos na vertical de compra e venda do fornecedor. */
++const TIPOS_VENDA: ProductTransactionType[] = ['Sale', 'RentAndSale'];
++
+ @Component({
+   selector: 'app-listagem-produtos',
+   imports: [CommonModule, FormsModule],
+@@ -43,7 +47,12 @@ export class ListagemProdutosComponent implements OnInit {
+     const query = { categoryId: this.categoryId, search: this.busca.trim() || undefined };
+     const req$ = this.mine ? this.marketplace.meusProdutos(query) : this.marketplace.produtos(query);
+     req$.pipe(finalize(() => (this.carregando = false))).subscribe({
+-      next: (page) => (this.produtos = page.items),
++      // Na gestão do fornecedor, compra e venda mostra apenas Venda e Venda e aluguel;
++      // itens só de aluguel (Rent) ficam na vertical de aluguel. A vitrine pública é inalterada.
++      next: (page) =>
++        (this.produtos = this.mine
++          ? page.items.filter((p) => TIPOS_VENDA.includes(p.transactionType))
++          : page.items),
+       error: (err: ApiError) => {
+         this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar os produtos.';
+       },
