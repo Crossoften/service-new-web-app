@@ -98,6 +98,22 @@ describe('DeliveryService', () => {
     expect(tempo).toBe('30-45 min');
   });
 
+  it('mapeia aberto (isOpen) e tempoMinMinutos no restaurante', () => {
+    let aberto: boolean | undefined;
+    let tempoMin: number | undefined;
+    service.getRestaurante(1).subscribe((r) => {
+      aberto = r.aberto;
+      tempoMin = r.tempoMinMinutos;
+    });
+    httpMock.expectOne((r) => r.url.endsWith('/restaurants/1')).flush({
+      id: 1, name: 'Cantina', isActive: true, isOpen: false,
+      category: { id: 2, name: 'Lanches', slug: 'lanches' },
+      deliveryTimeMinMinutes: 20, deliveryFee: 0,
+    });
+    expect(aberto).toBe(false);
+    expect(tempoMin).toBe(20);
+  });
+
   it('tempo de entrega vazio quando não informado', () => {
     let tempo = 'x';
     service.getRestaurante(2).subscribe((r) => (tempo = r.tempo));

@@ -7,6 +7,39 @@
     (buscarChange)="onBuscar($event)">
   </app-header-busca>
 
+  <!-- FILTROS -->
+  <div class="listagem-filtros">
+    <button class="filtro-chip" [class.filtro-chip--ativo]="filtroAberto" (click)="toggleAberto()">
+      Aberto agora
+    </button>
+    <button class="filtro-chip" [class.filtro-chip--ativo]="filtroGratis" (click)="toggleGratis()">
+      Entrega grátis
+    </button>
+    <div class="filtro-ordenar">
+      <button class="filtro-chip filtro-chip--ordenar"
+        [class.filtro-chip--ativo]="ordenacao !== 'relevancia'" (click)="toggleOrdenacao()">
+        <span>{{ ordenacaoLabel }}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          [style.transform]="ordenacaoAberta ? 'rotate(180deg)' : 'rotate(0)'">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      @if (ordenacaoAberta) {
+        <div class="filtro-ordenar__opcoes">
+          @for (o of ordenacoes; track o.id) {
+            <div class="filtro-ordenar__opcao" [class.filtro-ordenar__opcao--ativo]="ordenacao === o.id"
+              (click)="selecionarOrdenacao(o.id)">
+              {{ o.label }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+    @if (temFiltroAtivo) {
+      <button class="filtro-limpar" (click)="limparFiltros()" aria-label="Limpar filtros">Limpar</button>
+    }
+  </div>
+
   <div class="page-content">
     <div class="listagem-delivery">
 
@@ -32,7 +65,10 @@
           </div>
 
           <div class="restaurante-card__info">
-            <span class="restaurante-card__nome">{{ restaurante.nome }}</span>
+            <span class="restaurante-card__nome">
+              {{ restaurante.nome }}
+              @if (!restaurante.aberto) { <span class="restaurante-card__fechado">Fechado</span> }
+            </span>
 
             <div class="restaurante-card__meta">
               <span class="restaurante-card__avaliacao">⭐ {{ restaurante.avaliacao }}</span>

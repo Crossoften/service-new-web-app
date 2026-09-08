@@ -50,7 +50,9 @@ export interface Restaurante {
   avaliacao: number; // média (ratingAverage); 0 quando ninguém avaliou
   totalAvaliacoes: number; // ratingCount
   tempo: string; // (BE-D1)
+  tempoMinMinutos?: number; // deliveryTimeMinMinutes — para ordenar por tempo
   taxaEntrega: number; // (BE-D1)
+  aberto: boolean; // isOpen — para o filtro "aberto agora"
   descricao: string;
   imagem: string;
   logo: string; // (BE-D1)
@@ -276,7 +278,9 @@ export class DeliveryService {
       avaliacao: r.ratingAverage ?? r.rating ?? 0,
       totalAvaliacoes: r.ratingCount ?? 0,
       tempo: this.formatarTempoEntrega(r.deliveryTimeMinMinutes, r.deliveryTimeMaxMinutes) || (r.estimatedTime ?? ''),
+      tempoMinMinutos: r.deliveryTimeMinMinutes,
       taxaEntrega: r.deliveryFee ?? 0,
+      aberto: r.isOpen ?? true,
       descricao: r.description ?? '',
       imagem: r.imageUrl ?? '',
       logo: r.logoUrl ?? '',
