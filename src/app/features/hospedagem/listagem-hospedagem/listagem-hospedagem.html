@@ -27,8 +27,11 @@
     } @else if (itens.length === 0) {
       <p class="lh-msg">Nenhuma hospedagem encontrada.</p>
     } @else {
+      <div class="lh-ordenar">
+        <app-ordenacao-itens [(valor)]="ordenacao"></app-ordenacao-itens>
+      </div>
       <div class="lh-lista">
-        @for (a of itens; track a.id) {
+        @for (a of itensOrdenados; track a.id) {
           <div class="lh-card" (click)="abrir(a.id)">
             <div class="lh-card__img">
               @if (a.imageUrl) {

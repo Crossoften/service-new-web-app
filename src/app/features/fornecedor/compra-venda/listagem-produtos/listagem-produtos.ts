@@ -7,13 +7,15 @@ import { MarketplaceService } from '../../../../core/services/marketplace';
 import { ProductListItemDto } from '../../../../core/models/product';
 import { ProductTransactionType } from '../../../../core/models/enums';
 import { ApiError } from '../../../../core/models/common';
+import { OrdenacaoItensComponent } from '../../../../shared/components/ordenacao-itens/ordenacao-itens';
+import { OrdenacaoItem, ordenarItens } from '../../../../core/utils/item-search';
 
 /** Tipos de negociação exibidos na vertical de compra e venda do fornecedor. */
 const TIPOS_VENDA: ProductTransactionType[] = ['Sale', 'RentAndSale'];
 
 @Component({
   selector: 'app-listagem-produtos',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OrdenacaoItensComponent],
   templateUrl: './listagem-produtos.html',
   styleUrl: './listagem-produtos.scss',
 })
@@ -26,6 +28,7 @@ export class ListagemProdutosComponent implements OnInit {
   categoryId?: number;
   categoriaNome = '';
   busca = '';
+  ordenacao: OrdenacaoItem = 'relevancia';
   /** Modo "meus produtos" (gestão do fornecedor) vs vitrine (comprador). */
   mine = false;
   carregando = false;
@@ -66,6 +69,10 @@ export class ListagemProdutosComponent implements OnInit {
   get titulo(): string {
     if (this.mine) return 'Meus produtos';
     return this.categoriaNome || 'Produtos';
+  }
+
+  get produtosOrdenados(): ProductListItemDto[] {
+    return ordenarItens(this.produtos, this.ordenacao);
   }
 
   abrirProduto(id: number) {

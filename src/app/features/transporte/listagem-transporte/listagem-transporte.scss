@@ -84,3 +84,9 @@
   &__sub { font-size: 12px; color: var(--color-gray-600); }
   &__preco { font-size: 15px; font-weight: 700; color: var(--color-primary); }
 }
+
+.lt-ordenar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}

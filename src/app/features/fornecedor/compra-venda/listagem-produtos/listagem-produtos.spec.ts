@@ -42,6 +42,16 @@ describe('ListagemProdutosComponent', () => {
     expect(component.produtos.length).toBe(1);
     expect(component.produtos[0].name).toBe('Fiat');
   });
+
+  it('produtosOrdenados aplica a ordenação selecionada', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/products')).flush({ products: [], currentPage: 1, totalPages: 1, totalRecords: 0 });
+    component.produtos = [
+      { id: 1, price: '30', positiveReviews: 0, negativeReviews: 0 } as never,
+      { id: 2, price: '10', positiveReviews: 0, negativeReviews: 0 } as never,
+    ];
+    component.ordenacao = 'preco-asc';
+    expect(component.produtosOrdenados.map((p) => p.id)).toEqual([2, 1]);
+  });
 });
 
 describe('ListagemProdutosComponent (meus produtos)', () => {

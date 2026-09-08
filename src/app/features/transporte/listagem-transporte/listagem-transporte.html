@@ -27,8 +27,11 @@
     } @else if (itens.length === 0) {
       <p class="lt-msg">Nenhum veículo disponível.</p>
     } @else {
+      <div class="lt-ordenar">
+        <app-ordenacao-itens [(valor)]="ordenacao"></app-ordenacao-itens>
+      </div>
       <div class="lt-lista">
-        @for (t of itens; track t.id) {
+        @for (t of itensOrdenados; track t.id) {
           <div class="lt-card" (click)="abrir(t.id)">
             <div class="lt-card__img">
               @if (t.imageUrl) {

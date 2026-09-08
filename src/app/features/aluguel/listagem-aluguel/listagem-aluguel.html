@@ -27,8 +27,11 @@
     } @else if (produtos.length === 0) {
       <p class="la-msg">Nenhum item disponível para aluguel.</p>
     } @else {
+      <div class="la-ordenar">
+        <app-ordenacao-itens [(valor)]="ordenacao"></app-ordenacao-itens>
+      </div>
       <div class="la-grid">
-        @for (p of produtos; track p.id) {
+        @for (p of produtosOrdenados; track p.id) {
           <div class="la-card" (click)="abrirProduto(p.id)">
             <div class="la-card__img">
               @if (p.imageUrl) {

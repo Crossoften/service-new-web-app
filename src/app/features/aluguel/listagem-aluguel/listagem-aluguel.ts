@@ -6,10 +6,12 @@ import { finalize, map } from 'rxjs';
 import { MarketplaceService } from '../../../core/services/marketplace';
 import { ProductListItemDto } from '../../../core/models/product';
 import { ApiError } from '../../../core/models/common';
+import { OrdenacaoItensComponent } from '../../../shared/components/ordenacao-itens/ordenacao-itens';
+import { OrdenacaoItem, ordenarItens } from '../../../core/utils/item-search';
 
 @Component({
   selector: 'app-listagem-aluguel',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OrdenacaoItensComponent],
   templateUrl: './listagem-aluguel.html',
   styleUrl: './listagem-aluguel.scss',
 })
@@ -22,6 +24,7 @@ export class ListagemAluguelComponent implements OnInit {
   categoryId?: number;
   categoriaNome = '';
   busca = '';
+  ordenacao: OrdenacaoItem = 'relevancia';
   carregando = false;
   erro = '';
 
@@ -52,6 +55,10 @@ export class ListagemAluguelComponent implements OnInit {
 
   buscar() {
     this.carregar();
+  }
+
+  get produtosOrdenados(): ProductListItemDto[] {
+    return ordenarItens(this.produtos, this.ordenacao);
   }
 
   abrirProduto(id: number) {

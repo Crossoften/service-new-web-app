@@ -82,3 +82,9 @@
     small { font-size: 11px; font-weight: 500; color: var(--color-gray-600); }
   }
 }
+
+.lh-ordenar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}

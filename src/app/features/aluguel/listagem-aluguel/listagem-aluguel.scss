@@ -78,3 +78,9 @@
   &__nome { font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   &__preco { font-size: 15px; font-weight: 700; color: var(--color-primary); }
 }
+
+.la-ordenar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}

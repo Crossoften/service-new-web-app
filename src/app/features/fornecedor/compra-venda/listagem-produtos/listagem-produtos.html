@@ -29,8 +29,11 @@
     } @else if (produtos.length === 0) {
       <p class="lp-msg">Nenhum produto encontrado.</p>
     } @else {
+      <div class="lp-ordenar">
+        <app-ordenacao-itens [(valor)]="ordenacao"></app-ordenacao-itens>
+      </div>
       <div class="lp-grid">
-        @for (p of produtos; track p.id) {
+        @for (p of produtosOrdenados; track p.id) {
           <div class="lp-card" (click)="abrirProduto(p.id)">
             <div class="lp-card__img">
               @if (p.imageUrl) {

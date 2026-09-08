@@ -186,3 +186,9 @@
 
   &:active { opacity: 0.85; }
 }
+
+.lp-ordenar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}

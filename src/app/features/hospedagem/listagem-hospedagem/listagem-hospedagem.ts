@@ -6,10 +6,12 @@ import { finalize } from 'rxjs';
 import { AccommodationService } from '../../../core/services/accommodation';
 import { AccommodationListItemDto } from '../../../core/models/accommodation';
 import { ApiError } from '../../../core/models/common';
+import { OrdenacaoItensComponent } from '../../../shared/components/ordenacao-itens/ordenacao-itens';
+import { OrdenacaoItem, ordenarItens } from '../../../core/utils/item-search';
 
 @Component({
   selector: 'app-listagem-hospedagem',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OrdenacaoItensComponent],
   templateUrl: './listagem-hospedagem.html',
   styleUrl: './listagem-hospedagem.scss',
 })
@@ -22,6 +24,7 @@ export class ListagemHospedagemComponent implements OnInit {
   categoryId?: number;
   categoriaNome = '';
   busca = '';
+  ordenacao: OrdenacaoItem = 'relevancia';
   carregando = false;
   erro = '';
 
@@ -48,6 +51,10 @@ export class ListagemHospedagemComponent implements OnInit {
 
   buscar() {
     this.carregar();
+  }
+
+  get itensOrdenados(): AccommodationListItemDto[] {
+    return ordenarItens(this.itens, this.ordenacao);
   }
 
   abrir(id: number) {

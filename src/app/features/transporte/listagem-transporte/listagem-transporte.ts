@@ -6,10 +6,12 @@ import { finalize } from 'rxjs';
 import { TransportService } from '../../../core/services/transport';
 import { TransportationListItemDto } from '../../../core/models/transportation';
 import { ApiError } from '../../../core/models/common';
+import { OrdenacaoItensComponent } from '../../../shared/components/ordenacao-itens/ordenacao-itens';
+import { OrdenacaoItem, ordenarItens } from '../../../core/utils/item-search';
 
 @Component({
   selector: 'app-listagem-transporte',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OrdenacaoItensComponent],
   templateUrl: './listagem-transporte.html',
   styleUrl: './listagem-transporte.scss',
 })
@@ -22,6 +24,7 @@ export class ListagemTransporteComponent implements OnInit {
   categoryId?: number;
   categoriaNome = '';
   busca = '';
+  ordenacao: OrdenacaoItem = 'relevancia';
   carregando = false;
   erro = '';
 
@@ -48,6 +51,10 @@ export class ListagemTransporteComponent implements OnInit {
 
   buscar() {
     this.carregar();
+  }
+
+  get itensOrdenados(): TransportationListItemDto[] {
+    return ordenarItens(this.itens, this.ordenacao);
   }
 
   abrir(id: number) {

@@ -217,7 +217,9 @@
 | **RATE-1** | **Avaliar pós-entrega (cliente)** — quando o pedido fica **`Delivered`**, a tela de status mostra um card de avaliação (estrelas 1–5 + comentário opcional) → `POST /restaurants/:id/reviews` (reusa `avaliarRestaurante`). Trata **409** (já avaliou → esconde o form) e valida a nota. Fecha o ciclo do delivery. Sem mudança de back. | ✅ (9) | `RATE-1-avaliar-pos-entrega` |
 
 > **Próximas fatias sugeridas (🟢, back pronto):** **"pedir novamente"** (histórico) · **avaliar pós-entrega**.
-> Cupom/agendamento/gorjeta/push exigem back novo → `backend-demandas.md`.
+> ✅ **Backlog 🟢 do delivery concluído** (ADD-1/2, OBS-1, CART-1, SEARCH-1/2, REORDER-1, RATE-1). Os itens que
+> exigem back novo estão **documentados em `backend-demandas.md`** como **BE-Q10** (cupom) · **BE-Q11** (agendar) ·
+> **BE-Q12** (gorjeta) · **BE-Q13** (push) · **BE-Q14** (ícones das categorias de restaurante).
 > **Demanda de back (nova):** semear `iconUrl` nas **categorias de restaurante** (`restaurant-category.seeds.ts` não seta ícone — front já tem fallback, mas os ícones reais melhorariam a tela de Buscar).
 
 ---
