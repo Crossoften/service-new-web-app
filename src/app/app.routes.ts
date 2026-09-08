@@ -215,6 +215,7 @@ export const routes: Routes = [
   { path: 'hospedagem/reserva/:id', component: ReservaDetalheComponent, canActivate: [authGuard] },
   { path: 'empregos', component: CategoriaEmpregosComponent, canActivate: [authGuard] },
   { path: 'empregos/vagas', component: ListagemEmpregosComponent, canActivate: [authGuard] },
+  { path: 'empregos/minhas-vagas', component: ListagemEmpregosComponent, data: { mine: true }, canActivate: [authGuard] },
   { path: 'empregos/candidaturas', component: MinhasCandidaturasComponent, canActivate: [authGuard] },
   { path: 'empregos/vaga/nova', component: PublicarVagaComponent, canActivate: [authGuard] },
   { path: 'empregos/vaga/:id/candidaturas', component: VagaCandidaturasComponent, canActivate: [authGuard] },

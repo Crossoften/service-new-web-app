@@ -7,7 +7,7 @@
 > + **Mercado Pago** (MP-1…MP-3) + **Fase Mapa (MAP-1…MAP-3, rastreamento ao vivo)** aplicada + ajustes de layout.
 > **Em andamento:** fluxo delivery — **adicionais no cardápio** (back pronto, front a fazer) + melhorias de usabilidade.
 >
-> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `1e2ed48`).
+> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `24c4486`).
 > **Back-end:** `service-new-ws` @ `ajustes-gerais` (@ `b60afd0`, com Mercado Pago). **Base local:** `http://localhost:8000/v1`.
 
 ---
@@ -224,6 +224,24 @@
 
 ---
 
+### Fase Descoberta — busca/filtros nas demais verticais (VF-1…)
+
+> Levar a experiência de busca/ordenação do delivery para as **outras verticais** (auditoria em 3 grupos:
+> **Grupo A** = mesmo shape de item — produtos/aluguel/transporte/hospedagem; **Serviços** e **Empregos** = bespoke).
+
+| Fatia | Escopo | Specs | Patch |
+|---|---|---|---|
+| **VF-1** | **Ordenação nas vitrines do Grupo A** (Compra-venda, Aluguel, Transporte, Hospedagem) — cada uma ganhou seletor **Ordenar** (Relevância / Menor preço / Maior preço / Melhor avaliação), aplicado client-side sobre a lista já carregada. Busca por texto já existia (via API). Extraído util puro **`core/utils/item-search.ts`** + componente compartilhado **`<app-ordenacao-itens>`** (reutilizados pelas 4 telas). Sem mudança de back. | ✅ (8) | `VF-1-busca-filtros-verticais-grupoA` |
+| **VF-2** | **Ordenação em Serviços** — a listagem de prestadores (que já tinha busca por nome/profissão) ganhou o mesmo **`<app-ordenacao-itens>`**, com ordenação específica do VM `Prestador`: **Melhor avaliação** (gostei − não gostei) e **Menor/Maior preço** (preço opcional vai ao fim). Sem mexer no mapper/back. *(Depende do VF-1 — usa o componente compartilhado.)* | ✅ (2) | `VF-2-servicos-ordenacao` |
+| **EMP-1** | **Empregos: listagem antes do cadastro** — no **hub do fornecedor**, "Empregos" ia direto para o formulário de publicar vaga (`/empregos/vaga/nova`), diferente das outras verticais (que abrem uma listagem). Agora abre **"Minhas vagas"** (`/empregos/minhas-vagas`) — a `ListagemEmpregos` ganhou modo `mine` (route data → `scope: 'Mine'`, título "Minhas vagas", botão **+** para publicar). Vitrine pública (`/empregos/vagas`) inalterada. Sem mudança de back. | ✅ (4) | `EMP-1-listagem-antes-do-cadastro` |
+| **VF-3** | **Busca + filtros em Empregos** — a tela **não tinha busca nenhuma**; agora tem **busca** (cargo/empresa), **chips por tipo de contrato** (Todos/CLT/PJ/Freelance/Temporário) e chip **"Mais recentes"** (ordena por `createdAt`). Tudo client-side sobre `GET /jobs`. Bespoke (shape distinto), **independente do VF-1**. Sem mudança de back. | ✅ (2) | `VF-3-empregos-busca-filtros` |
+
+> ✅ **Descoberta levada a todas as verticais de vitrine.** (Marketplace/Aluguel/Transporte/Hospedagem via VF-1;
+> Serviços via VF-2; Empregos via VF-3.) Melhorias futuras possíveis: filtro por **tipo de serviço** (Online/Presencial/
+> Domicílio — exige estender o mapper `Prestador`) e faixa de preço; ficam anotadas como evolução, não bloqueiam.
+
+---
+
 ## ▶️ Ordem de aplicação dos patches (resumo)
 
 Fundação → Auth (1..3) → Perfil → Delivery (DC/DF) + fixes → Entregador → Parceiro → Marketplace → Aluguel →
@@ -233,8 +251,8 @@ correções criar-serviço (nome, categoria) → **verticais do fornecedor (FV-1
 **SV-1** (indep.) · **CV-1** (indep.) · **CD-1→PZ-1** (mask nos 5 forms) · **CD-1+PZ-1→CV-2** (aviso sem categoria) ·
 **CV-3** (indep.) → **PF-1 · PF-2** (perfil, aplicados @ `eec245d`) → **MAP-1a→1b→1c** → **MAP-2a→2b→2c** → **MAP-3** (fase mapa).
 **Aplicado @ `290db7c`:** **MAP-1a→…→2c→3** (fase mapa completa; `socket.io-client` instalado via `npm install`).
-Pendente de aplicação: **CV-3** (indep.), **AJ-layout** (2 `.scss`), **AJ-maps-key** (chave do Google), **AJ-buscar-v2** (filtros sempre visíveis + endereço real nas 2 telas — substitui o AJ-buscar não aplicado) e **RATE-1** (avaliar pós-entrega). *(…/SEARCH-2/REORDER-1 aplicados; base @ `1e2ed48`.)*
-`origin/integracao` @ `1e2ed48`.
+Pendente de aplicação: **CV-3** (indep.), **AJ-layout** (2 `.scss`), **AJ-maps-key** (chave do Google), **AJ-buscar-v2** (filtros sempre visíveis + endereço real nas 2 telas — substitui o AJ-buscar não aplicado) e **VF-2/VF-3** + **EMP-1** (Serviços/Empregos + listagem de empregos no hub). *(…/VF-1 aplicados; base @ `24c4486`.)*
+`origin/integracao` @ `24c4486`.
 
 > **AJ-layout** (`AJ-layout-periodos-scroll-restaurante`): (1) `.home-f-periodos` ganhou `margin: 0 16px` p/ alinhar
 > os chips **Tudo|Dia|Semana|Mês** às laterais dos cards; (2) `.rest-container` passou de `min-height` p/ `height: 100dvh`

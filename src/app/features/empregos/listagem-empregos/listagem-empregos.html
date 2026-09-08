@@ -6,7 +6,7 @@
         <polyline points="15 18 9 12 15 6"/>
       </svg>
     </button>
-    <span class="le-header__titulo">Vagas</span>
+    <span class="le-header__titulo">{{ titulo }}</span>
     <button class="le-header__novo" (click)="publicar()" aria-label="Publicar vaga">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -42,7 +42,7 @@
     } @else if (erro) {
       <p class="le-msg">{{ erro }}</p>
     } @else if (vagas.length === 0) {
-      <p class="le-msg">Nenhuma vaga disponível.</p>
+      <p class="le-msg">{{ mine ? 'Você ainda não publicou vagas.' : 'Nenhuma vaga disponível.' }}</p>
     } @else if (vagasFiltradas.length === 0) {
       <p class="le-msg">Nenhuma vaga com esses filtros.</p>
     } @else {

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { JobService } from '../../../core/services/job';
 import { JobDto, JobType } from '../../../core/models/job';
@@ -18,8 +18,11 @@ type FiltroTipo = JobType | 'todos';
 export class ListagemEmpregosComponent implements OnInit {
   private readonly jobs = inject(JobService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   vagas: JobDto[] = [];
+  /** Modo "minhas vagas" (gestão do empregador) vs vitrine pública. */
+  mine = false;
   carregando = false;
   erro = '';
 
@@ -37,9 +40,10 @@ export class ListagemEmpregosComponent implements OnInit {
   ];
 
   ngOnInit() {
+    this.mine = this.route.snapshot.data['mine'] === true;
     this.carregando = true;
     this.jobs
-      .vagas({ scope: 'All', isActive: true })
+      .vagas({ scope: this.mine ? 'Mine' : 'All', isActive: true })
       .pipe(finalize(() => (this.carregando = false)))
       .subscribe({
         next: (page) => (this.vagas = page.items),
@@ -47,6 +51,10 @@ export class ListagemEmpregosComponent implements OnInit {
           this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar as vagas.';
         },
       });
+  }
+
+  get titulo(): string {
+    return this.mine ? 'Minhas vagas' : 'Vagas';
   }
 
   /** Busca (título/empresa) + filtro por tipo + ordenação por data (mais recentes). */
