@@ -64,6 +64,48 @@ describe('DeliveryService', () => {
     expect(service.getPedidoAtual().itens?.[0].item.id).toBe(4);
   });
 
+  it('repetirPedido remonta a sacola pelo cardápio atual (ignora itens sumidos)', () => {
+    const pedido = {
+      id: 99,
+      restaurant: { id: 5, name: 'R' },
+      items: [
+        {
+          id: 1, menuItemId: 10, name: 'X', quantity: 2, unitPrice: '25.00',
+          notes: 'sem cebola', additions: [{ id: 1, name: 'Bacon', price: '5.00' }],
+        },
+        { id: 2, menuItemId: 999, name: 'Sumiu', quantity: 1, unitPrice: '0', additions: [] },
+      ],
+    } as never;
+
+    let resultado: { adicionados: number; indisponiveis: number } | undefined;
+    service.repetirPedido(pedido).subscribe((r) => (resultado = r));
+
+    httpMock.expectOne((r) => r.url.endsWith('/restaurants/5')).flush({
+      id: 5, name: 'R', isActive: true, isOpen: true,
+      category: { id: 2, name: 'Lanches', slug: 'lanches' },
+      menuCategories: [
+        {
+          id: 1, name: 'C', sortOrder: 0,
+          items: [
+            {
+              id: 10, name: 'X', price: '20.00', isActive: true, menuCategoryId: 1,
+              additions: [{ id: 1, name: 'Bacon', price: '5.00', isActive: true }],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(resultado).toEqual({ adicionados: 1, indisponiveis: 1 });
+    const cart = service.getPedidoAtual();
+    expect(cart.restaurante?.id).toBe(5);
+    expect(cart.itens?.length).toBe(1);
+    expect(cart.itens?.[0].item.id).toBe(10);
+    expect(cart.itens?.[0].quantidade).toBe(2);
+    expect(cart.itens?.[0].observacao).toBe('sem cebola');
+    expect(cart.itens?.[0].adicionaisSelecionados.map((a) => a.id)).toEqual([1]);
+  });
+
   it('mapeia "debito" → DebitCard', () => {
     service.setPedidoRestaurante({ id: 1 } as never);
     service.addItem({ id: 1, preco: 5 } as never, 1, []);

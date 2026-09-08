@@ -7,7 +7,7 @@
 > + **Mercado Pago** (MP-1…MP-3) + **Fase Mapa (MAP-1…MAP-3, rastreamento ao vivo)** aplicada + ajustes de layout.
 > **Em andamento:** fluxo delivery — **adicionais no cardápio** (back pronto, front a fazer) + melhorias de usabilidade.
 >
-> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `82c2730`).
+> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `f1a9c18`).
 > **Back-end:** `service-new-ws` @ `ajustes-gerais` (@ `b60afd0`, com Mercado Pago). **Base local:** `http://localhost:8000/v1`.
 
 ---
@@ -212,6 +212,8 @@
 | **SEARCH-1** | **Busca + filtros de restaurante (cliente)** — na listagem: busca por nome (já existia) + **chips de filtro** "Aberto agora" / "Entrega grátis" + **ordenação** (Relevância / Melhor avaliação / Menor taxa / Menor tempo) + botão **Limpar** + selo **Fechado** no card. Filtragem/ordenação client-side sobre `GET /restaurants`. View-model `Restaurante` ganhou `aberto` (`isOpen`) e `tempoMinMinutos` (`deliveryTimeMinMinutes`). Sem mudança de back. | ✅ (16) | `SEARCH-1-busca-filtros-restaurantes` |
 | **AJ-cat** | **Correções** — (1) dropdown de ordenação ficava **atrás dos cards** (o `overflow-x` da barra recortava) → barra passou a `flex-wrap` + `z-index`; (2) **imagens de categoria quebradas** (o back **não semeia `iconUrl`** nas categorias de restaurante) → `categoria-grid` ganhou **fallback** (placeholder quando sem ícone ou ao falhar o carregamento) que beneficia todas as telas que usam o grid. | ✅ (4) | `AJ-cat-icones-filtro-zindex` |
 | **SEARCH-2** | **Busca global de restaurantes na tela de Buscar** — a barra de busca (que só listava categorias e não fazia nada) agora, ao digitar, lista **restaurantes de todas as categorias** com os mesmos chips + ordenação; sem texto, mostra o grid de categorias. Lógica de filtro/ordenação extraída para util puro **`core/utils/restaurant-search.ts`** (reutilizável). Sem mudança de back. **Independente do AJ-cat** (aplica em qualquer ordem). | ✅ (9) | `SEARCH-2-busca-global-restaurantes` |
+| **AJ-buscar** | **Ajustes na tela de Buscar** — (1) os filtros/ordenação agora ficam **sempre visíveis** (antes só apareciam ao digitar; resultados aparecem com busca **ou** filtro ativo); (2) **fim do endereço mockado** "Rua Tuiucue" no cabeçalho — `header-busca` deixou de ter valor fixo e passa a receber o **endereço real do cliente** (`GET /profile/me`), com "Adicionar endereço" quando vazio, e tocar nele leva ao **/perfil** (onde se define com o mapa). Vale para todas as telas que usam o `header-busca`. | ✅ (8) | `AJ-buscar-filtros-endereco` |
+| **REORDER-1** | **Pedir novamente (cliente)** — botão em cada pedido do histórico remonta a sacola pelo **cardápio atual** do restaurante (`repetirPedido` no `DeliveryService`: quantidade + adicionais por id + observação; itens fora do cardápio são ignorados e avisados) e leva à sacola. Sem mudança de back. | ✅ (13) | `REORDER-1-pedir-novamente` |
 
 > **Próximas fatias sugeridas (🟢, back pronto):** **"pedir novamente"** (histórico) · **avaliar pós-entrega**.
 > Cupom/agendamento/gorjeta/push exigem back novo → `backend-demandas.md`.
@@ -228,8 +230,8 @@ correções criar-serviço (nome, categoria) → **verticais do fornecedor (FV-1
 **SV-1** (indep.) · **CV-1** (indep.) · **CD-1→PZ-1** (mask nos 5 forms) · **CD-1+PZ-1→CV-2** (aviso sem categoria) ·
 **CV-3** (indep.) → **PF-1 · PF-2** (perfil, aplicados @ `eec245d`) → **MAP-1a→1b→1c** → **MAP-2a→2b→2c** → **MAP-3** (fase mapa).
 **Aplicado @ `290db7c`:** **MAP-1a→…→2c→3** (fase mapa completa; `socket.io-client` instalado via `npm install`).
-Pendente de aplicação: **CV-3** (indep.), **AJ-layout** (2 `.scss`), **AJ-maps-key** (chave do Google), **AJ-cat** (ícones+z-index) e **SEARCH-2** (busca global). *(ADD-1/ADD-2/OBS-1/CART-1/SEARCH-1 aplicados; base @ `82c2730`.)*
-`origin/integracao` @ `82c2730`.
+Pendente de aplicação: **CV-3** (indep.), **AJ-layout** (2 `.scss`), **AJ-maps-key** (chave do Google), **AJ-buscar** (filtros sempre visíveis + endereço real) e **REORDER-1** (pedir novamente). *(…/SEARCH-1/AJ-cat/SEARCH-2 aplicados; base @ `f1a9c18`.)*
+`origin/integracao` @ `f1a9c18`.
 
 > **AJ-layout** (`AJ-layout-periodos-scroll-restaurante`): (1) `.home-f-periodos` ganhou `margin: 0 16px` p/ alinhar
 > os chips **Tudo|Dia|Semana|Mês** às laterais dos cards; (2) `.rest-container` passou de `min-height` p/ `height: 100dvh`

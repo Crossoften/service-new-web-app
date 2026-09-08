@@ -165,6 +165,38 @@ export class DeliveryService {
     this.pedidoAtual.itens?.splice(index, 1);
   }
 
+  /**
+   * "Pedir novamente": monta a sacola a partir de um pedido anterior, usando o
+   * cardápio **atual** do restaurante (preços/adicionais podem ter mudado).
+   * Itens que não existem mais são ignorados e contabilizados em `indisponiveis`.
+   */
+  repetirPedido(
+    pedido: ResponseFoodOrderDto,
+  ): Observable<{ adicionados: number; indisponiveis: number }> {
+    return this.getRestaurante(pedido.restaurant.id).pipe(
+      map((restaurante) => {
+        this.setPedidoRestaurante(restaurante);
+        const porId = new Map<number, ItemCardapio>();
+        restaurante.categorias.forEach((c) => c.itens.forEach((i) => porId.set(i.id, i)));
+
+        let adicionados = 0;
+        let indisponiveis = 0;
+        for (const it of pedido.items ?? []) {
+          const item = porId.get(it.menuItemId);
+          if (!item) {
+            indisponiveis++;
+            continue;
+          }
+          const idsSelecionados = new Set((it.additions ?? []).map((a) => a.id));
+          const adicionais = item.adicionais.filter((a) => idsSelecionados.has(a.id));
+          this.addItem(item, it.quantity, adicionais, it.notes);
+          adicionados++;
+        }
+        return { adicionados, indisponiveis };
+      }),
+    );
+  }
+
   getPedidoAtual(): Partial<Pedido> {
     return this.pedidoAtual;
   }

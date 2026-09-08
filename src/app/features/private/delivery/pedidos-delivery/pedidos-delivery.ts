@@ -28,6 +28,8 @@ export class PedidosDeliveryComponent implements OnInit {
   pedidos: ResponseFoodOrderDto[] = [];
   carregando = false;
   erro = '';
+  repetindoId: number | null = null;
+  aviso = '';
 
   ngOnInit() {
     this.carregando = true;
@@ -49,6 +51,32 @@ export class PedidosDeliveryComponent implements OnInit {
 
   abrir(pedido: ResponseFoodOrderDto) {
     this.router.navigate(['/delivery/status', pedido.id]);
+  }
+
+  /** Refaz o pedido: remonta a sacola pelo cardápio atual e vai para a sacola. */
+  pedirNovamente(pedido: ResponseFoodOrderDto, event: Event) {
+    event.stopPropagation(); // não abrir o detalhe ao clicar no botão
+    if (this.repetindoId !== null) return;
+    this.repetindoId = pedido.id;
+    this.aviso = '';
+    this.erro = '';
+    this.deliveryService.repetirPedido(pedido).subscribe({
+      next: ({ adicionados, indisponiveis }) => {
+        this.repetindoId = null;
+        if (adicionados === 0) {
+          this.erro = 'Os itens deste pedido não estão mais disponíveis.';
+          return;
+        }
+        if (indisponiveis > 0) {
+          this.aviso = `${indisponiveis} item(ns) fora do cardápio não foram adicionados.`;
+        }
+        this.router.navigate(['/delivery/sacola']);
+      },
+      error: (err: ApiError) => {
+        this.repetindoId = null;
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível repetir o pedido.';
+      },
+    });
   }
 
   fmt(valor?: string): string {

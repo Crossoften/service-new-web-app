@@ -19,6 +19,7 @@
     } @else if (pedidos.length === 0) {
       <p class="pedidos-vazio">Você ainda não fez nenhum pedido.</p>
     } @else {
+      @if (aviso) { <p class="pedidos-aviso">{{ aviso }}</p> }
       @for (pedido of pedidos; track pedido.id) {
         <div class="pedido-card" (click)="abrir(pedido)">
           <div class="pedido-card__topo">
@@ -31,6 +32,13 @@
             <span class="pedido-card__data">{{ pedido.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
             <span class="pedido-card__total">{{ fmt(pedido.totalValue) }}</span>
           </div>
+          <button class="pedido-card__repetir" (click)="pedirNovamente(pedido, $event)" [disabled]="repetindoId === pedido.id">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            {{ repetindoId === pedido.id ? 'MONTANDO…' : 'PEDIR NOVAMENTE' }}
+          </button>
         </div>
       }
     }
