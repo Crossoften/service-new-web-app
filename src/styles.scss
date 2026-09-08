@@ -55,3 +55,15 @@ html, body {
 .safe-bottom {
   padding-bottom: var(--safe-bottom);
 }
+
+// Google Places Autocomplete injeta um `.pac-container` no <body>. Quando vazio
+// (sem sugestões / após sair da tela), ele ficava visível só com o `border-top`,
+// aparentando uma "linha" solta. Escondemos o container vazio; com sugestões ele
+// tem filhos (`.pac-item`) e volta a aparecer, acima do conteúdo.
+.pac-container {
+  z-index: 1100;
+
+  &:empty {
+    display: none !important;
+  }
+}

@@ -3,6 +3,7 @@ import {
   ElementRef,
   EventEmitter,
   Input,
+  OnDestroy,
   OnInit,
   Output,
   ViewChild,
@@ -31,7 +32,7 @@ export interface Coordenadas {
   templateUrl: './mapa-endereco.html',
   styleUrl: './mapa-endereco.scss',
 })
-export class MapaEnderecoComponent implements OnInit {
+export class MapaEnderecoComponent implements OnInit, OnDestroy {
   private readonly loader = inject(GoogleMapsLoaderService);
 
   @ViewChild('mapa') mapaRef?: ElementRef<HTMLDivElement>;
@@ -47,6 +48,7 @@ export class MapaEnderecoComponent implements OnInit {
 
   private map: any;
   private marker: any;
+  private autocomplete: any;
 
   ngOnInit() {
     this.loader
@@ -89,11 +91,11 @@ export class MapaEnderecoComponent implements OnInit {
     });
 
     if (this.buscaRef) {
-      const autocomplete = new google.maps.places.Autocomplete(this.buscaRef.nativeElement, {
+      this.autocomplete = new google.maps.places.Autocomplete(this.buscaRef.nativeElement, {
         fields: ['geometry'],
       });
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
+      this.autocomplete.addListener('place_changed', () => {
+        const place = this.autocomplete.getPlace();
         const loc = place?.geometry?.location;
         if (!loc) return;
         this.map.setCenter(loc);
@@ -103,6 +105,18 @@ export class MapaEnderecoComponent implements OnInit {
         this.emitir(loc);
       });
     }
+  }
+
+  /**
+   * O Places Autocomplete injeta um `.pac-container` no `<body>`. Sem esta
+   * limpeza, ele fica pendurado (vazio, só com `border-top`) e aparece como uma
+   * "linha" em todas as telas seguintes. Removemos o container e os listeners.
+   */
+  ngOnDestroy() {
+    if (this.autocomplete && typeof google !== 'undefined') {
+      google.maps.event.clearInstanceListeners(this.autocomplete);
+    }
+    document.querySelectorAll('.pac-container').forEach((el) => el.remove());
   }
 
   private emitir(latLng: any) {

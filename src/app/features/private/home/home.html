@@ -3,11 +3,11 @@
   <div class="home-header">
     <div class="home-user" (click)="toggleDevMenu()">
       <div class="home-avatar">
-        <span>U</span>
+        <span>{{ inicial }}</span>
       </div>
       <div class="home-user-info">
         <span class="home-welcome">Bem vindo</span>
-        <span class="home-name">Usuário</span>
+        <span class="home-name">{{ nomeExibicao }}</span>
       </div>
     </div>
     <button class="home-bell">
@@ -48,6 +48,31 @@
   }
 
   <div class="page-content">
+
+    <!-- DESTAQUE: PEDIDO EM ANDAMENTO -->
+    @if (pedidoAtivo) {
+      <button class="home-pedido-ativo" (click)="verPedidos()">
+        <div class="home-pedido-ativo__icone">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="home-pedido-ativo__info">
+          <span class="home-pedido-ativo__titulo">
+            @if (pedidosAtivos.length > 1) {
+              {{ pedidosAtivos.length }} pedidos em andamento
+            } @else {
+              Pedido em andamento
+            }
+          </span>
+          <span class="home-pedido-ativo__sub">{{ pedidoAtivo.restaurant.name }} · {{ statusLabel(pedidoAtivo.status) }}</span>
+        </div>
+        <svg class="home-pedido-ativo__seta" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+    }
+
     <div class="home-servicos">
       @for (servico of servicos; track servico.label) {
         <button
