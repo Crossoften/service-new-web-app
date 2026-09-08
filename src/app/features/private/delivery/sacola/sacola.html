@@ -50,7 +50,7 @@
     }
 
     <!-- ITENS -->
-    @for (itemPedido of pedido?.itens; track itemPedido.item.id) {
+    @for (itemPedido of itens; track itemPedido; let i = $index) {
       <div class="sacola-item">
         <div class="sacola-item__imagem">
           <div class="sacola-item__imagem-placeholder">
@@ -61,23 +61,46 @@
         </div>
         <div class="sacola-item__info">
           <span class="sacola-item__nome">{{ itemPedido.item.nome }}</span>
-          <span class="sacola-item__descricao">{{ itemPedido.item.descricao }}</span>
-          <span class="sacola-item__preco">{{ formatarPreco(itemPedido.item.preco) }}</span>
+          @if (itemPedido.adicionaisSelecionados.length) {
+            <ul class="sacola-item__adicionais">
+              @for (adicional of itemPedido.adicionaisSelecionados; track adicional.id) {
+                <li>
+                  <span>+ {{ adicional.nome }}</span>
+                  @if (adicional.preco > 0) { <span>{{ formatarPreco(adicional.preco) }}</span> }
+                </li>
+              }
+            </ul>
+          }
+          @if (itemPedido.observacao) {
+            <span class="sacola-item__obs">Obs.: {{ itemPedido.observacao }}</span>
+          }
+          <span class="sacola-item__preco">{{ formatarPreco(subtotalItem(itemPedido)) }}</span>
+        </div>
+        <div class="sacola-item__acoes">
+          <button class="sacola-item__remover" (click)="remover(i)" aria-label="Remover item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+          <div class="sacola-item__stepper">
+            <button (click)="decrementar(i)" [disabled]="itemPedido.quantidade <= 1" aria-label="Diminuir">−</button>
+            <span>{{ itemPedido.quantidade }}</span>
+            <button (click)="incrementar(i)" aria-label="Aumentar">+</button>
+          </div>
         </div>
       </div>
     }
 
-    <!-- INGREDIENTES EXTRA -->
-    @if (pedido?.itens?.[0]?.adicionaisSelecionados?.length) {
-      <div class="sacola-secao">
-        <h3 class="sacola-secao__titulo">Ingrediente Extra</h3>
-        @for (adicional of pedido!.itens![0].adicionaisSelecionados; track adicional.id) {
-          <div class="sacola-adicional">
-            <div class="sacola-adicional__checkbox"></div>
-            <span class="sacola-adicional__nome">{{ adicional.nome }}</span>
-            <span class="sacola-adicional__preco">+ {{ formatarPreco(adicional.preco) }}</span>
-          </div>
-        }
+    @if (!itens.length) {
+      <div class="sacola-vazia">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span>Sua sacola está vazia.</span>
+        <button class="sacola-vazia__btn" (click)="voltar()">Voltar ao cardápio</button>
       </div>
     }
 
@@ -139,7 +162,7 @@
 
   <!-- BOTÃO -->
   <div class="sacola-actions">
-    <button class="sacola-btn" (click)="continuar()">CONTINUAR</button>
+    <button class="sacola-btn" (click)="continuar()" [disabled]="!itens.length">CONTINUAR</button>
   </div>
 
 </div>

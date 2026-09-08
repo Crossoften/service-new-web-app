@@ -151,6 +151,18 @@ export class DeliveryService {
     this.pedidoAtual.itens.push({ item, quantidade, adicionaisSelecionados: adicionais, observacao });
   }
 
+  /** Ajusta a quantidade de uma linha da sacola (mínimo 1). */
+  alterarQuantidade(index: number, delta: number) {
+    const linha = this.pedidoAtual.itens?.[index];
+    if (!linha) return;
+    linha.quantidade = Math.max(1, linha.quantidade + delta);
+  }
+
+  /** Remove uma linha da sacola. */
+  removerItem(index: number) {
+    this.pedidoAtual.itens?.splice(index, 1);
+  }
+
   getPedidoAtual(): Partial<Pedido> {
     return this.pedidoAtual;
   }

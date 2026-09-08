@@ -51,6 +51,19 @@ describe('DeliveryService', () => {
     req.flush({ message: 'ok', foodOrder: { id: 3 } });
   });
 
+  it('alterarQuantidade respeita o mínimo de 1 e removerItem tira a linha', () => {
+    service.setPedidoRestaurante({ id: 7 } as never);
+    service.addItem({ id: 3, preco: 10 } as never, 1, []);
+    service.addItem({ id: 4, preco: 5 } as never, 2, []);
+    service.alterarQuantidade(0, 3);
+    expect(service.getPedidoAtual().itens?.[0].quantidade).toBe(4);
+    service.alterarQuantidade(0, -10); // não passa de 1
+    expect(service.getPedidoAtual().itens?.[0].quantidade).toBe(1);
+    service.removerItem(0);
+    expect(service.getPedidoAtual().itens?.length).toBe(1);
+    expect(service.getPedidoAtual().itens?.[0].item.id).toBe(4);
+  });
+
   it('mapeia "debito" → DebitCard', () => {
     service.setPedidoRestaurante({ id: 1 } as never);
     service.addItem({ id: 1, preco: 5 } as never, 1, []);

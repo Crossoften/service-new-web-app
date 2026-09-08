@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { DeliveryService, Pedido, FormaPagamento } from '../../../../core/services/delivery';
+import { DeliveryService, Pedido, FormaPagamento, ItemPedido } from '../../../../core/services/delivery';
 
 @Component({
   selector: 'app-sacola',
@@ -31,6 +31,29 @@ export class SacolaComponent implements OnInit {
     this.pedido = this.deliveryService.getPedidoAtual();
   }
 
+  get itens(): ItemPedido[] {
+    return this.pedido?.itens ?? [];
+  }
+
+  /** Subtotal da linha: (preço do item + adicionais) × quantidade. */
+  subtotalItem(ip: ItemPedido): number {
+    const extras = ip.adicionaisSelecionados.reduce((acc, a) => acc + a.preco, 0);
+    return (ip.item.preco + extras) * ip.quantidade;
+  }
+
+  incrementar(index: number) {
+    this.deliveryService.alterarQuantidade(index, 1);
+  }
+
+  decrementar(index: number) {
+    this.deliveryService.alterarQuantidade(index, -1);
+  }
+
+  remover(index: number) {
+    this.deliveryService.removerItem(index);
+    this.pedido = this.deliveryService.getPedidoAtual();
+  }
+
   get formaSelecionadaLabel(): string {
     return this.formasPagamento.find(f => f.id === this.formaSelecionada)?.label ?? '';
   }
@@ -46,6 +69,7 @@ export class SacolaComponent implements OnInit {
   }
 
   continuar() {
+    if (!this.itens.length) return;
     this.deliveryService.setFormaPagamento(this.formaSelecionada);
     this.router.navigate(['/delivery/endereco']);
   }
