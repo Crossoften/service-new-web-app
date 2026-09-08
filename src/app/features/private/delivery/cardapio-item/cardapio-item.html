@@ -66,6 +66,17 @@
       </div>
     }
 
+    <!-- OBSERVAÇÃO -->
+    <div class="cardapio-item-obs">
+      <h2 class="cardapio-item-obs__titulo">Alguma observação?</h2>
+      <textarea
+        class="cardapio-item-obs__campo"
+        rows="3"
+        maxlength="500"
+        placeholder="Ex.: sem cebola, ponto da carne, troco para R$ 50…"
+        [(ngModel)]="observacao"></textarea>
+    </div>
+
   </div>
 
   <!-- RODAPÉ: QUANTIDADE + ADICIONAR -->

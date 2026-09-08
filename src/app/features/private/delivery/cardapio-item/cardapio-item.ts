@@ -1,12 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DeliveryService, ItemCardapio, Adicional } from '../../../../core/services/delivery';
 import { ApiError } from '../../../../core/models/common';
 
 @Component({
   selector: 'app-cardapio-item',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './cardapio-item.html',
   styleUrl: './cardapio-item.scss',
 })
@@ -19,6 +20,7 @@ export class CardapioItemComponent implements OnInit {
   restauranteId = 0;
   quantidade = 1;
   adicionais: Adicional[] = [];
+  observacao = '';
   carregando = false;
   erro = '';
 
@@ -59,7 +61,7 @@ export class CardapioItemComponent implements OnInit {
   adicionar() {
     if (!this.item) return;
     const selecionados = this.adicionais.filter((a) => a.selecionado);
-    this.deliveryService.addItem(this.item, this.quantidade, selecionados);
+    this.deliveryService.addItem(this.item, this.quantidade, selecionados, this.observacao.trim() || undefined);
     this.router.navigate(['/delivery/sacola']);
   }
 

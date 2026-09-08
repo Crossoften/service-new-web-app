@@ -39,6 +39,18 @@ describe('DeliveryService', () => {
     req.flush({ message: 'ok', foodOrder: { id: 1 } });
   });
 
+  it('envia a observação do item como notes (e omite quando vazia)', () => {
+    service.setPedidoRestaurante({ id: 7 } as never);
+    service.addItem({ id: 3, preco: 10 } as never, 1, [], 'sem cebola');
+    service.addItem({ id: 4, preco: 5 } as never, 1, [], '   '); // só espaços → omitido
+    service.setFormaPagamento('pix');
+    service.criarPedido().subscribe();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/food-orders') && r.method === 'POST');
+    expect(req.request.body.items[0].notes).toBe('sem cebola');
+    expect(req.request.body.items[1].notes).toBeUndefined();
+    req.flush({ message: 'ok', foodOrder: { id: 3 } });
+  });
+
   it('mapeia "debito" → DebitCard', () => {
     service.setPedidoRestaurante({ id: 1 } as never);
     service.addItem({ id: 1, preco: 5 } as never, 1, []);

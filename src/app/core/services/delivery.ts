@@ -61,6 +61,7 @@ export interface ItemPedido {
   item: ItemCardapio;
   quantidade: number;
   adicionaisSelecionados: Adicional[];
+  observacao?: string; // ex.: "sem cebola" → vira `notes` no item do pedido
 }
 
 export interface OpcaoEntrega {
@@ -145,9 +146,9 @@ export class DeliveryService {
     this.pedidoAtual.itens = [];
   }
 
-  addItem(item: ItemCardapio, quantidade: number, adicionais: Adicional[]) {
+  addItem(item: ItemCardapio, quantidade: number, adicionais: Adicional[], observacao?: string) {
     if (!this.pedidoAtual.itens) this.pedidoAtual.itens = [];
-    this.pedidoAtual.itens.push({ item, quantidade, adicionaisSelecionados: adicionais });
+    this.pedidoAtual.itens.push({ item, quantidade, adicionaisSelecionados: adicionais, observacao });
   }
 
   getPedidoAtual(): Partial<Pedido> {
@@ -194,6 +195,7 @@ export class DeliveryService {
         menuItemId: ip.item.id,
         quantity: ip.quantidade,
         additionIds: ip.adicionaisSelecionados.map((a) => a.id),
+        notes: ip.observacao?.trim() || undefined,
       })),
     };
   }

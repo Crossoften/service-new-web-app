@@ -184,3 +184,28 @@
     text-align: center;
   }
 }
+.cardapio-item-obs {
+  padding: 0 16px 16px;
+
+  &__titulo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 12px;
+  }
+
+  &__campo {
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    border-radius: 10px;
+    background: var(--color-gray-100);
+    font-size: 14px;
+    color: var(--color-text);
+    outline: none;
+    font-family: inherit;
+    resize: none;
+
+    &::placeholder { color: var(--color-gray-400); }
+  }
+}
