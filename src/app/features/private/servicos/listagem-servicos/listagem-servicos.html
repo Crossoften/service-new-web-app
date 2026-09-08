@@ -38,8 +38,13 @@
   </div>
 
   <div class="page-content">
+    @if (prestadoresFiltrados.length) {
+      <div class="listagem-ordenar">
+        <app-ordenacao-itens [(valor)]="ordenacao"></app-ordenacao-itens>
+      </div>
+    }
     <div class="listagem-lista">
-      @for (prestador of prestadoresFiltrados; track prestador.id) {
+      @for (prestador of prestadoresOrdenados; track prestador.id) {
         <div class="prestador-card" (click)="togglePrestador(prestador)">
 
           <div class="prestador-card__foto" (click)="abrirDetalhes(prestador, $event)">

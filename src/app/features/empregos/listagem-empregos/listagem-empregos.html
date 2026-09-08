@@ -18,6 +18,24 @@
     <button class="le-sub__link" (click)="minhasCandidaturas()">Minhas candidaturas →</button>
   </div>
 
+  <!-- BUSCA -->
+  <div class="le-busca">
+    <input type="text" placeholder="Cargo ou empresa…" [(ngModel)]="busca" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="le-filtros">
+    @for (t of tipos; track t.id) {
+      <button class="le-chip" [class.le-chip--ativo]="filtroTipo === t.id" (click)="selecionarTipo(t.id)">
+        {{ t.label }}
+      </button>
+    }
+    <button class="le-chip" [class.le-chip--ativo]="maisRecentes" (click)="toggleRecentes()">Mais recentes</button>
+  </div>
+
   <div class="page-content">
     @if (carregando) {
       <p class="le-msg">Carregando…</p>
@@ -25,9 +43,11 @@
       <p class="le-msg">{{ erro }}</p>
     } @else if (vagas.length === 0) {
       <p class="le-msg">Nenhuma vaga disponível.</p>
+    } @else if (vagasFiltradas.length === 0) {
+      <p class="le-msg">Nenhuma vaga com esses filtros.</p>
     } @else {
       <div class="le-lista">
-        @for (v of vagas; track v.id) {
+        @for (v of vagasFiltradas; track v.id) {
           <div class="le-card" (click)="abrir(v.id)">
             <div class="le-card__top">
               <span class="le-card__titulo">{{ v.title }}</span>

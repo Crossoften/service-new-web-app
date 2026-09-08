@@ -36,4 +36,20 @@ describe('ListagemEmpregosComponent', () => {
     });
     expect(component.vagas.length).toBe(1);
   });
+
+  it('vagasFiltradas aplica busca, tipo e "mais recentes"', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/jobs')).flush({ jobs: [], currentPage: 1, totalPages: 1, totalRecords: 0 });
+    component.vagas = [
+      { id: 1, title: 'Dev Back-end', type: 'PJ', employer: { id: 1, name: 'Alpha' }, createdAt: '2026-01-01', updatedAt: '' } as never,
+      { id: 2, title: 'Designer', type: 'CLT', employer: { id: 2, name: 'Beta' }, createdAt: '2026-03-01', updatedAt: '' } as never,
+    ];
+    component.busca = 'dev';
+    expect(component.vagasFiltradas.map((v) => v.id)).toEqual([1]);
+    component.busca = '';
+    component.selecionarTipo('CLT');
+    expect(component.vagasFiltradas.map((v) => v.id)).toEqual([2]);
+    component.selecionarTipo('todos');
+    component.toggleRecentes();
+    expect(component.vagasFiltradas.map((v) => v.id)).toEqual([2, 1]); // mais recentes primeiro
+  });
 });

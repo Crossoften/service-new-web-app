@@ -190,3 +190,8 @@
 
   &:active { opacity: 0.85; }
 }
+.listagem-ordenar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 16px 12px;
+}

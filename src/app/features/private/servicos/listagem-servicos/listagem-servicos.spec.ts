@@ -53,4 +53,16 @@ describe('ListagemServicosComponent', () => {
     expect(component.prestadores[0].nome).toBe('Joelson');
     expect(component.prestadores[0].gostei).toBe(5);
   });
+
+  it('prestadoresOrdenados ordena por avaliação e por preço', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/services')).flush({ services: [], currentPage: 1, totalPages: 1, totalRecords: 0 });
+    component.prestadores = [
+      { id: 1, nome: 'A', profissao: 'x', descricao: '', foto: '', gostei: 1, naoGostei: 0, negociacoes: 0, preco: 30 } as never,
+      { id: 2, nome: 'B', profissao: 'x', descricao: '', foto: '', gostei: 9, naoGostei: 0, negociacoes: 0, preco: 10 } as never,
+    ];
+    component.ordenacao = 'avaliacao';
+    expect(component.prestadoresOrdenados.map((p) => p.id)).toEqual([2, 1]);
+    component.ordenacao = 'preco-asc';
+    expect(component.prestadoresOrdenados.map((p) => p.id)).toEqual([2, 1]);
+  });
 });

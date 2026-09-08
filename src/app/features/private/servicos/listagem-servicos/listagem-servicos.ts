@@ -5,10 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { Prestador, ServiceCatalogService } from '../../../../core/services/service-catalog';
 import { ApiError } from '../../../../core/models/common';
+import { OrdenacaoItensComponent } from '../../../../shared/components/ordenacao-itens/ordenacao-itens';
+import { OrdenacaoItem } from '../../../../core/utils/item-search';
 
 @Component({
   selector: 'app-listagem-servicos',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OrdenacaoItensComponent],
   templateUrl: './listagem-servicos.html',
   styleUrl: './listagem-servicos.scss',
 })
@@ -21,6 +23,7 @@ export class ListagemServicosComponent implements OnInit {
   categoryId?: number;
   prestadores: Prestador[] = [];
   busca = '';
+  ordenacao: OrdenacaoItem = 'relevancia';
   selecionarTodos = false;
   carregando = false;
   erro = '';
@@ -52,6 +55,21 @@ export class ListagemServicosComponent implements OnInit {
     return this.prestadores.filter(
       (p) => p.nome.toLowerCase().includes(t) || p.profissao.toLowerCase().includes(t),
     );
+  }
+
+  /** Filtro por texto + ordenação. `avaliacao` = (gostei − não gostei); preço opcional vai ao fim. */
+  get prestadoresOrdenados(): Prestador[] {
+    const base = this.prestadoresFiltrados;
+    switch (this.ordenacao) {
+      case 'preco-asc':
+        return [...base].sort((a, b) => (a.preco ?? Infinity) - (b.preco ?? Infinity));
+      case 'preco-desc':
+        return [...base].sort((a, b) => (b.preco ?? -Infinity) - (a.preco ?? -Infinity));
+      case 'avaliacao':
+        return [...base].sort((a, b) => b.gostei - b.naoGostei - (a.gostei - a.naoGostei));
+      default:
+        return base;
+    }
   }
 
   toggleTodos() {
