@@ -11,13 +11,23 @@ import { Router } from '@angular/router';
 export class HeaderBuscaComponent {
   @Input() titulo: string = 'BUSCAR';
   @Input() variante: 'padrao' | 'delivery' = 'padrao';
-  @Input() endereco: string = 'Rua Tuiucue 122';
+  /** Endereço do cliente (vazio = ainda não definido). Sem valor mockado. */
+  @Input() endereco: string = '';
   @Output() buscarChange = new EventEmitter<string>();
 
   constructor(private router: Router) {}
 
+  get enderecoLabel(): string {
+    return this.endereco.trim() || 'Adicionar endereço';
+  }
+
   voltar() {
     this.router.navigate(['/home']);
+  }
+
+  /** Toca no endereço → tela de perfil (onde o cliente define/edita com o mapa). */
+  irParaEndereco() {
+    this.router.navigate(['/perfil']);
   }
 
   onBuscar(event: Event) {

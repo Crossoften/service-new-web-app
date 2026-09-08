@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subject, Subscription, switchMap, takeUntil, timer } from 'rxjs';
 import { DeliveryService } from '../../../../core/services/delivery';
 import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../../core/models/food-order';
@@ -26,7 +27,7 @@ const STATUS_INDEX: Record<FoodOrderStatus, number> = {
 
 @Component({
   selector: 'app-status-pedido',
-  imports: [CommonModule, MapaRastreioComponent],
+  imports: [CommonModule, FormsModule, MapaRastreioComponent],
   templateUrl: './status-pedido.html',
   styleUrl: './status-pedido.scss',
 })
@@ -44,6 +45,14 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
   erro = '';
   cancelando = false;
   pagando = false;
+
+  // Avaliação pós-entrega (RATE-1)
+  nota = 0; // 0 = ainda não escolheu
+  comentario = '';
+  enviandoAvaliacao = false;
+  jaAvaliou = false;
+  avaliacaoMsg = '';
+  avaliacaoErro = '';
 
   etapas: EtapaStatus[] = [
     { id: 'recebido', label: 'Pedido recebido' },
@@ -210,5 +219,45 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
 
   voltar() {
     this.router.navigate(['/home']);
+  }
+
+  // ── Avaliação pós-entrega (RATE-1) ────────────────────────────────────────
+
+  /** Só avalia depois de entregue e enquanto ainda não avaliou. */
+  get podeAvaliar(): boolean {
+    return this.status === 'Delivered' && !this.jaAvaliou;
+  }
+
+  selecionarNota(n: number) {
+    this.nota = n;
+  }
+
+  enviarAvaliacao() {
+    if (this.enviandoAvaliacao || !this.pedido) return;
+    if (this.nota < 1 || this.nota > 5) {
+      this.avaliacaoErro = 'Escolha uma nota de 1 a 5.';
+      return;
+    }
+    this.enviandoAvaliacao = true;
+    this.avaliacaoErro = '';
+    const comment = this.comentario.trim();
+    this.deliveryService
+      .avaliarRestaurante(this.pedido.restaurant.id, { rating: this.nota, comment: comment || undefined })
+      .subscribe({
+        next: () => {
+          this.enviandoAvaliacao = false;
+          this.jaAvaliou = true;
+          this.avaliacaoMsg = 'Obrigado pela sua avaliação!';
+        },
+        error: (err: ApiError) => {
+          this.enviandoAvaliacao = false;
+          if (err?.status === 409) {
+            this.jaAvaliou = true;
+            this.avaliacaoMsg = 'Você já avaliou este restaurante.';
+            return;
+          }
+          this.avaliacaoErro = err?.message?.trim() ? err.message : 'Não foi possível enviar a avaliação.';
+        },
+      });
   }
 }

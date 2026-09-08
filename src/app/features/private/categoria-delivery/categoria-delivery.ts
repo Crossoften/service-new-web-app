@@ -4,7 +4,9 @@ import { CommonModule } from '@angular/common';
 import { HeaderBuscaComponent } from '../../../shared/components/header-busca/header-busca';
 import { CategoriaGridComponent, CategoriaItem } from '../../../shared/components/categoria-grid/categoria-grid';
 import { DeliveryService, Restaurante } from '../../../core/services/delivery';
+import { ProfileService } from '../../../core/services/profile';
 import { ResponseRestaurantCategoryDto } from '../../../core/models/restaurant';
+import { ResponseAddressDto } from '../../../core/models/profile';
 import { ApiError } from '../../../core/models/common';
 import { Ordenacao, ORDENACOES, filtrarEOrdenarRestaurantes } from '../../../core/utils/restaurant-search';
 
@@ -17,10 +19,12 @@ import { Ordenacao, ORDENACOES, filtrarEOrdenarRestaurantes } from '../../../cor
 export class CategoriaDeliveryComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly deliveryService = inject(DeliveryService);
+  private readonly profileService = inject(ProfileService);
 
   categorias: ResponseRestaurantCategoryDto[] = [];
   items: CategoriaItem[] = [];
   restaurantes: Restaurante[] = []; // todos (para a busca global)
+  endereco = ''; // endereço real do cliente (perfil); vazio = "Adicionar endereço"
   carregando = false;
   erro = '';
 
@@ -50,11 +54,27 @@ export class CategoriaDeliveryComponent implements OnInit {
       next: (lista) => (this.restaurantes = lista),
       error: () => {},
     });
+    // Endereço real do cliente no cabeçalho (sem mock).
+    this.profileService.me().subscribe({
+      next: (p) => (this.endereco = this.formatarEndereco(p.address)),
+      error: () => {},
+    });
   }
 
-  /** Enquanto há texto na busca, a tela mostra restaurantes; senão, o grid de categorias. */
+  private formatarEndereco(a?: ResponseAddressDto): string {
+    if (!a?.street?.trim()) return '';
+    const rua = a.number?.trim() ? `${a.street}, ${a.number}` : a.street;
+    return a.neighborhood?.trim() ? `${rua} - ${a.neighborhood}` : rua;
+  }
+
+  /** Há texto na busca? */
   get buscando(): boolean {
     return this.busca.trim().length > 0;
+  }
+
+  /** Mostra a lista de restaurantes quando há busca OU algum filtro ativo; senão, o grid. */
+  get mostrarResultados(): boolean {
+    return this.buscando || this.temFiltroAtivo;
   }
 
   get resultados(): Restaurante[] {

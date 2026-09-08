@@ -115,6 +115,32 @@
         }
       </div>
 
+      <!-- AVALIAÇÃO PÓS-ENTREGA -->
+      @if (status === 'Delivered') {
+        <div class="status-avaliacao">
+          @if (jaAvaliou) {
+            <p class="status-avaliacao__msg">{{ avaliacaoMsg }}</p>
+          } @else {
+            <h3 class="status-avaliacao__titulo">Como foi seu pedido?</h3>
+            <div class="status-avaliacao__estrelas">
+              @for (estrela of [1, 2, 3, 4, 5]; track estrela) {
+                <button type="button" class="status-avaliacao__estrela"
+                  [class.status-avaliacao__estrela--ativa]="estrela <= nota"
+                  (click)="selecionarNota(estrela)" [attr.aria-label]="estrela + ' estrelas'">
+                  ★
+                </button>
+              }
+            </div>
+            <textarea class="status-avaliacao__comentario" rows="2" maxlength="2000"
+              placeholder="Deixe um comentário (opcional)" [(ngModel)]="comentario"></textarea>
+            @if (avaliacaoErro) { <span class="status-avaliacao__erro">{{ avaliacaoErro }}</span> }
+            <button class="status-avaliacao__enviar" (click)="enviarAvaliacao()" [disabled]="enviandoAvaliacao || nota < 1">
+              {{ enviandoAvaliacao ? 'ENVIANDO…' : 'ENVIAR AVALIAÇÃO' }}
+            </button>
+          }
+        </div>
+      }
+
       @if (erro) {
         <p class="status-erro">{{ erro }}</p>
       }

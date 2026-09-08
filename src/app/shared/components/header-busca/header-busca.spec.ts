@@ -1,22 +1,37 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
-import { HeaderBusca } from './header-busca';
+import { HeaderBuscaComponent } from './header-busca';
 
-describe('HeaderBusca', () => {
-  let component: HeaderBusca;
-  let fixture: ComponentFixture<HeaderBusca>;
+describe('HeaderBuscaComponent', () => {
+  let component: HeaderBuscaComponent;
+  let fixture: ComponentFixture<HeaderBuscaComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HeaderBusca],
+      imports: [HeaderBuscaComponent],
+      providers: [provideRouter([])],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(HeaderBusca);
+    fixture = TestBed.createComponent(HeaderBuscaComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('enderecoLabel usa "Adicionar endereço" quando vazio (sem mock)', () => {
+    expect(component.enderecoLabel).toBe('Adicionar endereço');
+    component.endereco = 'Rua A, 10 - Centro';
+    expect(component.enderecoLabel).toBe('Rua A, 10 - Centro');
+  });
+
+  it('emite buscarChange ao digitar', () => {
+    let valor = '';
+    component.buscarChange.subscribe((v) => (valor = v));
+    component.onBuscar({ target: { value: 'pizza' } } as unknown as Event);
+    expect(valor).toBe('pizza');
   });
 });

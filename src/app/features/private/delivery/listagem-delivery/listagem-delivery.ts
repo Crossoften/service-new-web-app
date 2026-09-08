@@ -3,6 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DeliveryService, Restaurante } from '../../../../core/services/delivery';
+import { ProfileService } from '../../../../core/services/profile';
+import { ResponseAddressDto } from '../../../../core/models/profile';
 import { HeaderBuscaComponent } from '../../../../shared/components/header-busca/header-busca';
 import { ApiError } from '../../../../core/models/common';
 
@@ -18,9 +20,11 @@ export class ListagemDeliveryComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly deliveryService = inject(DeliveryService);
+  private readonly profileService = inject(ProfileService);
 
   categoryId: number | null = null;
   restaurantes: Restaurante[] = [];
+  endereco = ''; // endereço real do cliente (perfil); vazio = "Adicionar endereço"
   busca = '';
   carregando = false;
   erro = '';
@@ -42,6 +46,17 @@ export class ListagemDeliveryComponent implements OnInit {
     const id = Number(this.route.snapshot.paramMap.get('categoria'));
     this.categoryId = Number.isFinite(id) && id > 0 ? id : null;
     this.carregar();
+    // Endereço real do cliente no cabeçalho (sem mock).
+    this.profileService.me().subscribe({
+      next: (p) => (this.endereco = this.formatarEndereco(p.address)),
+      error: () => {},
+    });
+  }
+
+  private formatarEndereco(a?: ResponseAddressDto): string {
+    if (!a?.street?.trim()) return '';
+    const rua = a.number?.trim() ? `${a.street}, ${a.number}` : a.street;
+    return a.neighborhood?.trim() ? `${rua} - ${a.neighborhood}` : rua;
   }
 
   carregar() {

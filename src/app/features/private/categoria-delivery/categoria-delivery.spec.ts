@@ -43,6 +43,16 @@ describe('CategoriaDeliveryComponent', () => {
     expect(component.buscando).toBe(true);
   });
 
+  it('mostrarResultados vale com busca OU com filtro ativo (sem texto)', () => {
+    expect(component.mostrarResultados).toBe(false);
+    component.toggleGratis(); // filtro sem texto
+    expect(component.mostrarResultados).toBe(true);
+    component.limparFiltros();
+    expect(component.mostrarResultados).toBe(false);
+    component.busca = 'x';
+    expect(component.mostrarResultados).toBe(true);
+  });
+
   it('resultados aplica busca + filtros globalmente', () => {
     component.busca = 'r'; // casa "Pizzaria" e "Burger King"
     expect(component.resultados.map((r) => r.id)).toEqual([1, 2]);

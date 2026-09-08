@@ -2,12 +2,12 @@
   <app-header-busca
     titulo="BUSCAR"
     variante="delivery"
-    endereco="Rua Tuiucue 122"
+    [endereco]="endereco"
     (buscarChange)="onBuscar($event)">
   </app-header-busca>
 
-  <!-- FILTROS (só na busca de restaurantes) -->
-  @if (buscando) {
+  <!-- FILTROS (sempre visíveis assim que os restaurantes carregam) -->
+  @if (restaurantes.length) {
     <div class="busca-filtros">
       <button class="filtro-chip" [class.filtro-chip--ativo]="filtroAberto" (click)="toggleAberto()">
         Aberto agora
@@ -43,7 +43,7 @@
 
   <div class="page-content">
 
-    @if (buscando) {
+    @if (mostrarResultados) {
       <!-- RESULTADOS DA BUSCA (restaurantes de todas as categorias) -->
       <div class="busca-resultados">
         @for (restaurante of resultados; track restaurante.id) {
@@ -77,7 +77,13 @@
         }
 
         @if (resultados.length === 0) {
-          <div class="busca-vazio"><p>Nenhum restaurante encontrado para "{{ busca }}".</p></div>
+          <div class="busca-vazio">
+            @if (buscando) {
+              <p>Nenhum restaurante encontrado para "{{ busca }}".</p>
+            } @else {
+              <p>Nenhum restaurante com esses filtros.</p>
+            }
+          </div>
         }
       </div>
     } @else {
