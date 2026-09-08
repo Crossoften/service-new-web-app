@@ -1,8 +1,12 @@
 .rest-container {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
+  // Altura fixa + overflow hidden dão à .rest-content uma altura limitada para
+  // rolar internamente (header e ações ficam fixos). Com min-height o container
+  // crescia com o conteúdo e o endereço/mapa ficavam inacessíveis (sem rolagem).
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   padding-top: var(--safe-top);
   padding-bottom: var(--safe-bottom);
   background: var(--color-white);

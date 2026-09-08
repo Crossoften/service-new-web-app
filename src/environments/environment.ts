@@ -19,5 +19,5 @@ export const environment = {
    * por restrição de referrer HTTP + APIs no Google Cloud, não por segredo.
    * Vazia = mapa desabilitado (a UI mostra aviso e segue funcionando sem coordenadas).
    */
-  googleMapsApiKey: '',
+  googleMapsApiKey: 'AIzaSyAngtAtWYaK0dnC29uK9WfchOPj37Xtb4o',
 };

@@ -165,6 +165,19 @@ export interface UpdateMenuItemDto {
   isActive?: boolean;
 }
 
+/** Cria um adicional do item — `POST /v1/restaurants/menu-items/{id}/additions`. */
+export interface CreateMenuItemAdditionDto {
+  name: string;
+  price?: number;
+}
+
+/** Edita/ativa-desativa um adicional — `PATCH /v1/restaurants/menu-item-additions/{id}`. */
+export interface UpdateMenuItemAdditionDto {
+  name?: string;
+  price?: number;
+  isActive?: boolean;
+}
+
 /** Payout/repasse do restaurante — `GET /v1/restaurants/me/payouts`. */
 /** Recorte do repasse — `?period=` em `GET /v1/restaurants/me/payouts`. */
 export type PayoutPeriod = 'day' | 'week' | 'month';

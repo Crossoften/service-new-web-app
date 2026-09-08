@@ -68,4 +68,47 @@ describe('AddCardapioComponent', () => {
     req.flush({ fileUrl: 'https://cdn/foto.png', fileKey: 'k1' });
     expect(component.arquivo).toBe('https://cdn/foto.png');
   });
+
+  it('cadastra um adicional no item em edição (POST additions) e o adiciona à lista', () => {
+    component.modoEdicao = true;
+    component.itemId = 5;
+    component.novoAdicionalNome = 'Bacon extra';
+    component.onAdicionalValorInput('500'); // R$ 5,00
+    component.adicionarAdicional();
+    const req = httpMock.expectOne(
+      (r) => r.url.endsWith('/restaurants/menu-items/5/additions') && r.method === 'POST',
+    );
+    expect(req.request.body.name).toBe('Bacon extra');
+    expect(req.request.body.price).toBe(5);
+    req.flush({ id: 9, name: 'Bacon extra', price: '5.00', isActive: true });
+    expect(component.adicionais).toEqual([{ id: 9, nome: 'Bacon extra', valor: 5, ativo: true }]);
+    expect(component.novoAdicionalNome).toBe('');
+  });
+
+  it('bloqueia adicional sem nome', () => {
+    component.modoEdicao = true;
+    component.itemId = 5;
+    component.novoAdicionalNome = '  ';
+    component.adicionarAdicional();
+    expect(component.erroAdicional).toContain('nome');
+    httpMock.expectNone((r) => r.url.includes('/additions'));
+  });
+
+  it('remove um adicional via PATCH isActive:false e tira da lista', () => {
+    component.modoEdicao = true;
+    component.itemId = 5;
+    component.adicionais = [{ id: 9, nome: 'Bacon', valor: 5, ativo: true }];
+    component.removerAdicional(component.adicionais[0]);
+    const req = httpMock.expectOne(
+      (r) => r.url.endsWith('/restaurants/menu-item-additions/9') && r.method === 'PATCH',
+    );
+    expect(req.request.body.isActive).toBe(false);
+    req.flush({ id: 9, name: 'Bacon', price: '5.00', isActive: false });
+    expect(component.adicionais).toEqual([]);
+  });
+
+  it('preço grátis quando o adicional vale 0', () => {
+    expect(component.precoAdicional(0)).toBe('Grátis');
+    expect(component.precoAdicional(5)).toContain('5,00');
+  });
 });

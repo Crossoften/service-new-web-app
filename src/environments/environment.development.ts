@@ -13,5 +13,5 @@ export const environment = {
    */
   bypassVerifyCode: true,
   /** Chave do Google Maps JavaScript API (Fase 8.4). Vazia = mapa desabilitado. */
-  googleMapsApiKey: '',
+  googleMapsApiKey: 'AIzaSyAngtAtWYaK0dnC29uK9WfchOPj37Xtb4o',
 };

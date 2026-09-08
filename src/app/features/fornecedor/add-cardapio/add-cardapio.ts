@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
+  AdicionalFornecedor,
   CategoriaCardapioFornecedor,
   FornecedorService,
 } from '../../../core/services/fornecedor';
@@ -38,6 +39,15 @@ export class AddCardapioComponent implements OnInit {
   categoriaAberta = false;
   novaCategoria = '';
 
+  // Adicionais / complementos (só no modo edição — precisam do id do item)
+  adicionais: AdicionalFornecedor[] = [];
+  novoAdicionalNome = '';
+  novoAdicionalValor = '';
+  salvandoAdicional = false;
+  removendoId: number | null = null;
+  erroAdicional = '';
+  aviso = '';
+
   ngOnInit() {
     this.fornecedorService.getCategorias().subscribe({
       next: (cats) => {
@@ -60,6 +70,7 @@ export class AddCardapioComponent implements OnInit {
             this.valor = formatBRL(Number(item.valor));
             this.categoriaSelecionadaId = item.categoriaId ?? this.categoriaSelecionadaId;
             this.arquivo = item.imagem;
+            this.adicionais = item.adicionais ?? [];
           }
         },
       });
@@ -136,6 +147,7 @@ export class AddCardapioComponent implements OnInit {
   }
 
   private persistirItem(categoriaId: number, valor: number) {
+    const editando = this.itemId != null;
     this.fornecedorService
       .salvarItem({
         id: this.itemId,
@@ -146,12 +158,71 @@ export class AddCardapioComponent implements OnInit {
         imagem: this.arquivo || undefined,
       })
       .subscribe({
-        next: () => {
+        next: (item) => {
           this.salvando = false;
-          this.router.navigate(['/fornecedor/cardapio']);
+          if (editando) {
+            this.router.navigate(['/fornecedor/cardapio']);
+          } else if (item?.id) {
+            // Item novo criado: entra no modo edição do próprio item para,
+            // em seguida, cadastrar os adicionais (a rota precisa do id).
+            this.router.navigate(['/fornecedor/cardapio/editar', item.id]);
+          } else {
+            this.router.navigate(['/fornecedor/cardapio']);
+          }
         },
         error: (err: ApiError) => this.falhar(err, 'Não foi possível salvar o item.'),
       });
+  }
+
+  // ── Adicionais / complementos ───────────────────────────────────────────────
+
+  /** Máscara de moeda no campo de valor do adicional (entrada em centavos). */
+  onAdicionalValorInput(valor: string) {
+    this.novoAdicionalValor = maskBRL(valor);
+  }
+
+  precoAdicional(valor: number): string {
+    return valor > 0 ? formatBRL(valor) : 'Grátis';
+  }
+
+  adicionarAdicional() {
+    this.erroAdicional = '';
+    const nome = this.novoAdicionalNome.trim();
+    if (!nome) {
+      this.erroAdicional = 'Informe o nome do adicional.';
+      return;
+    }
+    if (this.itemId == null) return; // guardado pela UI (só aparece no modo edição)
+    const valor = parseBRL(this.novoAdicionalValor) || 0; // opcional; 0 = grátis
+    this.salvandoAdicional = true;
+    this.fornecedorService.criarAdicional(this.itemId, { nome, valor }).subscribe({
+      next: (a) => {
+        this.salvandoAdicional = false;
+        this.adicionais = [...this.adicionais, a];
+        this.novoAdicionalNome = '';
+        this.novoAdicionalValor = '';
+      },
+      error: (err: ApiError) => {
+        this.salvandoAdicional = false;
+        this.erroAdicional = err?.message?.trim() ? err.message : 'Não foi possível adicionar o adicional.';
+      },
+    });
+  }
+
+  removerAdicional(a: AdicionalFornecedor) {
+    if (this.removendoId != null) return;
+    this.erroAdicional = '';
+    this.removendoId = a.id;
+    this.fornecedorService.removerAdicional(a.id).subscribe({
+      next: () => {
+        this.removendoId = null;
+        this.adicionais = this.adicionais.filter((x) => x.id !== a.id);
+      },
+      error: (err: ApiError) => {
+        this.removendoId = null;
+        this.erroAdicional = err?.message?.trim() ? err.message : 'Não foi possível remover o adicional.';
+      },
+    });
   }
 
   private falhar(err: ApiError, fallback: string) {

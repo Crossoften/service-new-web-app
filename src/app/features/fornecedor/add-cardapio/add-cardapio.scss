@@ -188,3 +188,86 @@
     border: 2px solid var(--color-primary);
   }
 }
+// ── Adicionais / complementos ────────────────────────────────────────────────
+.add-adicionais {
+  &__hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--color-gray-400);
+  }
+
+  &__vazio {
+    margin: 2px 0;
+    font-size: 13px;
+    color: var(--color-gray-400);
+  }
+
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--color-gray-100);
+    border-radius: 10px;
+  }
+
+  &__nome {
+    flex: 1;
+    font-size: 14px;
+    color: var(--color-text);
+  }
+
+  &__valor {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  &__remover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 8px;
+    background: var(--color-white);
+    color: var(--color-gray-600);
+    cursor: pointer;
+
+    &:disabled { opacity: 0.5; cursor: default; }
+  }
+
+  &__form {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+
+    // Sobrepõe o `width:100%` herdado de `.add-field input`.
+    input { width: auto; }
+
+    .add-adicionais__nome-input { flex: 1; min-width: 0; }
+    .add-adicionais__valor-input { width: 110px; flex-shrink: 0; }
+  }
+
+  &__add {
+    flex-shrink: 0;
+    padding: 0 16px;
+    border: none;
+    border-radius: 10px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled { opacity: 0.6; cursor: default; }
+  }
+}

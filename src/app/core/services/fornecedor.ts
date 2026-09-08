@@ -3,14 +3,18 @@ import { Observable, catchError, map, of, timeout } from 'rxjs';
 import { ApiService } from './api';
 import {
   CreateMenuCategoryDto,
+  CreateMenuItemAdditionDto,
   CreateMenuItemDto,
   CreateRestaurantDto,
   CreateRestaurantResponseDto,
   DeleteMenuItemResponseDto,
   ResponseMenuCategoryDto,
+  ResponseMenuItemAdditionDto,
+  ResponseMenuItemDto,
   ResponseRestaurantDto,
   PayoutPeriod,
   ResponseRestaurantPayoutDto,
+  UpdateMenuItemAdditionDto,
   UpdateMenuItemDto,
   UpdateRestaurantDto,
 } from '../models/restaurant';
@@ -23,6 +27,14 @@ import { PaymentMethod } from '../models/enums';
 
 // ─── View-models do Front (pt) ──────────────────────────────────────────────
 
+/** Adicional/complemento de um item do cardápio (visão do fornecedor). */
+export interface AdicionalFornecedor {
+  id: number;
+  nome: string;
+  valor: number; // 0 = grátis
+  ativo: boolean;
+}
+
 export interface ItemCardapioFornecedor {
   id: number; // = menuItem.id
   nome: string;
@@ -31,6 +43,7 @@ export interface ItemCardapioFornecedor {
   categoria: string; // nome da categoria (exibição)
   categoriaId?: number; // = menuCategory.id (para editar/criar)
   imagem: string;
+  adicionais: AdicionalFornecedor[]; // complementos do item (todos, ativos e inativos)
 }
 
 export interface CategoriaCardapioFornecedor {
@@ -126,8 +139,8 @@ export class FornecedorService {
     return this.api.post<ResponseMenuCategoryDto>('/restaurants/menu-categories', dto);
   }
 
-  /** Cria/edita um item — `POST`/`PATCH /v1/restaurants/menu-items`. */
-  salvarItem(input: SalvarItemInput): Observable<unknown> {
+  /** Cria/edita um item — `POST`/`PATCH /v1/restaurants/menu-items`. Retorna o item salvo (com `id`). */
+  salvarItem(input: SalvarItemInput): Observable<ResponseMenuItemDto> {
     if (input.id) {
       const dto: UpdateMenuItemDto = {
         name: input.nome,
@@ -136,7 +149,7 @@ export class FornecedorService {
         menuCategoryId: input.categoriaId,
         imageUrl: input.imagem || undefined,
       };
-      return this.api.patch(`/restaurants/menu-items/${input.id}`, dto);
+      return this.api.patch<ResponseMenuItemDto>(`/restaurants/menu-items/${input.id}`, dto);
     }
     const dto: CreateMenuItemDto = {
       name: input.nome,
@@ -145,7 +158,7 @@ export class FornecedorService {
       menuCategoryId: input.categoriaId,
       imageUrl: input.imagem || undefined,
     };
-    return this.api.post('/restaurants/menu-items', dto);
+    return this.api.post<ResponseMenuItemDto>('/restaurants/menu-items', dto);
   }
 
   /** Desativa um item (soft-delete) — `PATCH /v1/restaurants/menu-items/{id}` `{isActive:false}`. */
@@ -174,8 +187,47 @@ export class FornecedorService {
           categoria: c.name,
           categoriaId: c.id,
           imagem: i.imageUrl ?? '',
+          // Fornecedor vê todos os adicionais (inclusive inativos) para poder reativar.
+          adicionais: (i.additions ?? []).map((a) => this.mapAdicional(a)),
         })),
     );
+  }
+
+  // ── Adicionais / complementos (API) ─────────────────────────────────────────
+
+  private mapAdicional(a: ResponseMenuItemAdditionDto): AdicionalFornecedor {
+    return { id: a.id, nome: a.name, valor: Number(a.price), ativo: a.isActive };
+  }
+
+  /** Cria um adicional do item — `POST /v1/restaurants/menu-items/{id}/additions`. */
+  criarAdicional(
+    menuItemId: number,
+    input: { nome: string; valor?: number },
+  ): Observable<AdicionalFornecedor> {
+    const dto: CreateMenuItemAdditionDto = { name: input.nome, price: input.valor };
+    return this.api
+      .post<ResponseMenuItemAdditionDto>(`/restaurants/menu-items/${menuItemId}/additions`, dto)
+      .pipe(map((a) => this.mapAdicional(a)));
+  }
+
+  /** Edita um adicional — `PATCH /v1/restaurants/menu-item-additions/{id}`. */
+  atualizarAdicional(
+    id: number,
+    input: { nome?: string; valor?: number; ativo?: boolean },
+  ): Observable<AdicionalFornecedor> {
+    const dto: UpdateMenuItemAdditionDto = {
+      name: input.nome,
+      price: input.valor,
+      isActive: input.ativo,
+    };
+    return this.api
+      .patch<ResponseMenuItemAdditionDto>(`/restaurants/menu-item-additions/${id}`, dto)
+      .pipe(map((a) => this.mapAdicional(a)));
+  }
+
+  /** Remove (desativa) um adicional — não há DELETE; usa `isActive:false`. */
+  removerAdicional(id: number): Observable<AdicionalFornecedor> {
+    return this.atualizarAdicional(id, { ativo: false });
   }
 
   // ── Pedidos recebidos (API) ─────────────────────────────────────────────────

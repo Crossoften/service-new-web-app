@@ -3,10 +3,11 @@
 > **Arquivo mestre de progresso e retomada.** Atualizado a cada passo. Se a sessão renovar/reiniciar,
 > **leia este arquivo primeiro** — ele resume o que foi decidido, feito e o que falta.
 >
-> **Última atualização:** 2026-09-07 · **Fase atual:** 🎉 Integração completa + verticais do fornecedor (FV-1…FV-5)
-> + **Mercado Pago** (MP-1…MP-3) + ajustes de UX/navegação (CD-1, NAV-1, AJ-A). Pendências só de back-end.
+> **Última atualização:** 2026-09-08 · **Fase atual:** 🎉 Integração completa + verticais do fornecedor (FV-1…FV-5)
+> + **Mercado Pago** (MP-1…MP-3) + **Fase Mapa (MAP-1…MAP-3, rastreamento ao vivo)** aplicada + ajustes de layout.
+> **Em andamento:** fluxo delivery — **adicionais no cardápio** (back pronto, front a fazer) + melhorias de usabilidade.
 >
-> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `eec245d`).
+> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `290db7c`).
 > **Back-end:** `service-new-ws` @ `ajustes-gerais` (@ `b60afd0`, com Mercado Pago). **Base local:** `http://localhost:8000/v1`.
 
 ---
@@ -197,6 +198,21 @@
 
 ---
 
+### Fase Delivery — usabilidade (benchmark iFood / Zé Delivery)
+
+> Revisão completa do fluxo em `docs/analise-fluxo-delivery.md` (backlog priorizado). **Achado-chave:** o lado do
+> **cliente já tinha** seletor de adicionais, sacola e `additionIds` no POST — a lacuna era só a **autoria pelo fornecedor**.
+
+| Fatia | Escopo | Specs | Patch |
+|---|---|---|---|
+| **ADD-1** | **Adicionais no cardápio (fornecedor)** — no form do item (criar/editar): cadastrar/remover adicionais com nome + preço (máscara BRL). Back **já existia** (`POST /restaurants/menu-items/:id/additions`, `PATCH /restaurants/menu-item-additions/:id`; item já retorna `additions[]`). Item novo entra em modo edição p/ liberar os adicionais (rota precisa do id). Remoção = `isActive:false` (não há DELETE). | ✅ (13) | `ADD-1-adicionais-cardapio` |
+
+> **Próximas fatias sugeridas (todas 🟢, back pronto):** **ADD-2** (mostrar adicionais escolhidos no pedido — cliente e
+> cozinha) · **OBS-1** (observação por item) · **CART-1** (editar sacola). Depois: busca/filtros, "pedir novamente",
+> avaliar pós-entrega. Cupom/agendamento/gorjeta/push exigem back novo → `backend-demandas.md`.
+
+---
+
 ## ▶️ Ordem de aplicação dos patches (resumo)
 
 Fundação → Auth (1..3) → Perfil → Delivery (DC/DF) + fixes → Entregador → Parceiro → Marketplace → Aluguel →
@@ -205,8 +221,17 @@ correções criar-serviço (nome, categoria) → **verticais do fornecedor (FV-1
 **Mercado Pago (MP-1..MP-3)** → **UX/nav: CD-1, NAV-1, MP-1→AJ-A** (CD-1/NAV-1 independentes; AJ-A depois do MP-1) →
 **SV-1** (indep.) · **CV-1** (indep.) · **CD-1→PZ-1** (mask nos 5 forms) · **CD-1+PZ-1→CV-2** (aviso sem categoria) ·
 **CV-3** (indep.) → **PF-1 · PF-2** (perfil, aplicados @ `eec245d`) → **MAP-1a→1b→1c** → **MAP-2a→2b→2c** → **MAP-3** (fase mapa).
-Pendentes de aplicação: **CV-3** (indep.) e **MAP-1a→1b→1c→2a→2b→2c→3** (nessa ordem; `npm install` após o MAP-3).
-`origin/integracao` @ `eec245d`.
+**Aplicado @ `290db7c`:** **MAP-1a→…→2c→3** (fase mapa completa; `socket.io-client` instalado via `npm install`).
+Pendente de aplicação: **CV-3** (indep.), **AJ-layout** (2 `.scss`), **AJ-maps-key** (chave do Google no environment) e **ADD-1** (adicionais no cardápio).
+`origin/integracao` @ `290db7c`.
+
+> **AJ-layout** (`AJ-layout-periodos-scroll-restaurante`): (1) `.home-f-periodos` ganhou `margin: 0 16px` p/ alinhar
+> os chips **Tudo|Dia|Semana|Mês** às laterais dos cards; (2) `.rest-container` passou de `min-height` p/ `height: 100dvh`
+> + `overflow: hidden` (mesmo padrão de `.page-container`), liberando a rolagem interna do form (endereço/mapa acessíveis).
+
+> **Mapa "indisponível":** é esperado enquanto `googleMapsApiKey` estiver **vazia** nos `environment.*` — o mapa
+> renderiza normalmente assim que a chave for preenchida (habilitar **Maps JavaScript API** + **Places API** no Google
+> Cloud, com billing; e liberar o domínio nas restrições de referenciador HTTP da chave). Sem chave, cai no fallback textual.
 
 > Cada fatia foi entregue como patch individual. A `integracao` do cliente é a fonte da verdade do estado aplicado.
 > **Demandas de back-end recentes:** **BE-Q8** (upload `500` — S3 sem credencial/sem fallback) e **BE-Q9**

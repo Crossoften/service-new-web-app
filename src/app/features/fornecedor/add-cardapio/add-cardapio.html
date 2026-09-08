@@ -95,6 +95,52 @@
         </label>
       </div>
 
+      <!-- ADICIONAIS / COMPLEMENTOS -->
+      <div class="add-field add-adicionais">
+        <label>Adicionais / complementos
+          <span style="font-weight:400;color:var(--color-gray-400)">(opcional)</span>
+        </label>
+        <p class="add-adicionais__hint">
+          Itens extras que o cliente pode escolher (ex.: bacon, borda recheada). O valor é somado ao preço no pedido.
+        </p>
+
+        @if (modoEdicao && itemId) {
+          @if (adicionais.length > 0) {
+            <div class="add-adicionais__lista">
+              @for (a of adicionais; track a.id) {
+                <div class="add-adicionais__item">
+                  <span class="add-adicionais__nome">{{ a.nome }}</span>
+                  <span class="add-adicionais__valor">{{ precoAdicional(a.valor) }}</span>
+                  <button type="button" class="add-adicionais__remover"
+                    (click)="removerAdicional(a)" [disabled]="removendoId === a.id" aria-label="Remover adicional">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="add-adicionais__vazio">Nenhum adicional cadastrado ainda.</p>
+          }
+
+          <div class="add-adicionais__form">
+            <input class="add-adicionais__nome-input" type="text" placeholder="Nome (ex.: Bacon extra)"
+              [(ngModel)]="novoAdicionalNome" />
+            <input class="add-adicionais__valor-input" type="text" inputmode="numeric" placeholder="R$ 0,00"
+              [ngModel]="novoAdicionalValor" (ngModelChange)="onAdicionalValorInput($event)" />
+            <button type="button" class="add-adicionais__add" (click)="adicionarAdicional()" [disabled]="salvandoAdicional">
+              {{ salvandoAdicional ? '…' : 'Adicionar' }}
+            </button>
+          </div>
+          @if (erroAdicional) {
+            <span class="add-erro">{{ erroAdicional }}</span>
+          }
+        } @else {
+          <p class="add-adicionais__vazio">Salve o item primeiro para cadastrar os adicionais.</p>
+        }
+      </div>
+
       @if (erro) {
         <span class="add-erro">{{ erro }}</span>
       }
