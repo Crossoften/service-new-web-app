@@ -39,6 +39,16 @@
 
     <!-- FATURAMENTO (payout) -->
     @if (payout) {
+      <div class="home-f-periodos">
+        @for (p of periodos; track p.label) {
+          <button
+            class="home-f-periodos__item"
+            [class.home-f-periodos__item--ativo]="periodoPayout === p.id"
+            (click)="selecionarPeriodo(p.id)">
+            {{ p.label }}
+          </button>
+        }
+      </div>
       <div class="home-f-faturamento">
         <div class="home-f-faturamento__item">
           <span class="home-f-faturamento__label">Pedidos</span>

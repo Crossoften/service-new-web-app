@@ -222,3 +222,22 @@
   color: var(--color-primary);
   text-align: left;
 }
+
+.rest-form__row {
+  display: flex;
+  gap: 12px;
+
+  input { flex: 1; min-width: 0; }
+}
+
+.rest-field__opcional {
+  font-weight: 400;
+  color: var(--color-gray-400);
+}
+
+.rest-secao {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-top: 8px;
+}

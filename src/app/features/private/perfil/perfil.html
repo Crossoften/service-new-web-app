@@ -136,6 +136,14 @@
         </div>
 
         @if (editandoEndereco) {
+          <div class="perfil-field">
+            <label>Localização no mapa</label>
+            <app-mapa-endereco
+              [latitude]="latitude"
+              [longitude]="longitude"
+              (coordenadas)="onCoordenadas($event)"></app-mapa-endereco>
+          </div>
+
           <div class="perfil-secao__acoes">
             <button class="perfil-btn perfil-btn--primary" (click)="salvarEndereco()" [disabled]="salvandoEndereco">
               {{ salvandoEndereco ? 'SALVANDO…' : 'SALVAR' }}

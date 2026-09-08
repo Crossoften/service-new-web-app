@@ -40,7 +40,7 @@
           <div class="sacola-restaurante__meta">
             <span>⭐ {{ pedido!.restaurante!.avaliacao }}</span>
             <span>•</span>
-            <span>🕐 {{ pedido!.restaurante!.tempo }}</span>
+            @if (pedido!.restaurante!.tempo) { <span>🕐 {{ pedido!.restaurante!.tempo }}</span> }
             <span>•</span>
             <span class="sacola-restaurante__entrega">🛵 <strong>Entrega {{ formatarPreco(pedido!.restaurante!.taxaEntrega) }}</strong></span>
           </div>

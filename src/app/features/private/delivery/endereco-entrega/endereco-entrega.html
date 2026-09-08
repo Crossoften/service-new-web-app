@@ -40,7 +40,7 @@
           <div class="endereco-restaurante__meta">
             <span>⭐ {{ pedido!.restaurante!.avaliacao }}</span>
             <span>•</span>
-            <span>🕐 {{ pedido!.restaurante!.tempo }}</span>
+            @if (pedido!.restaurante!.tempo) { <span>🕐 {{ pedido!.restaurante!.tempo }}</span> }
             <span>•</span>
             <span class="endereco-restaurante__entrega">🛵 <strong>Entrega {{ pedido!.restaurante!.taxaEntrega.toFixed(2) }}</strong></span>
           </div>

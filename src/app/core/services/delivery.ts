@@ -247,13 +247,21 @@ export class DeliveryService {
 
   // ── Mapeadores API → view-model ───────────────────────────────────────────
 
+  /** "30-45 min" (ou "30 min" quando iguais). Vazio quando não informado. */
+  private formatarTempoEntrega(min?: number, max?: number): string {
+    if (min == null && max == null) return '';
+    const a = min ?? max!;
+    const b = max ?? min!;
+    return a === b ? `${a} min` : `${a}-${b} min`;
+  }
+
   private mapRestaurante(r: ResponseRestaurantDto): Restaurante {
     return {
       id: r.id,
       nome: r.name,
       avaliacao: r.ratingAverage ?? r.rating ?? 0,
       totalAvaliacoes: r.ratingCount ?? 0,
-      tempo: r.estimatedTime ?? '',
+      tempo: this.formatarTempoEntrega(r.deliveryTimeMinMinutes, r.deliveryTimeMaxMinutes) || (r.estimatedTime ?? ''),
       taxaEntrega: r.deliveryFee ?? 0,
       descricao: r.description ?? '',
       imagem: r.imageUrl ?? '',

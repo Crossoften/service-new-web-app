@@ -55,4 +55,36 @@ describe('DeliveryService', () => {
     expect(req.request.body.payerEmail).toBe('cliente@example.com');
     req.flush({ message: 'ok', checkoutUrl: 'https://mp/checkout', foodOrder: { id: 9 } });
   });
+
+  it('mapeia o tempo de entrega ("30-45 min") a partir dos minutos', () => {
+    let tempo = '';
+    service.getRestaurante(1).subscribe((r) => (tempo = r.tempo));
+    httpMock
+      .expectOne((r) => r.url.endsWith('/restaurants/1'))
+      .flush({
+        id: 1,
+        name: 'Cantina',
+        isActive: true,
+        isOpen: true,
+        category: { id: 2, name: 'Lanches', slug: 'lanches' },
+        deliveryTimeMinMinutes: 30,
+        deliveryTimeMaxMinutes: 45,
+      });
+    expect(tempo).toBe('30-45 min');
+  });
+
+  it('tempo de entrega vazio quando não informado', () => {
+    let tempo = 'x';
+    service.getRestaurante(2).subscribe((r) => (tempo = r.tempo));
+    httpMock
+      .expectOne((r) => r.url.endsWith('/restaurants/2'))
+      .flush({
+        id: 2,
+        name: 'Sem tempo',
+        isActive: true,
+        isOpen: true,
+        category: { id: 2, name: 'Lanches', slug: 'lanches' },
+      });
+    expect(tempo).toBe('');
+  });
 });

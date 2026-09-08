@@ -8,8 +8,17 @@ import {
   StatusPedidoFornecedor,
 } from '../../../core/services/fornecedor';
 import { BottomNavFornecedorComponent } from '../../../shared/components/bottom-nav-fornecedor/bottom-nav-fornecedor';
-import { ResponseRestaurantDto, ResponseRestaurantPayoutDto } from '../../../core/models/restaurant';
+import {
+  PayoutPeriod,
+  ResponseRestaurantDto,
+  ResponseRestaurantPayoutDto,
+} from '../../../core/models/restaurant';
 import { ApiError } from '../../../core/models/common';
+
+interface PeriodoOpcao {
+  id?: PayoutPeriod;
+  label: string;
+}
 
 @Component({
   selector: 'app-home-fornecedor',
@@ -25,6 +34,14 @@ export class HomeFornecedorComponent implements OnInit {
   payout?: ResponseRestaurantPayoutDto;
   pedidos: PedidoFornecedor[] = [];
   carregando = false;
+
+  periodoPayout?: PayoutPeriod;
+  periodos: PeriodoOpcao[] = [
+    { id: undefined, label: 'Tudo' },
+    { id: 'day', label: 'Dia' },
+    { id: 'week', label: 'Semana' },
+    { id: 'month', label: 'Mês' },
+  ];
   erro = '';
 
   ngOnInit() {
@@ -57,7 +74,15 @@ export class HomeFornecedorComponent implements OnInit {
   }
 
   private carregarPayout() {
-    this.fornecedorService.getPayout().subscribe({ next: (p) => (this.payout = p), error: () => {} });
+    this.fornecedorService
+      .getPayout(this.periodoPayout)
+      .subscribe({ next: (p) => (this.payout = p), error: () => {} });
+  }
+
+  selecionarPeriodo(periodo?: PayoutPeriod) {
+    if (this.periodoPayout === periodo) return;
+    this.periodoPayout = periodo;
+    this.carregarPayout();
   }
 
   private carregarPedidos() {

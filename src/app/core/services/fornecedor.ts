@@ -9,6 +9,7 @@ import {
   DeleteMenuItemResponseDto,
   ResponseMenuCategoryDto,
   ResponseRestaurantDto,
+  PayoutPeriod,
   ResponseRestaurantPayoutDto,
   UpdateMenuItemDto,
   UpdateRestaurantDto,
@@ -179,9 +180,9 @@ export class FornecedorService {
 
   // ── Pedidos recebidos (API) ─────────────────────────────────────────────────
 
-  /** Payout/repasse do restaurante — `GET /v1/restaurants/me/payouts`. */
-  getPayout(): Observable<ResponseRestaurantPayoutDto> {
-    return this.api.get<ResponseRestaurantPayoutDto>('/restaurants/me/payouts');
+  /** Payout/repasse do restaurante — `GET /v1/restaurants/me/payouts` (opcional `?period=`). */
+  getPayout(period?: PayoutPeriod): Observable<ResponseRestaurantPayoutDto> {
+    return this.api.get<ResponseRestaurantPayoutDto>('/restaurants/me/payouts', { period });
   }
 
   /** Pedidos recebidos pelo restaurante — `GET /v1/food-orders` (view-model). */

@@ -12,4 +12,6 @@ export const environment = {
    * apiBaseUrl: 'https://homolog.crosoften.com:8029/v1',
    */
   bypassVerifyCode: true,
+  /** Chave do Google Maps JavaScript API (Fase 8.4). Vazia = mapa desabilitado. */
+  googleMapsApiKey: '',
 };

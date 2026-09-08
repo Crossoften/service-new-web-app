@@ -49,7 +49,7 @@
           <span>Sem avaliações</span>
         }
         <span>•</span>
-        <span>🕐 {{ restaurante?.tempo }}</span>
+        @if (restaurante?.tempo) { <span>🕐 {{ restaurante?.tempo }}</span> }
         <span>•</span>
         <span class="restaurante-info__entrega">🛵 <strong>Entrega R$ {{ restaurante?.taxaEntrega?.toFixed(2) }}</strong></span>
       </div>

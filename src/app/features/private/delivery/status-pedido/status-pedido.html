@@ -18,18 +18,21 @@
 
   <!-- MAPA / RASTREIO -->
   <div class="status-mapa">
-    <div class="status-mapa__placeholder">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-        <circle cx="12" cy="10" r="3"/>
-      </svg>
-      @if (rastreando) {
-        <span>Entregador a caminho</span>
-        <small>lat {{ pedido?.delivery?.currentLat }} · lng {{ pedido?.delivery?.currentLng }}</small>
-      } @else {
-        <span>Mapa disponível em breve</span>
-      }
-    </div>
+    @if (emRota) {
+      <app-mapa-rastreio
+        [deliveryId]="deliveryId"
+        [latInicial]="latEntrega"
+        [lngInicial]="lngEntrega"
+        [ativo]="emRota"></app-mapa-rastreio>
+    } @else {
+      <div class="status-mapa__placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <span>Mapa disponível quando o pedido sair para entrega</span>
+      </div>
+    }
   </div>
 
   <div class="page-content">

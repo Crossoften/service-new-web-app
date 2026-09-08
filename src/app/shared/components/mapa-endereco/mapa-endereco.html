@@ -1,0 +1,26 @@
+<div class="mapa-endereco">
+  @if (!indisponivel) {
+    <input
+      #busca
+      class="mapa-endereco__busca"
+      type="text"
+      placeholder="Buscar endereço no mapa"
+      (keydown.enter)="$event.preventDefault()" />
+  }
+
+  <div class="mapa-endereco__wrap">
+    <div #mapa class="mapa-endereco__canvas"></div>
+    @if (carregando) {
+      <div class="mapa-endereco__overlay">Carregando mapa…</div>
+    }
+    @if (indisponivel) {
+      <div class="mapa-endereco__overlay">Mapa indisponível no momento. Você pode salvar sem as coordenadas.</div>
+    }
+  </div>
+
+  @if (latitude && longitude) {
+    <span class="mapa-endereco__coords">📍 {{ latitude }}, {{ longitude }}</span>
+  } @else if (!indisponivel && !carregando) {
+    <span class="mapa-endereco__hint">Busque o endereço ou toque no mapa para marcar o ponto.</span>
+  }
+</div>

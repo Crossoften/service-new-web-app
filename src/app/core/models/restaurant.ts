@@ -55,6 +55,11 @@ export interface ResponseRestaurantDto {
   ratingAverage?: number;
   /** Total de avaliações recebidas (0 quando não há). */
   ratingCount?: number;
+  /** Tempo de entrega (Fase 8.4) — ausente = não informado (a tela omite). */
+  deliveryTimeMinMinutes?: number;
+  deliveryTimeMaxMinutes?: number;
+  /** Endereço do estabelecimento (Fase 8.4), com coordenadas. */
+  address?: RestaurantAddressDto;
   // (BE-D1) ainda não retornados pela API:
   rating?: number;
   estimatedTime?: string;
@@ -87,12 +92,30 @@ export interface ResponseFindAllRestaurantDto {
 // ── Administração (fornecedor) ───────────────────────────────────────────────
 // Observação: nos DTOs de criação/edição, `price` é **number** (na resposta é string).
 
+/**
+ * Endereço do estabelecimento (Fase 8.4) — é o endereço da cozinha, de onde a
+ * entrega sai (não o do perfil do dono). `latitude/longitude` capturadas via mapa (MAP-2).
+ */
+export interface RestaurantAddressDto {
+  street?: string;
+  number?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  latitude?: string;
+  longitude?: string;
+}
+
 export interface CreateRestaurantDto {
   name: string;
   categoryId: number;
   description?: string;
   imageUrl?: string;
   imageKey?: string;
+  deliveryTimeMinMinutes?: number;
+  deliveryTimeMaxMinutes?: number;
+  address?: RestaurantAddressDto;
 }
 
 export interface UpdateRestaurantDto {
@@ -103,6 +126,9 @@ export interface UpdateRestaurantDto {
   categoryId?: number;
   isOpen?: boolean;
   isActive?: boolean;
+  deliveryTimeMinMinutes?: number;
+  deliveryTimeMaxMinutes?: number;
+  address?: RestaurantAddressDto;
 }
 
 export interface CreateRestaurantResponseDto {
@@ -140,6 +166,9 @@ export interface UpdateMenuItemDto {
 }
 
 /** Payout/repasse do restaurante — `GET /v1/restaurants/me/payouts`. */
+/** Recorte do repasse — `?period=` em `GET /v1/restaurants/me/payouts`. */
+export type PayoutPeriod = 'day' | 'week' | 'month';
+
 export interface ResponseRestaurantPayoutDto {
   billingType: string;
   commissionRate?: string;
@@ -147,4 +176,6 @@ export interface ResponseRestaurantPayoutDto {
   totalItemsValue: string;
   totalCommission: string;
   netAmount: string;
+  /** `all` quando nenhum recorte foi pedido. */
+  period?: string;
 }

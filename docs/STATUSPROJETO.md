@@ -6,7 +6,7 @@
 > **Última atualização:** 2026-09-07 · **Fase atual:** 🎉 Integração completa + verticais do fornecedor (FV-1…FV-5)
 > + **Mercado Pago** (MP-1…MP-3) + ajustes de UX/navegação (CD-1, NAV-1, AJ-A). Pendências só de back-end.
 >
-> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `3f84e35`).
+> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `eec245d`).
 > **Back-end:** `service-new-ws` @ `ajustes-gerais` (@ `b60afd0`, com Mercado Pago). **Base local:** `http://localhost:8000/v1`.
 
 ---
@@ -172,6 +172,24 @@
 
 > **Perfil × dados bancários:** a tela `perfil` **não** gerencia conta bancária (isso fica no fluxo Parceiro/Entregador via `/bank-accounts`). O padrão ver/editar do PF-1 pode ser estendido lá se desejado (não solicitado ainda).
 
+### Fase Mapa / Fase 8.4 (ORIENTACOESFRONT §8.4) — MAP-1 (sem dependências)
+
+> Back atualizado (§8.4): coordenadas no endereço (resolve **BE-Q7**), tempo de entrega, período no repasse
+> (resolve **BE-F2**), rastreamento por WebSocket (`/deliveries`), Google Maps no front. Ordem do doc: coordenadas → mapa.
+
+| Fatia | Escopo | Status | Patch |
+|---|---|---|---|
+| **MAP-1a** | **Período no repasse** — `getPayout(period?)` → `?period=day\|week\|month`; seletor Tudo/Dia/Semana/Mês na home do fornecedor; model ganha `period`. Resolve **BE-F2**. | ✅ (2 specs) | `MAP-1a-repasse-periodo` |
+| **MAP-1b** | **Tempo de entrega** — `deliveryTimeMin/MaxMinutes` nos DTOs do restaurante; 2 campos no cadastro (validação 1–480, máx≥mín); vitrine mostra "30-45 min" e **omite quando ausente** (5 telas). | ✅ (9 specs) | `MAP-1b-tempo-entrega` |
+| **MAP-1c** | **Coordenadas (encanamento)** — `latitude/longitude` (string) em `Response/UpdateAddressDto`; perfil **preserva** as coords ao salvar; `RestaurantAddressDto` + `address?` nos DTOs do restaurante (prontos p/ MAP-2). | ✅ (7 specs) | `MAP-1c-coordenadas-plumbing` |
+| **MAP-2a** | **Base Google Maps (sem dep npm)** — chave em `environment.*` (`googleMapsApiKey`, vazia = mapa off c/ aviso); `GoogleMapsLoaderService` (carrega o SDK JS + `places` sob demanda); componente reutilizável **`<app-mapa-endereco>`** (Places Autocomplete + pino arrastável + clique → emite lat/lng). | ✅ (4 specs) | `MAP-2a-google-maps-base` |
+| **MAP-2b** | **Mapa no endereço do perfil** — no modo Editar da seção Endereço, mapa centrado nas coords; buscar/mover o pino preenche lat/lng e o Salvar envia (via MAP-1c). | ✅ (8 specs) | `MAP-2b-perfil-endereco-mapa` |
+| **MAP-2c** | **Endereço + mapa no cadastro do restaurante** — nova seção de endereço (CEP/rua/nº/bairro/cidade/UF) + `<app-mapa-endereco>`; envia `address{…, lat, lng}` (só se preenchido); `ResponseRestaurantDto.address?`. Com as duas pontas, **o frete varia** (fecha **BE-Q7** na prática). | ✅ (5 specs) | `MAP-2c-restaurante-endereco-mapa` |
+| **MAP-3** | **Rastreamento ao vivo** — `DeliveryTrackingService` (WebSocket `socket.io-client` no namespace `/deliveries`, JWT no handshake; eventos `delivery:location`/`delivery:status`, contrato verificado no back `deliveries.gateway.ts`); componente **`<app-mapa-rastreio>`** (mapa read-only que segue o pino do entregador, fallback textual sem chave/posição); na tela de status do pedido do cliente, o mapa liga quando o pedido está **A caminho** (`OnTheWay`), usando a última posição do polling até o 1º evento ao vivo. **GPS do entregador já existia** na base (`status-entrega` → `PATCH /deliveries/:id/location` a cada 15s, 1º envio muda p/ `OnTheWay`). **Requer MAP-2a** (loader do Maps). Adiciona `socket.io-client` (rodar `npm install` ao aplicar). | ✅ (7 specs) | `MAP-3-rastreio-tempo-real` |
+
+> **Ordem MAP:** 1a → 1b → 1c → 2a → 2b → 2c → **3** (verificado em sequência; chain aplica limpo em `origin/integracao` e builda). **Preencher `googleMapsApiKey`** nos `environment.*` para o mapa carregar; **rodar `npm install`** após aplicar o MAP-3 (nova dep `socket.io-client`).
+> **Admin de ícones de categoria** e faixas de frete = portal, fora deste app.
+
 > **Categorias (BE-Q9) — seed pronto:** entregue `catalog-categories.seeds.ts` (drop-in do **back-end**) que semeia
 > `ProductCategory`/`AccommodationCategory`/`TransportationCategory` (idempotente, padrão do seed de serviço).
 > Não dá para "categoria só no front": `POST /products` valida o `categoryId` no banco e não há rota de criar
@@ -186,8 +204,9 @@ Transporte → Hospedagem/Empregos → Chat → Serviços (S-1..S-5) → **Fase 
 correções criar-serviço (nome, categoria) → **verticais do fornecedor (FV-1..FV-5)** →
 **Mercado Pago (MP-1..MP-3)** → **UX/nav: CD-1, NAV-1, MP-1→AJ-A** (CD-1/NAV-1 independentes; AJ-A depois do MP-1) →
 **SV-1** (indep.) · **CV-1** (indep.) · **CD-1→PZ-1** (mask nos 5 forms) · **CD-1+PZ-1→CV-2** (aviso sem categoria) ·
-**CV-3** (indep.) — aplicados e empurrados até `origin/integracao` @ `3f84e35`. Pendentes de aplicação:
-**CV-3** · **PF-1** (perfil ver/editar, indep.) · **PF-2** (scroll do perfil, indep.; convive com PF-1).
+**CV-3** (indep.) → **PF-1 · PF-2** (perfil, aplicados @ `eec245d`) → **MAP-1a→1b→1c** → **MAP-2a→2b→2c** → **MAP-3** (fase mapa).
+Pendentes de aplicação: **CV-3** (indep.) e **MAP-1a→1b→1c→2a→2b→2c→3** (nessa ordem; `npm install` após o MAP-3).
+`origin/integracao` @ `eec245d`.
 
 > Cada fatia foi entregue como patch individual. A `integracao` do cliente é a fonte da verdade do estado aplicado.
 > **Demandas de back-end recentes:** **BE-Q8** (upload `500` — S3 sem credencial/sem fallback) e **BE-Q9**

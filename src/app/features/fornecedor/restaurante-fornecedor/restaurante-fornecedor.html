@@ -54,6 +54,55 @@
         }
       </div>
 
+      <div class="rest-field">
+        <label>Tempo de entrega (min) <span class="rest-field__opcional">— opcional</span></label>
+        <div class="rest-form__row">
+          <input type="number" min="1" max="480" placeholder="Mín (ex.: 30)" [(ngModel)]="tempoMin" />
+          <input type="number" min="1" max="480" placeholder="Máx (ex.: 45)" [(ngModel)]="tempoMax" />
+        </div>
+      </div>
+
+      <!-- ENDEREÇO DO RESTAURANTE (de onde sai a entrega) -->
+      <span class="rest-secao">Endereço do restaurante</span>
+      <p class="rest-hint">É o endereço da cozinha, de onde a entrega sai — usado no cálculo do frete.</p>
+
+      <div class="rest-field">
+        <label>CEP</label>
+        <input type="tel" placeholder="00000-000" [(ngModel)]="cepEnd" />
+      </div>
+      <div class="rest-field">
+        <label>Rua</label>
+        <input type="text" placeholder="Rua / Avenida" [(ngModel)]="ruaEnd" />
+      </div>
+      <div class="rest-form__row">
+        <div class="rest-field">
+          <label>Número</label>
+          <input type="text" placeholder="Nº" [(ngModel)]="numeroEnd" />
+        </div>
+        <div class="rest-field">
+          <label>Bairro</label>
+          <input type="text" placeholder="Bairro" [(ngModel)]="bairroEnd" />
+        </div>
+      </div>
+      <div class="rest-form__row">
+        <div class="rest-field">
+          <label>Cidade</label>
+          <input type="text" placeholder="Cidade" [(ngModel)]="cidadeEnd" />
+        </div>
+        <div class="rest-field">
+          <label>UF</label>
+          <input type="text" placeholder="UF" maxlength="2" [(ngModel)]="estadoEnd" />
+        </div>
+      </div>
+
+      <div class="rest-field">
+        <label>Localização no mapa</label>
+        <app-mapa-endereco
+          [latitude]="latEnd"
+          [longitude]="lngEnd"
+          (coordenadas)="onCoordenadas($event)"></app-mapa-endereco>
+      </div>
+
       @if (modoEdicao) {
         <div class="rest-toggle" (click)="toggleAberto()">
           <span>Loja {{ aberto ? 'aberta' : 'fechada' }}</span>

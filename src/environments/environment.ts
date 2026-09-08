@@ -14,4 +14,10 @@ export const environment = {
    * desenvolvimento podem pular a etapa. SEMPRE `false` em produção.
    */
   bypassVerifyCode: false,
+  /**
+   * Chave do Google Maps JavaScript API (Fase 8.4). Pública por natureza — proteja
+   * por restrição de referrer HTTP + APIs no Google Cloud, não por segredo.
+   * Vazia = mapa desabilitado (a UI mostra aviso e segue funcionando sem coordenadas).
+   */
+  googleMapsApiKey: '',
 };

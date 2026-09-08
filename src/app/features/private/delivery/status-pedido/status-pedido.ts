@@ -5,6 +5,7 @@ import { Subject, Subscription, switchMap, takeUntil, timer } from 'rxjs';
 import { DeliveryService } from '../../../../core/services/delivery';
 import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../../core/models/food-order';
 import { ApiError } from '../../../../core/models/common';
+import { MapaRastreioComponent } from '../../../../shared/components/mapa-rastreio/mapa-rastreio';
 
 interface EtapaStatus {
   id: string;
@@ -25,7 +26,7 @@ const STATUS_INDEX: Record<FoodOrderStatus, number> = {
 
 @Component({
   selector: 'app-status-pedido',
-  imports: [CommonModule],
+  imports: [CommonModule, MapaRastreioComponent],
   templateUrl: './status-pedido.html',
   styleUrl: './status-pedido.scss',
 })
@@ -113,6 +114,23 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
 
   get rastreando(): boolean {
     return this.status === 'OnTheWay' && !!this.pedido?.delivery?.currentLat;
+  }
+
+  /** A caminho: liga o rastreio ao vivo no mapa (mesmo antes da 1ª posição). */
+  get emRota(): boolean {
+    return this.status === 'OnTheWay';
+  }
+
+  get deliveryId(): number | undefined {
+    return this.pedido?.delivery?.id;
+  }
+
+  get latEntrega(): string | undefined {
+    return this.pedido?.delivery?.currentLat;
+  }
+
+  get lngEntrega(): string | undefined {
+    return this.pedido?.delivery?.currentLng;
   }
 
   /** Pagamento online só faz sentido para pedido não-dinheiro ainda pendente e não cancelado. */

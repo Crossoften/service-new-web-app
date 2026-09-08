@@ -1,13 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 
 import { PerfilComponent } from './perfil';
 
 describe('PerfilComponent', () => {
   let component: PerfilComponent;
   let fixture: ComponentFixture<PerfilComponent>;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -17,11 +21,30 @@ describe('PerfilComponent', () => {
 
     fixture = TestBed.createComponent(PerfilComponent);
     component = fixture.componentInstance;
+    httpMock = TestBed.inject(HttpTestingController);
     await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('onCoordenadas atualiza latitude/longitude do endereço', () => {
+    component.onCoordenadas({ latitude: '-18.9', longitude: '-48.2' });
+    expect(component.latitude).toBe('-18.9');
+    expect(component.longitude).toBe('-48.2');
+  });
+
+  it('salvarEndereco preserva latitude/longitude no PATCH', () => {
+    component.latitude = '-18.9186';
+    component.longitude = '-48.2772';
+    component.salvarEndereco();
+    const req = httpMock.expectOne(
+      (r) => r.url.endsWith('/profile/me/address') && r.method === 'PATCH',
+    );
+    expect(req.request.body.latitude).toBe('-18.9186');
+    expect(req.request.body.longitude).toBe('-48.2772');
+    req.flush({});
   });
 
   it('irContaRecebimento() leva ao vínculo do Mercado Pago', () => {

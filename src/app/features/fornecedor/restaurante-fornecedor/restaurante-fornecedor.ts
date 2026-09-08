@@ -5,8 +5,16 @@ import { FormsModule } from '@angular/forms';
 import { finalize, timeout } from 'rxjs';
 import { FornecedorService } from '../../../core/services/fornecedor';
 import { DeliveryService } from '../../../core/services/delivery';
-import { ResponseRestaurantCategoryDto, ResponseRestaurantDto } from '../../../core/models/restaurant';
+import {
+  RestaurantAddressDto,
+  ResponseRestaurantCategoryDto,
+  ResponseRestaurantDto,
+} from '../../../core/models/restaurant';
 import { ApiError } from '../../../core/models/common';
+import {
+  Coordenadas,
+  MapaEnderecoComponent,
+} from '../../../shared/components/mapa-endereco/mapa-endereco';
 
 /**
  * Cadastro/edição do restaurante do fornecedor (onboarding).
@@ -14,7 +22,7 @@ import { ApiError } from '../../../core/models/common';
  */
 @Component({
   selector: 'app-restaurante-fornecedor',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MapaEnderecoComponent],
   templateUrl: './restaurante-fornecedor.html',
   styleUrl: './restaurante-fornecedor.scss',
 })
@@ -31,6 +39,18 @@ export class RestauranteFornecedorComponent implements OnInit {
   categoriaId: number | null = null;
   categoriaAberta = false;
   aberto = true;
+  tempoMin?: number;
+  tempoMax?: number;
+
+  // Endereço do estabelecimento (Fase 8.4)
+  ruaEnd = '';
+  numeroEnd = '';
+  bairroEnd = '';
+  cidadeEnd = '';
+  estadoEnd = '';
+  cepEnd = '';
+  latEnd?: string;
+  lngEnd?: string;
 
   carregando = false;
   carregandoCategorias = false;
@@ -90,6 +110,36 @@ export class RestauranteFornecedorComponent implements OnInit {
     this.descricao = r.description ?? '';
     this.categoriaId = r.category?.id ?? this.categoriaId;
     this.aberto = r.isOpen;
+    this.tempoMin = r.deliveryTimeMinMinutes;
+    this.tempoMax = r.deliveryTimeMaxMinutes;
+    this.ruaEnd = r.address?.street ?? '';
+    this.numeroEnd = r.address?.number ?? '';
+    this.bairroEnd = r.address?.neighborhood ?? '';
+    this.cidadeEnd = r.address?.city ?? '';
+    this.estadoEnd = r.address?.state ?? '';
+    this.cepEnd = r.address?.zipCode ?? '';
+    this.latEnd = r.address?.latitude;
+    this.lngEnd = r.address?.longitude;
+  }
+
+  onCoordenadas(c: Coordenadas) {
+    this.latEnd = c.latitude;
+    this.lngEnd = c.longitude;
+  }
+
+  /** Monta o endereço só se houver algum campo preenchido; senão, não envia. */
+  private montarEndereco(): RestaurantAddressDto | undefined {
+    const address: RestaurantAddressDto = {
+      street: this.ruaEnd.trim() || undefined,
+      number: this.numeroEnd.trim() || undefined,
+      neighborhood: this.bairroEnd.trim() || undefined,
+      city: this.cidadeEnd.trim() || undefined,
+      state: this.estadoEnd.trim() || undefined,
+      zipCode: this.cepEnd.trim() || undefined,
+      latitude: this.latEnd || undefined,
+      longitude: this.lngEnd || undefined,
+    };
+    return Object.values(address).some((v) => v !== undefined) ? address : undefined;
   }
 
   get categoriaLabel(): string {
@@ -120,6 +170,10 @@ export class RestauranteFornecedorComponent implements OnInit {
       this.erro = this.categorias.length ? 'Selecione uma categoria.' : 'Não foi possível carregar as categorias. Tente novamente.';
       return;
     }
+    if (!this.tempoEntregaValido()) {
+      this.erro = 'Tempo de entrega inválido (1 a 480 min; máximo não pode ser menor que o mínimo).';
+      return;
+    }
     this.salvando = true;
 
     if (this.restaurante) {
@@ -129,6 +183,9 @@ export class RestauranteFornecedorComponent implements OnInit {
           description: this.descricao.trim() || undefined,
           categoryId: this.categoriaId,
           isOpen: this.aberto,
+          deliveryTimeMinMinutes: this.tempoMin ?? undefined,
+          deliveryTimeMaxMinutes: this.tempoMax ?? undefined,
+          address: this.montarEndereco(),
         })
         .subscribe({
           next: (r) => {
@@ -144,6 +201,9 @@ export class RestauranteFornecedorComponent implements OnInit {
           name: this.nome.trim(),
           categoryId: this.categoriaId,
           description: this.descricao.trim() || undefined,
+          deliveryTimeMinMinutes: this.tempoMin ?? undefined,
+          deliveryTimeMaxMinutes: this.tempoMax ?? undefined,
+          address: this.montarEndereco(),
         })
         .subscribe({
           next: (res) => {
@@ -155,6 +215,14 @@ export class RestauranteFornecedorComponent implements OnInit {
           error: (e: ApiError) => this.falhar(e),
         });
     }
+  }
+
+  /** 1..480 por campo; se ambos preenchidos, máximo não pode ser menor que o mínimo. */
+  private tempoEntregaValido(): boolean {
+    const dentro = (v?: number) => v == null || (Number.isFinite(v) && v >= 1 && v <= 480);
+    if (!dentro(this.tempoMin) || !dentro(this.tempoMax)) return false;
+    if (this.tempoMin != null && this.tempoMax != null && this.tempoMax < this.tempoMin) return false;
+    return true;
   }
 
   private falhar(err: ApiError) {

@@ -2,6 +2,10 @@ import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import {
+  Coordenadas,
+  MapaEnderecoComponent,
+} from '../../../shared/components/mapa-endereco/mapa-endereco';
 import { ProfileService } from '../../../core/services/profile';
 import { AuthService } from '../../../core/services/auth';
 import { SessionService } from '../../../core/services/session';
@@ -16,7 +20,7 @@ import { ResponseProfileDto } from '../../../core/models/profile';
  */
 @Component({
   selector: 'app-perfil',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MapaEnderecoComponent],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
 })
@@ -44,6 +48,9 @@ export class PerfilComponent implements OnInit {
   cidade = '';
   estado = '';
   cep = '';
+  // Coordenadas do endereço (Fase 8.4) — capturadas via mapa (MAP-2); aqui preservadas.
+  latitude?: string;
+  longitude?: string;
 
   // Cobrança (fornecedor)
   billingType: BillingType = 'None';
@@ -97,6 +104,8 @@ export class PerfilComponent implements OnInit {
     this.cidade = p.address?.city ?? '';
     this.estado = p.address?.state ?? '';
     this.cep = p.address?.zipCode ?? '';
+    this.latitude = p.address?.latitude;
+    this.longitude = p.address?.longitude;
     this.billingType = p.billingType ?? 'None';
   }
 
@@ -147,6 +156,11 @@ export class PerfilComponent implements OnInit {
     this.editandoEndereco = true;
   }
 
+  onCoordenadas(c: Coordenadas) {
+    this.latitude = c.latitude;
+    this.longitude = c.longitude;
+  }
+
   cancelarEndereco() {
     if (this.perfil) this.aplicar(this.perfil);
     this.erro = '';
@@ -165,6 +179,9 @@ export class PerfilComponent implements OnInit {
         city: this.cidade.trim() || undefined,
         state: this.estado.trim() || undefined,
         zipCode: this.cep.trim() || undefined,
+        // Preserva as coordenadas já existentes (a captura via mapa entra no MAP-2).
+        latitude: this.latitude || undefined,
+        longitude: this.longitude || undefined,
       })
       .subscribe({
         next: () => {

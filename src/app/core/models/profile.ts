@@ -19,6 +19,9 @@ export interface ResponseAddressDto {
   city?: string;
   state?: string;
   zipCode?: string;
+  /** Coordenadas (Fase 8.4) — voltam como string p/ não perder casas decimais. */
+  latitude?: string;
+  longitude?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -65,6 +68,9 @@ export interface UpdateAddressDto {
   city?: string;
   state?: string;
   zipCode?: string;
+  /** Aceitam número ou texto; enviamos como string (Fase 8.4). Capturadas via mapa (MAP-2). */
+  latitude?: string;
+  longitude?: string;
 }
 
 /** Corpo de `PATCH /v1/profile/me/billing-type` (UpdateBillingTypeDto). */

@@ -37,7 +37,7 @@
             <div class="restaurante-card__meta">
               <span class="restaurante-card__avaliacao">⭐ {{ restaurante.avaliacao }}</span>
               <span class="restaurante-card__separador">•</span>
-              <span class="restaurante-card__tempo">🕐 {{ restaurante.tempo }}</span>
+              @if (restaurante.tempo) { <span class="restaurante-card__tempo">🕐 {{ restaurante.tempo }}</span> }
               <span class="restaurante-card__separador">•</span>
               <span class="restaurante-card__entrega">
                 🛵 <strong>Entrega {{ formatarPreco(restaurante.taxaEntrega) }}</strong>
