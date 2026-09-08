@@ -2,14 +2,93 @@
   <app-header-busca
     titulo="BUSCAR"
     variante="delivery"
-    endereco="Rua Tuiucue 122">
+    endereco="Rua Tuiucue 122"
+    (buscarChange)="onBuscar($event)">
   </app-header-busca>
 
+  <!-- FILTROS (só na busca de restaurantes) -->
+  @if (buscando) {
+    <div class="busca-filtros">
+      <button class="filtro-chip" [class.filtro-chip--ativo]="filtroAberto" (click)="toggleAberto()">
+        Aberto agora
+      </button>
+      <button class="filtro-chip" [class.filtro-chip--ativo]="filtroGratis" (click)="toggleGratis()">
+        Entrega grátis
+      </button>
+      <div class="filtro-ordenar">
+        <button class="filtro-chip filtro-chip--ordenar"
+          [class.filtro-chip--ativo]="ordenacao !== 'relevancia'" (click)="toggleOrdenacao()">
+          <span>{{ ordenacaoLabel }}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            [style.transform]="ordenacaoAberta ? 'rotate(180deg)' : 'rotate(0)'">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        @if (ordenacaoAberta) {
+          <div class="filtro-ordenar__opcoes">
+            @for (o of ordenacoes; track o.id) {
+              <div class="filtro-ordenar__opcao" [class.filtro-ordenar__opcao--ativo]="ordenacao === o.id"
+                (click)="selecionarOrdenacao(o.id)">
+                {{ o.label }}
+              </div>
+            }
+          </div>
+        }
+      </div>
+      @if (temFiltroAtivo) {
+        <button class="filtro-limpar" (click)="limparFiltros()">Limpar</button>
+      }
+    </div>
+  }
+
   <div class="page-content">
-    <app-categoria-grid
-      [items]="items"
-      tipo="delivery"
-      (itemSelecionado)="onItemSelecionado($event)">
-    </app-categoria-grid>
+
+    @if (buscando) {
+      <!-- RESULTADOS DA BUSCA (restaurantes de todas as categorias) -->
+      <div class="busca-resultados">
+        @for (restaurante of resultados; track restaurante.id) {
+          <div class="restaurante-card" (click)="abrirRestaurante(restaurante)">
+            <div class="restaurante-card__logo">
+              @if (restaurante.logo) {
+                <img [src]="restaurante.logo" [alt]="restaurante.nome" />
+              } @else {
+                <div class="restaurante-card__logo-placeholder">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+                  </svg>
+                </div>
+              }
+            </div>
+            <div class="restaurante-card__info">
+              <span class="restaurante-card__nome">
+                {{ restaurante.nome }}
+                @if (!restaurante.aberto) { <span class="restaurante-card__fechado">Fechado</span> }
+              </span>
+              <div class="restaurante-card__meta">
+                <span>⭐ {{ restaurante.avaliacao }}</span>
+                <span class="restaurante-card__separador">•</span>
+                @if (restaurante.tempo) { <span>🕐 {{ restaurante.tempo }}</span> }
+                <span class="restaurante-card__separador">•</span>
+                <span class="restaurante-card__entrega">🛵 <strong>Entrega {{ formatarPreco(restaurante.taxaEntrega) }}</strong></span>
+              </div>
+              <span class="restaurante-card__descricao">{{ restaurante.descricao }}</span>
+            </div>
+          </div>
+        }
+
+        @if (resultados.length === 0) {
+          <div class="busca-vazio"><p>Nenhum restaurante encontrado para "{{ busca }}".</p></div>
+        }
+      </div>
+    } @else {
+      <!-- GRID DE CATEGORIAS (padrão) -->
+      @if (erro) { <div class="busca-vazio"><p>{{ erro }}</p></div> }
+      <app-categoria-grid
+        [items]="items"
+        tipo="delivery"
+        (itemSelecionado)="onItemSelecionado($event)">
+      </app-categoria-grid>
+    }
+
   </div>
 </div>

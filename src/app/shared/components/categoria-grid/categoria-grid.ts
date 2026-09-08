@@ -19,6 +19,17 @@ export class CategoriaGridComponent {
   @Input() tipo: string = '';
   @Output() itemSelecionado = new EventEmitter<CategoriaItem>();
 
+  /** Ícones sem URL ou que falharam ao carregar → caem no placeholder. */
+  private readonly quebrados = new Set<string>();
+
+  temIcone(item: CategoriaItem): boolean {
+    return !!item.icon && !this.quebrados.has(item.label);
+  }
+
+  marcarQuebrado(item: CategoriaItem) {
+    this.quebrados.add(item.label);
+  }
+
   selecionar(item: CategoriaItem) {
     this.itemSelecionado.emit(item);
   }

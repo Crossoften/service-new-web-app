@@ -187,12 +187,11 @@
 .listagem-filtros {
   display: flex;
   align-items: center;
+  flex-wrap: wrap; // não usa overflow-x (que recortava o dropdown de ordenação)
   gap: 8px;
   padding: 10px 16px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-
-  &::-webkit-scrollbar { display: none; }
+  position: relative;
+  z-index: 5; // mantém o dropdown de ordenação acima dos cards da lista
 }
 
 .filtro-chip {

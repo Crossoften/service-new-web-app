@@ -2,7 +2,13 @@
   @for (item of items; track item.label) {
     <div class="categoria-grid__item" (click)="selecionar(item)">
       <div class="categoria-grid__icon">
-        <img [src]="item.icon" [alt]="item.label" />
+        @if (temIcone(item)) {
+          <img [src]="item.icon" [alt]="item.label" (error)="marcarQuebrado(item)" />
+        } @else {
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+          </svg>
+        }
       </div>
       <span class="categoria-grid__label">{{ item.label }}</span>
     </div>
