@@ -60,24 +60,20 @@
           </div>
         </div>
         <div class="revisao-item__info">
-          <span class="revisao-item__nome">{{ itemPedido.item.nome }}</span>
+          <span class="revisao-item__nome">{{ itemPedido.quantidade }}× {{ itemPedido.item.nome }}</span>
           <span class="revisao-item__descricao">{{ itemPedido.item.descricao }}</span>
+          @if (itemPedido.adicionaisSelecionados.length) {
+            <ul class="revisao-item__adicionais">
+              @for (adicional of itemPedido.adicionaisSelecionados; track adicional.id) {
+                <li>
+                  <span>+ {{ adicional.nome }}</span>
+                  @if (adicional.preco > 0) { <span>{{ formatarPreco(adicional.preco) }}</span> }
+                </li>
+              }
+            </ul>
+          }
           <span class="revisao-item__preco">{{ formatarPreco(itemPedido.item.preco) }}</span>
         </div>
-      </div>
-    }
-
-    <!-- INGREDIENTES EXTRA -->
-    @if (pedido?.itens?.[0]?.adicionaisSelecionados?.length) {
-      <div class="revisao-secao">
-        <h3 class="revisao-secao__titulo">Ingrediente Extra</h3>
-        @for (adicional of pedido!.itens![0].adicionaisSelecionados; track adicional.id) {
-          <div class="revisao-adicional">
-            <div class="revisao-adicional__checkbox"></div>
-            <span class="revisao-adicional__nome">{{ adicional.nome }}</span>
-            <span class="revisao-adicional__preco">+ {{ formatarPreco(adicional.preco) }}</span>
-          </div>
-        }
       </div>
     }
 

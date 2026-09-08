@@ -49,7 +49,14 @@
           </div>
           <div class="pedido-f-item__info">
             <span class="pedido-f-item__nome">{{ item.quantity }}× {{ item.name }}</span>
-            @if (item.notes) { <span class="pedido-f-item__descricao">{{ item.notes }}</span> }
+            @if (item.additions.length) {
+              <ul class="pedido-f-item__adicionais">
+                @for (ad of item.additions; track ad.id) {
+                  <li>+ {{ ad.name }}</li>
+                }
+              </ul>
+            }
+            @if (item.notes) { <span class="pedido-f-item__descricao">Obs.: {{ item.notes }}</span> }
             <span class="pedido-f-item__preco">{{ fmt(item.unitPrice) }}</span>
           </div>
         </div>

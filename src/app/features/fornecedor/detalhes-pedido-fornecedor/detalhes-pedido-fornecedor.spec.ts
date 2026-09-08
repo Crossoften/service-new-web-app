@@ -60,4 +60,27 @@ describe('DetalhesPedidoFornecedorComponent', () => {
     req.flush(order({ paymentStatus: 'Paid' }));
     expect(component.pedido?.paymentStatus).toBe('Paid');
   });
+
+  it('mostra os adicionais escolhidos em cada item (para a cozinha)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/food-orders/1')).flush(
+      order({
+        items: [
+          {
+            id: 1,
+            menuItemId: 3,
+            name: 'X-Burguer',
+            quantity: 2,
+            unitPrice: '20.00',
+            notes: 'sem cebola',
+            additions: [{ id: 9, name: 'Bacon', price: '5.00' }],
+          },
+        ],
+      }),
+    );
+    fixture.detectChanges();
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('2× X-Burguer');
+    expect(texto).toContain('+ Bacon');
+    expect(texto).toContain('sem cebola');
+  });
 });

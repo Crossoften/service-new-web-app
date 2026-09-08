@@ -7,7 +7,7 @@
 > + **Mercado Pago** (MP-1…MP-3) + **Fase Mapa (MAP-1…MAP-3, rastreamento ao vivo)** aplicada + ajustes de layout.
 > **Em andamento:** fluxo delivery — **adicionais no cardápio** (back pronto, front a fazer) + melhorias de usabilidade.
 >
-> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `290db7c`).
+> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `60cdd44`).
 > **Back-end:** `service-new-ws` @ `ajustes-gerais` (@ `b60afd0`, com Mercado Pago). **Base local:** `http://localhost:8000/v1`.
 
 ---
@@ -206,10 +206,11 @@
 | Fatia | Escopo | Specs | Patch |
 |---|---|---|---|
 | **ADD-1** | **Adicionais no cardápio (fornecedor)** — no form do item (criar/editar): cadastrar/remover adicionais com nome + preço (máscara BRL). Back **já existia** (`POST /restaurants/menu-items/:id/additions`, `PATCH /restaurants/menu-item-additions/:id`; item já retorna `additions[]`). Item novo entra em modo edição p/ liberar os adicionais (rota precisa do id). Remoção = `isActive:false` (não há DELETE). | ✅ (13) | `ADD-1-adicionais-cardapio` |
+| **ADD-2** | **Adicionais no pedido (cliente + cozinha)** — a revisão do cliente agora mostra **quantidade + adicionais por item** (corrige bug antigo que só exibia os adicionais do 1º item, numa seção solta); o detalhe do pedido do fornecedor (cozinha) passa a listar os adicionais e a observação (`Obs.:`) de cada item. Tipado `ResponseFoodOrderItemDto.additions` (era `unknown[]`) → `{id,name,price}[]` (bate com o back). Sem mudança de back. | ✅ (8) | `ADD-2-adicionais-no-pedido` |
 
-> **Próximas fatias sugeridas (todas 🟢, back pronto):** **ADD-2** (mostrar adicionais escolhidos no pedido — cliente e
-> cozinha) · **OBS-1** (observação por item) · **CART-1** (editar sacola). Depois: busca/filtros, "pedir novamente",
-> avaliar pós-entrega. Cupom/agendamento/gorjeta/push exigem back novo → `backend-demandas.md`.
+> **Próximas fatias sugeridas (todas 🟢, back pronto):** **OBS-1** (observação por item no `cardapio-item`) ·
+> **CART-1** (editar sacola). Depois: busca/filtros, "pedir novamente", avaliar pós-entrega.
+> Cupom/agendamento/gorjeta/push exigem back novo → `backend-demandas.md`.
 
 ---
 
@@ -222,8 +223,8 @@ correções criar-serviço (nome, categoria) → **verticais do fornecedor (FV-1
 **SV-1** (indep.) · **CV-1** (indep.) · **CD-1→PZ-1** (mask nos 5 forms) · **CD-1+PZ-1→CV-2** (aviso sem categoria) ·
 **CV-3** (indep.) → **PF-1 · PF-2** (perfil, aplicados @ `eec245d`) → **MAP-1a→1b→1c** → **MAP-2a→2b→2c** → **MAP-3** (fase mapa).
 **Aplicado @ `290db7c`:** **MAP-1a→…→2c→3** (fase mapa completa; `socket.io-client` instalado via `npm install`).
-Pendente de aplicação: **CV-3** (indep.), **AJ-layout** (2 `.scss`), **AJ-maps-key** (chave do Google no environment) e **ADD-1** (adicionais no cardápio).
-`origin/integracao` @ `290db7c`.
+Pendente de aplicação: **CV-3** (indep.), **AJ-layout** (2 `.scss`), **AJ-maps-key** (chave do Google) e **ADD-2** (adicionais no pedido — cliente + cozinha). *(ADD-1 aplicado @ `60cdd44`.)*
+`origin/integracao` @ `60cdd44`.
 
 > **AJ-layout** (`AJ-layout-periodos-scroll-restaurante`): (1) `.home-f-periodos` ganhou `margin: 0 16px` p/ alinhar
 > os chips **Tudo|Dia|Semana|Mês** às laterais dos cards; (2) `.rest-container` passou de `min-height` p/ `height: 100dvh`

@@ -54,6 +54,13 @@ export interface ResponseFoodOrderUserDto {
   fileUrl?: string;
 }
 
+/** Adicional escolhido no item do pedido (`price` já é o valor cobrado). */
+export interface ResponseFoodOrderItemAdditionDto {
+  id: number;
+  name: string;
+  price: string;
+}
+
 export interface ResponseFoodOrderItemDto {
   id: number;
   menuItemId: number;
@@ -61,7 +68,7 @@ export interface ResponseFoodOrderItemDto {
   quantity: number;
   unitPrice: string;
   notes?: string;
-  additions: unknown[];
+  additions: ResponseFoodOrderItemAdditionDto[];
 }
 
 /** Rastreio do entregador (polling de lat/lng). */

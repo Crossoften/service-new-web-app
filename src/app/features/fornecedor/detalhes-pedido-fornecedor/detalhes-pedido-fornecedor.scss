@@ -113,6 +113,18 @@
     line-height: 1.4;
   }
 
+  &__adicionais {
+    list-style: none;
+    margin: 2px 0;
+    padding: 0;
+
+    li {
+      font-size: 12px;
+      color: var(--color-gray-600);
+      line-height: 1.4;
+    }
+  }
+
   &__preco {
     font-size: 13px;
     font-weight: 600;

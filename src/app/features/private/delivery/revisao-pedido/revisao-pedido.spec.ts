@@ -46,6 +46,20 @@ describe('RevisaoPedidoComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('mostra a quantidade e os adicionais escolhidos por item', () => {
+    // Restaurante do stub precisa dos campos numéricos que o card formata.
+    Object.assign(service.getPedidoAtual().restaurante ?? {}, { taxaEntrega: 0, avaliacao: 0 });
+    service.addItem(
+      { id: 4, nome: 'Pizza', descricao: 'Grande', preco: 12 } as never,
+      2,
+      [{ id: 9, nome: 'Borda recheada', preco: 8 } as never],
+    );
+    fixture.detectChanges(); // ngOnInit lê a sacola completa
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('2× Pizza');
+    expect(texto).toContain('+ Borda recheada');
+  });
+
   it('no 400 de restaurante sem Mercado Pago, oferece pagar em dinheiro', () => {
     component.finalizarPedido();
     httpMock
