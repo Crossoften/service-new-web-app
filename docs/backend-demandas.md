@@ -264,6 +264,26 @@ GET  /v1/admin-delivery-payouts?courierId=42     (histórico de um entregador)
 
 ---
 
+## BE-W1…BE-W6 — Garantia e pagamento de Trabalhos (auditoria Serviços/Orçamentos/Trabalhos) 🔴
+
+> Levantadas na auditoria do módulo (`docs/auditoria-servicos-orcamentos-garantia.md`), back `@ b60afd0`.
+> **Aguardam decisões de produto Q-A…Q-E** (ver §6 do doc) antes de virar contrato.
+
+| ID | Demanda | O que falta no back | Depende de |
+|---|---|---|---|
+| **BE-W1** | **Execução da garantia.** Aprovar garantia (`PATCH /works/:id/respond-warranty` com `Approved`) só grava `warrantyRequestStatus`; **não** reabre o Work, não cria reparo, não muda status, não cobra, não agenda. `Approved` e `Rejected` rodam o mesmo update. | Modelar a execução do reparo: **(A)** reabertura do Work (novo status `WarrantyInProgress` + endpoints iniciar/concluir reparo) **ou (B, recomendado)** criar **Work de garantia** vinculado (`parentWorkId`, `serviceValue=0`, ciclo próprio). Efeito colateral no `respondWarranty(Approved)`. | **Q-A** |
+| **BE-W2** | **Notificação de garantia.** `requestWarranty`/`respondWarranty` não disparam WhatsApp/chat (ao contrário de start/finish/cancel). | Notificar cliente no `respond` e fornecedor no `request` (mesmo padrão de start/finish). | **Q-D** |
+| **BE-W3** | **Validade da garantia estruturada.** Front nunca envia `warrantyExpiresAt`; "tempo de garantia" vira texto. Se a validade for definida **na resposta do orçamento**, `UpdateBudgetDto` **não tem** campo de garantia. | Se produto escolher "garantia no orçamento": adicionar campo de garantia em `UpdateBudgetDto` e propagar ao criar o Work. Se "na conclusão": **nada a fazer** (`FinishWorkDto.warrantyExpiresAt` já existe). | **Q-C** |
+| **BE-W4** | **Histórico de garantia (slot único).** Colunas no próprio `Work`; nova solicitação sobrescreve a anterior, sem histórico de múltiplos acionamentos. | Se produto exigir múltiplos acionamentos: tabela `WarrantyRequest[]` (ou reaproveitar Work-filho da Opção B). | **Q-A/Q-E** |
+| **BE-W5** | **Recusa de garantia sem mediação.** Recusa do fornecedor é final; não há trilha para o admin mediar. | Se produto exigir mediação: estado/rota de contestação + superfície no **portal admin** (fora deste PWA). | **Q-B** |
+| **BE-W6** | **Status do Work não reflete pagamento; `Cash` sem caminho.** Após `Paid` (webhook MP), `Work.status` continua `Finished`; "pago" só existe no `Payment` (`referenceType=Work`). `PaymentMethodEnum.Cash` existe mas Work só paga via Mercado Pago (exige provider com conta MP vinculada). | Confirmar se o Work deve expor um estado "pago/concluído-pago" (ou o front junta por `Payment`). Confirmar se haverá pagamento manual/dinheiro para Work ou se é **só MP**. Acréscimo aprovado após pagamento **não re-cobra** (`request-extra` liberado em quase todo status). | **Q-E** |
+
+> **Nota front (sem back):** a fatia de front "garantia respondível" (mapear `warrantyRequestStatus`/descrições
+> + tela de resposta do fornecedor `respond-warranty` + tela de solicitação do cliente com anexos) **não depende**
+> destas demandas — usa o que o back já expõe. O reparo (BE-W1) é que exige back novo após Q-A.
+
+---
+
 ## Observações (sem ação obrigatória de back-end)
 
 - **Serviços gerais = assinatura** (ata) → coberto por `/plans` + `/subscriptions`.
