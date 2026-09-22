@@ -14,7 +14,17 @@ export type SocialNetwork = 'Instagram' | 'TikTok' | 'YouTube' | 'Facebook' | 'X
 export type ServiceType = 'Online' | 'Presential' | 'Home';
 
 // ── Orçamentos (Budgets) ─────────────────────────────────────────────────────
-export type BudgetStatus = 'Pending' | 'Responded' | 'WaitingInformation' | 'Cancelled';
+/**
+ * `BudgetStatusEnum` do contrato. `Accepted` e `Rejected` (§8.8) são **terminais**.
+ * ⚠️ `Cancelled` (desistência do pedido) ≠ `Rejected` (cliente recusou o preço).
+ */
+export type BudgetStatus =
+  | 'Pending'
+  | 'Responded'
+  | 'WaitingInformation'
+  | 'Accepted'
+  | 'Rejected'
+  | 'Cancelled';
 export type BudgetScope = 'Requested' | 'Received';
 export type BudgetTimeUnit = 'Hour' | 'Day' | 'Week' | 'Month';
 export type BudgetFileType = 'Request' | 'InformationRequest';

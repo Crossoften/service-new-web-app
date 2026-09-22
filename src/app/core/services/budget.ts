@@ -23,8 +23,16 @@ export interface OrcamentoFornecedor {
   arquivos: { nome: string; tipo: string }[];
 }
 
-/** Status do mock (3 estados) usado pelos templates de orçamento. */
-export type StatusOrcamento = 'nao_respondido' | 'finalizado' | 'em_andamento';
+/**
+ * Status de exibição do orçamento. `aceito`/`recusado`/`cancelado` são terminais
+ * e **distintos** (§8.8: recusar o preço ≠ desistir do pedido).
+ */
+export type StatusOrcamento =
+  | 'nao_respondido'
+  | 'em_andamento'
+  | 'aceito'
+  | 'recusado'
+  | 'cancelado';
 
 /** View-model de orçamento (adapta `/budgets` às telas). */
 export interface Orcamento {
@@ -173,8 +181,12 @@ export class BudgetService {
     switch (status) {
       case 'Pending':
         return 'nao_respondido';
+      case 'Accepted':
+        return 'aceito';
+      case 'Rejected':
+        return 'recusado';
       case 'Cancelled':
-        return 'finalizado';
+        return 'cancelado';
       default: // Responded, WaitingInformation
         return 'em_andamento';
     }

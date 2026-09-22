@@ -47,7 +47,9 @@ export class OrcamentosComponent implements OnInit {
   get orcamentosFiltrados(): Orcamento[] {
     let lista = this.orcamentos;
     if (this.tabAtiva === 'respondidos') {
-      lista = lista.filter((o) => o.status === 'finalizado' || o.status === 'em_andamento');
+      lista = lista.filter(
+        (o) => o.status === 'em_andamento' || o.status === 'aceito' || o.status === 'recusado',
+      );
     } else if (this.tabAtiva === 'nao_respondidos') {
       lista = lista.filter((o) => o.status === 'nao_respondido');
     }
@@ -60,8 +62,10 @@ export class OrcamentosComponent implements OnInit {
   statusLabel(status: StatusOrcamento): string {
     const labels: Record<StatusOrcamento, string> = {
       nao_respondido: 'Não respondido',
-      finalizado: 'Finalizado',
       em_andamento: 'Em andamento',
+      aceito: 'Aceito',
+      recusado: 'Recusado',
+      cancelado: 'Cancelado',
     };
     return labels[status];
   }
@@ -69,8 +73,10 @@ export class OrcamentosComponent implements OnInit {
   statusClass(status: StatusOrcamento): string {
     const classes: Record<StatusOrcamento, string> = {
       nao_respondido: 'status--amarelo',
-      finalizado: 'status--verde',
       em_andamento: 'status--laranja',
+      aceito: 'status--verde',
+      recusado: 'status--vermelho',
+      cancelado: 'status--cinza',
     };
     return classes[status];
   }
