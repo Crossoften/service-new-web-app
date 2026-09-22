@@ -209,6 +209,27 @@ isso vira demanda de backend (login por telefone, envio e verificação de SMS).
 
 ---
 
+## BE-Q15 — Repasses do entregador: tela de painel admin (§8.5, item 22) 🟡
+
+As rotas de repasse já existem no back (§8.5) e **não** exigem trabalho de back-end novo:
+
+```
+GET  /v1/admin-delivery-payouts/pending          (lista por entregador: nome, telefone, valor devido,
+                                                   nº de entregas, data da mais antiga, bankAccount)
+POST /v1/admin-delivery-payouts { courierId, expectedAmount }   (registra repasse já pago por fora;
+                                                   201 ok · 409 sem saldo/saldo divergente · 403 sem Financial)
+GET  /v1/admin-delivery-payouts?courierId=42     (histórico de um entregador)
+```
+
+- Exigem papel **admin + permissão `Financial`** (403 esconde a tela do admin sem permissão).
+- `pending` traz `refundedDeliveries`/`refundedAmount` (§8.7) — destacar a linha quando `> 0` (não bloqueia o repasse).
+- Entregador sem `bankAccount` = sem para onde enviar → marcar a linha.
+- **Onde construir:** essas telas pertencem a um **painel administrativo/financeiro**, que **não existe neste PWA**
+  (`service-app` não tem nenhuma feature `admin`). Devem ser feitas no portal do admin — não nesta base do cliente.
+  Registrado aqui para rastreio; o front do cliente/fornecedor/entregador não muda por causa disso.
+
+---
+
 ## Observações (sem ação obrigatória de back-end)
 
 - **Serviços gerais = assinatura** (ata) → coberto por `/plans` + `/subscriptions`.

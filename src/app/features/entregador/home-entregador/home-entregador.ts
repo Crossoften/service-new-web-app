@@ -6,6 +6,7 @@ import {
   EntregadorService,
   PedidoEntregador,
   AtividadeEntregador,
+  GanhosEntregador,
 } from '../../../core/services/entregador';
 import { BottomNavEntregadorComponent } from '../../../shared/components/bottom-nav-entregador/bottom-nav-entregador';
 import { ApiError } from '../../../core/models/common';
@@ -22,12 +23,22 @@ export class HomeEntregadorComponent implements OnInit {
 
   disponiveis: PedidoEntregador[] = [];
   atividades: AtividadeEntregador[] = [];
+  ganhos?: GanhosEntregador;
   statusOperacional: 'ativo' | 'inativo' = 'ativo';
   carregando = false;
   erro = '';
 
   ngOnInit() {
     this.carregar();
+    this.carregarGanhos();
+  }
+
+  /** Carteira: `available` (a receber) em destaque; total como histórico (§8.5). */
+  carregarGanhos() {
+    this.entregadorService.ganhos().subscribe({
+      next: (g) => (this.ganhos = g),
+      error: () => {},
+    });
   }
 
   carregar() {

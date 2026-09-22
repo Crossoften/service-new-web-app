@@ -77,6 +77,38 @@
         <input type="text" placeholder="000000" [(ngModel)]="cpf" />
       </div>
 
+      <!-- CHAVE PIX (§8.5) -->
+      <div class="banco-field">
+        <label>Chave Pix <span class="banco-field__opcional">(opcional)</span></label>
+        <div class="banco-field__select" (click)="togglePix()">
+          <span>{{ pixTipoLabel }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            [style.transform]="pixAberto ? 'rotate(180deg)' : 'rotate(0)'">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        @if (pixAberto) {
+          <div class="banco-field__opcoes">
+            <div class="banco-field__opcao" [class.banco-field__opcao--ativo]="!pixTipoSelecionado"
+              (click)="selecionarPixTipo('')">Nenhuma</div>
+            @for (t of pixTipos; track t.id) {
+              <div class="banco-field__opcao"
+                [class.banco-field__opcao--ativo]="pixTipoSelecionado === t.id"
+                (click)="selecionarPixTipo(t.id)">
+                {{ t.label }}
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      @if (pixTipoSelecionado) {
+        <div class="banco-field">
+          <input type="text" placeholder="Digite a chave Pix" [(ngModel)]="pixChave" />
+          <span class="banco-field__hint">É por onde você recebe seus repasses.</span>
+        </div>
+      }
+
       @if (erro) {
         <span class="banco-erro">{{ erro }}</span>
       }

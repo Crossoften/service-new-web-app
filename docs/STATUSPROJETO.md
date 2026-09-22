@@ -259,10 +259,17 @@
 
 | **OF-19** | **Maquininha própria do restaurante (§8.6)** — o estabelecimento pode cobrar cartão na maquininha dele, na entrega. **Fornecedor**: model `usesOwnCardMachine?` + `UpdateCardMachineDto`; `FornecedorService.atualizarMaquininha` → `PATCH /restaurants/me/card-machine`; na tela do restaurante, seção Maquininha com **termo antes do aceite** (ligar exige `acceptResponsibility:true`; desligar não exige) e status "Ligada". **Cliente**: VM `Restaurante.usaMaquininhaPropria` (de `usesOwnCardMachine`); a **revisão** avisa quando cartão+maquininha ("pago na entrega, sem checkout online"); na **tela de status**, o `pagar()` trata o **400** do `/pay` por pedido fora da plataforma → esconde "Pagar", marca `pagamentoNaEntrega` e avisa. ⚠️ Contrato conferido no back: a rota de confirmação real é **`confirm-payment`** (o doc diz `confirm-cash-payment`) — mantido o existente. Sem mudança de back. | ✅ (7 novos/44 no lote) | `OF-19-maquininha-propria` |
 
-> **Próximas (ordem da seção 10 do doc):** **20-22** carteira/Pix/repasses
-> do entregador (§8.5 — inclui `refundedDeliveries`/`refundedAmount` no repasse do admin, §8.7 · **é onde entra o aviso
-> no histórico do entregador de que pedidos com maquininha não somam saldo, §8.6**) · **23** agendamento (`scheduledFor`, §8.9) ·
-> **24** push/PWA (§8.10 — ⚠️ `publicKey` null ⇒ **não** pedir permissão).
+| **OF-20** | **Carteira do entregador (§8.5, item 20)** — `GET /deliveries/me/earnings` ganhou `available` (já ganho, não repassado — o que a plataforma deve) e `paid` (`available + paid = total`). Novo `core/models/earnings.ts`; `EntregadorService.ganhos()` → VM `GanhosEntregador { aReceber, jaPago, dia, semana, mes, total }`. Na **home do entregador**, o card "Ganhos — Em breve" (mock morto `getFaturamento`, BE-17) virou uma **carteira real**: `aReceber` em destaque + já repassado + total (histórico) + aviso "pedidos em dinheiro são pagos na entrega e não entram aqui" (§8.5). Sem mudança de back. | ✅ (5) | `OF-20-carteira-entregador` |
+
+| **OF-21** | **Chave Pix no cadastro bancário (§8.5, item 21)** — `POST`/`PATCH /bank-accounts/me` aceitam `pixKeyType` (`Cpf·Cnpj·Email·Phone·Random`) e `pixKey`, **opcionais e que andam juntos** (um sem o outro = 400). Enum `PixKeyType`; model `Create/Response BankAccountDto` + campos Pix. Form **`novo-banco`** (conta única, usado por parceiro/entregador): dropdown de tipo (com "Nenhuma") + campo da chave, **validação client-side** de que tipo e chave vão juntos (evita o 400), enviados só quando ambos preenchidos (com máscara — o back normaliza); dica "é por onde você recebe seus repasses". Sem mudança de back. | ✅ (4) | `OF-21-pix-cadastro-bancario` |
+
+> **Próximas (ordem da seção 10 do doc):** **23** agendamento (`scheduledFor`, §8.9) · **24** push/PWA (§8.10 —
+> ⚠️ `publicKey` null ⇒ **não** pedir permissão).
+>
+> **Fora do escopo deste app — item 22 (repasses do admin, §8.5):** as rotas `GET/POST /admin-delivery-payouts…`
+> (com `refundedDeliveries`/`refundedAmount` do §8.7) exigem papel de **admin + permissão `Financial`** e vivem num
+> **painel administrativo**, que **não existe neste PWA** (não há nenhuma tela `admin` em `features/`). Documentado em
+> `backend-demandas.md` (BE-Q15) como tela de painel admin, a ser construída onde o admin operar — não nesta base.
 
 ---
 

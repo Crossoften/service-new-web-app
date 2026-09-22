@@ -67,6 +67,8 @@ export type PlanInterval = 'Month' | 'Year';
 
 // ── Dados bancários ──────────────────────────────────────────────────────────
 export type BankAccountType = 'Checking' | 'Savings';
+/** Tipo de chave Pix (§8.5). `pixKeyType` e `pixKey` andam sempre juntos. */
+export type PixKeyType = 'Cpf' | 'Cnpj' | 'Email' | 'Phone' | 'Random';
 
 // ── Chat ─────────────────────────────────────────────────────────────────────
 export type ChatContextType = 'Budget' | 'Work' | 'CommercialTransaction';

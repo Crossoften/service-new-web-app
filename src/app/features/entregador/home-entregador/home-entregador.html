@@ -25,10 +25,26 @@
 
   <div class="page-content">
 
-    <!-- GANHOS (em breve — sem endpoint no back, BE-17) -->
-    <div class="he-card">
-      <span class="he-card__titulo">Ganhos</span>
-      <span class="he-card__acao">Em breve</span>
+    <!-- CARTEIRA / GANHOS (§8.5) -->
+    <div class="he-carteira">
+      <div class="he-carteira__topo">
+        <span class="he-carteira__label">A receber</span>
+        <span class="he-carteira__valor">{{ formatarPreco(ganhos?.aReceber ?? 0) }}</span>
+        @if ((ganhos?.aReceberEntregas ?? 0) > 0) {
+          <span class="he-carteira__sub">{{ ganhos!.aReceberEntregas }} entrega(s) aguardando repasse</span>
+        }
+      </div>
+      <div class="he-carteira__linhas">
+        <div class="he-carteira__linha">
+          <span>Já repassado</span>
+          <span>{{ formatarPreco(ganhos?.jaPago ?? 0) }}</span>
+        </div>
+        <div class="he-carteira__linha">
+          <span>Total (histórico)</span>
+          <span>{{ formatarPreco(ganhos?.total ?? 0) }}</span>
+        </div>
+      </div>
+      <span class="he-carteira__aviso">Pedidos em dinheiro são pagos na entrega e não entram aqui.</span>
     </div>
 
     <!-- STATUS OPERACIONAL -->

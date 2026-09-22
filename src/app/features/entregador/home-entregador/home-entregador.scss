@@ -299,3 +299,56 @@
   font-size: 14px;
   padding: 16px 0;
 }
+
+.he-carteira {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__topo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__label {
+    font-size: 13px;
+    opacity: 0.85;
+  }
+
+  &__valor {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  &__sub {
+    font-size: 12px;
+    opacity: 0.85;
+  }
+
+  &__linhas {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  &__linha {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    opacity: 0.95;
+  }
+
+  &__aviso {
+    font-size: 11px;
+    opacity: 0.8;
+    line-height: 1.4;
+  }
+}

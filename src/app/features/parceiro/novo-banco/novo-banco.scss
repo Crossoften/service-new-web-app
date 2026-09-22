@@ -39,6 +39,16 @@
     color: var(--color-gray-600);
   }
 
+  &__opcional {
+    font-weight: 400;
+    color: var(--color-gray-400);
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: var(--color-gray-600);
+  }
+
   input {
     width: 100%;
     padding: 14px 16px;

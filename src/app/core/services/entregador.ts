@@ -6,6 +6,20 @@ import {
   ResponseDeliveryDto,
   ResponseFindAllDeliveryDto,
 } from '../models/delivery';
+import { EarningsBucketDto, ResponseCourierEarningsDto } from '../models/earnings';
+
+/** Ganhos do entregador (view-model, §8.5). Valores em reais. */
+export interface GanhosEntregador {
+  /** Já ganho e ainda não repassado — número em destaque. */
+  aReceber: number;
+  aReceberEntregas: number;
+  /** Já repassado (fora da plataforma). */
+  jaPago: number;
+  dia: number;
+  semana: number;
+  mes: number;
+  total: number;
+}
 
 // ─── Interfaces (prontas para integração com API) ───────────────────────────
 
@@ -132,6 +146,28 @@ export class EntregadorService {
   /** Atualiza a localização (GPS) — `PATCH /v1/deliveries/{id}/location`. */
   enviarLocalizacao(id: number, lat: number, lng: number): Observable<ResponseDeliveryDto> {
     return this.api.patch<ResponseDeliveryDto>(`/deliveries/${id}/location`, { lat, lng });
+  }
+
+  // ── Carteira / ganhos (API) ────────────────────────────────────────────────
+
+  /** Ganhos do entregador — `GET /v1/deliveries/me/earnings` (§8.5). */
+  ganhos(): Observable<GanhosEntregador> {
+    return this.api
+      .get<ResponseCourierEarningsDto>('/deliveries/me/earnings')
+      .pipe(map((r) => this.mapGanhos(r)));
+  }
+
+  private mapGanhos(r: ResponseCourierEarningsDto): GanhosEntregador {
+    const valor = (b?: EarningsBucketDto) => Number(b?.amount ?? 0);
+    return {
+      aReceber: valor(r.available),
+      aReceberEntregas: r.available?.deliveries ?? 0,
+      jaPago: valor(r.paid),
+      dia: valor(r.day),
+      semana: valor(r.week),
+      mes: valor(r.month),
+      total: valor(r.total),
+    };
   }
 
   // ── Mapeadores API → view-model ──────────────────────────────────────────
