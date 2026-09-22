@@ -59,6 +59,7 @@
 | `inventario-*.md` | Auditorias detalhadas por módulo (auth, delivery, entregador, parceiro, marketplace, serviços) |
 | `auditoria-servicos-orcamentos-garantia.md` | Auditoria 3-fontes de Serviços/Orçamentos/Trabalhos + desenho da **garantia** (decisões Q-A…Q-E, BE-W1…W7) |
 | `auditoria-ux-servicos.md` | Auditoria de **UX** de Serviços (cliente+fornecedor) + proposta (menu Atividade, painel fornecedor, chat) e decisões UX-A…C/Q-UX1 |
+| `auditoria-ux-jornada-e2e.md` | Revisão **ponta-a-ponta**: histórico do cliente (Atividade), urgência na entrada do fornecedor, chat não-lidos (E2E-1…4; back BE-Q5) |
 
 ---
 
