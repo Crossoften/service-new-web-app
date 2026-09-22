@@ -4,6 +4,7 @@ import { profileGuard } from './core/guards/profile-guard';
 import { guestGuard } from './core/guards/guest-guard';
 import { SplashComponent } from './features/private/splash/splash';
 import { HomeComponent } from './features/private/home/home';
+import { AtividadeComponent } from './features/private/atividade/atividade';
 import { CategoriaDeliveryComponent } from './features/private/categoria-delivery/categoria-delivery';
 import { CategoriaServicosComponent } from './features/private/categoria-servicos/categoria-servicos';
 import { CategoriaCompraVenderComponent } from './features/private/categoria-compra-vender/categoria-compra-vender';
@@ -103,6 +104,7 @@ export const routes: Routes = [
 
   // Cliente / área geral (exige sessão)
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
+  { path: 'atividade', component: AtividadeComponent, canActivate: [authGuard] },
   { path: 'perfil', component: PerfilComponent, canActivate: [authGuard] },
 
   // Delivery Cliente

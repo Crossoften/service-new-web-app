@@ -1,0 +1,55 @@
+<div class="page-container">
+
+  <div class="atividade-header">
+    <span class="atividade-header__titulo">Atividade</span>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="atividade-filtros">
+    @for (f of filtros; track f.id) {
+      <button
+        class="atividade-filtros__item"
+        [class.atividade-filtros__item--ativo]="filtro === f.id"
+        (click)="selecionarFiltro(f.id)">
+        {{ f.label }}
+      </button>
+    }
+  </div>
+
+  <div class="page-content">
+
+    @if (carregando) {
+      <p class="atividade-loading">Carregando…</p>
+    } @else {
+
+      <div class="atividade-lista">
+        @for (item of itensFiltrados; track $index) {
+          <button class="atividade-card" [class.atividade-card--destaque]="item.destaque" (click)="abrir(item)">
+            <div class="atividade-card__info">
+              <span class="atividade-card__categoria">{{ item.categoriaLabel }}</span>
+              <span class="atividade-card__titulo">{{ item.titulo }}</span>
+              <span class="atividade-card__sub">{{ item.subtitulo }}</span>
+            </div>
+            @if (item.destaque) {
+              <span class="atividade-card__badge">Responder</span>
+            }
+            <svg class="atividade-card__seta" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        }
+      </div>
+
+      @if (itensFiltrados.length === 0) {
+        <div class="atividade-vazio">
+          <p>Nenhuma atividade em andamento.</p>
+        </div>
+      }
+
+    }
+
+  </div>
+
+  <app-bottom-nav-cliente tabAtiva="atividade"></app-bottom-nav-cliente>
+
+</div>

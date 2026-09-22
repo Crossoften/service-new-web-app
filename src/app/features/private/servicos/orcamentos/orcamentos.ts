@@ -5,12 +5,13 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { BudgetService, Orcamento, StatusOrcamento } from '../../../../core/services/budget';
 import { ApiError } from '../../../../core/models/common';
+import { BottomNavClienteComponent } from '../../../../shared/components/bottom-nav-cliente/bottom-nav-cliente';
 
 type TabOrcamento = 'todos' | 'respondidos' | 'nao_respondidos';
 
 @Component({
   selector: 'app-orcamentos',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BottomNavClienteComponent],
   templateUrl: './orcamentos.html',
   styleUrl: './orcamentos.scss',
 })

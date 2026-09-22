@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth';
 import { ProfileService } from '../../../core/services/profile';
 import { DeliveryService } from '../../../core/services/delivery';
 import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../core/models/food-order';
+import { BottomNavClienteComponent } from '../../../shared/components/bottom-nav-cliente/bottom-nav-cliente';
 
 /** Status de pedido ainda "em andamento" (não entregue nem cancelado). */
 const STATUS_ATIVOS: FoodOrderStatus[] = ['Received', 'Accepted', 'Preparing', 'OnTheWay'];
@@ -20,7 +21,7 @@ const STATUS_LABEL: Record<FoodOrderStatus, string> = {
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule],
+  imports: [CommonModule, BottomNavClienteComponent],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })

@@ -58,6 +58,7 @@
 | `blueprint-perfis-e-regras.md` | Perfis, regras de negócio e matriz por vertical |
 | `inventario-*.md` | Auditorias detalhadas por módulo (auth, delivery, entregador, parceiro, marketplace, serviços) |
 | `auditoria-servicos-orcamentos-garantia.md` | Auditoria 3-fontes de Serviços/Orçamentos/Trabalhos + desenho da **garantia** (decisões Q-A…Q-E, BE-W1…W7) |
+| `auditoria-ux-servicos.md` | Auditoria de **UX** de Serviços (cliente+fornecedor) + proposta (menu Atividade, painel fornecedor, chat) e decisões UX-A…C/Q-UX1 |
 
 ---
 
@@ -320,6 +321,24 @@ e o `warrantyExpiresAt` **nunca era definido** pelo front (garantia nunca ficava
 - Habilita a Fatia 1: com `warrantyExpiresAt` setado, `isUnderWarranty` fica `true` na janela e o cliente pode
   **acionar** a garantia (o botão da Fatia 1 depende de `sobGarantia`).
 - Testes: `detalhes-trabalho.spec` cobre finish **com** prazo (envia ISO futuro) e **sem** prazo (não envia).
+
+---
+
+## 🧭 Usabilidade — Serviços (fatias UX)
+
+Decisões em `auditoria-ux-servicos.md` (UX-A lançar anexos; **UX-B Atividade unificada**; **UX-C painel do
+fornecedor**; Q-UX1 mesma conversa segue no trabalho).
+
+| Patch | Escopo |
+|---|---|
+| **UX-NAV-CLIENTE (Fatia 1)** | **(a)** `BottomNavClienteComponent` compartilhado (**Início · Atividade · Perfil**; Mensagens entra com **BE-Q5**) — substitui os navs hardcoded em `home`, `solicitacoes`, `orcamentos`. **(b)** Nova tela **`/atividade`**: central cross-vertical que agrega **Serviços** (orçamentos `Pending/Responded/WaitingInformation` + solicitações `em_andamento/em_garantia`, sem jargão) e **Delivery** (pedidos ativos), com filtros Todos/Serviços/Delivery e destaque "Responder" para o que precisa de ação. Cada card leva ao detalhe certo (`aprovar-orcamento`/`detalhes-solicitacao`/`delivery/status`). |
+
+- **Não removido nesta fatia:** as telas `/servicos/solicitacoes` e `/servicos/orcamentos` seguem acessíveis
+  (agora com o nav novo, aba Atividade). Aposentá-las (redirect → `/atividade`) fica para fatia posterior.
+- **Fora desta fatia:** cards de atividade de Serviços **na home** (Fatia 2, UX-HOME-SERVICOS); nav nas telas
+  de categoria/listagem de serviços; painel do fornecedor (Fatia 3).
+- Testes: `atividade.spec` (agregação, filtros, esconder terminais, tolerância a falha) + build verde.
+  Falhas pré-existentes de ambiente (Maps/título) não relacionadas.
 
 ---
 
