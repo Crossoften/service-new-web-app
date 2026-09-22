@@ -139,19 +139,75 @@
       <button class="sacola-adicionar-cartao">Adicionar cartão</button>
     </div>
 
+    <!-- GORJETA -->
+    @if (itens.length) {
+      <div class="sacola-secao">
+        <h3 class="sacola-secao__titulo">Gorjeta ao entregador</h3>
+        <p class="sacola-secao__aviso">Vai inteira para o entregador.</p>
+        <div class="sacola-gorjeta">
+          @for (g of gorjetasSugeridas; track g) {
+            <button
+              class="sacola-gorjeta__chip"
+              [class.sacola-gorjeta__chip--ativo]="gorjetaSelecionada === g"
+              (click)="selecionarGorjeta(g)">
+              {{ g === 0 ? 'Sem gorjeta' : formatarPreco(g) }}
+            </button>
+          }
+        </div>
+        <input class="sacola-gorjeta__custom" type="text" inputmode="decimal"
+          placeholder="Outro valor (R$)" [ngModel]="gorjetaCustom" (ngModelChange)="onGorjetaCustom($event)" />
+      </div>
+
+      <!-- CUPOM -->
+      <div class="sacola-secao">
+        <h3 class="sacola-secao__titulo">Cupom de desconto</h3>
+        @if (cupom) {
+          <div class="sacola-cupom__aplicado">
+            <div>
+              <span class="sacola-cupom__codigo">{{ cupom.codigo }}</span>
+              @if (cupom.descricao) { <span class="sacola-cupom__descricao">{{ cupom.descricao }}</span> }
+              <span class="sacola-cupom__previa">Desconto estimado: −{{ formatarPreco(cupom.desconto) }} (confirmado no pedido)</span>
+            </div>
+            <button class="sacola-cupom__remover" (click)="removerCupom()">Remover</button>
+          </div>
+        } @else {
+          <div class="sacola-cupom__form">
+            <input class="sacola-cupom__input" type="text" placeholder="Digite o código"
+              [ngModel]="cupomCodigo" (ngModelChange)="cupomCodigo = $event" />
+            <button class="sacola-cupom__aplicar" (click)="aplicarCupom()" [disabled]="validandoCupom || !cupomCodigo.trim()">
+              {{ validandoCupom ? '...' : 'Aplicar' }}
+            </button>
+          </div>
+          @if (cupomErro) { <span class="sacola-cupom__erro">{{ cupomErro }}</span> }
+        }
+      </div>
+    }
+
     <!-- DETALHES DA COMPRA -->
     <div class="sacola-secao">
       <h3 class="sacola-secao__titulo">Detalhes da compra</h3>
       <div class="sacola-detalhes">
         <div class="sacola-detalhes__linha">
-          <span>Realizado em</span>
-          <span>{{ pedido?.data ?? '00/00/0000' }}</span>
+          <span>Subtotal</span>
+          <span>{{ formatarPreco(subtotal) }}</span>
         </div>
+        @if (gorjeta > 0) {
+          <div class="sacola-detalhes__linha">
+            <span>Gorjeta</span>
+            <span>{{ formatarPreco(gorjeta) }}</span>
+          </div>
+        }
+        @if (cupom) {
+          <div class="sacola-detalhes__linha">
+            <span>Cupom ({{ cupom.codigo }})</span>
+            <span>−{{ formatarPreco(cupom.desconto) }}</span>
+          </div>
+        }
         <div class="sacola-detalhes__linha">
-          <span>Valor serviço</span>
-          <span>{{ formatarPreco(total) }}</span>
+          <span>Entrega</span>
+          <span>calculada no endereço</span>
         </div>
-        <div class="sacola-detalhes__linha">
+        <div class="sacola-detalhes__linha sacola-detalhes__linha--total">
           <span>Total</span>
           <span>{{ formatarPreco(total) }}</span>
         </div>

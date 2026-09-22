@@ -106,6 +106,52 @@ describe('DeliveryService', () => {
     expect(cart.itens?.[0].adicionaisSelecionados.map((a) => a.id)).toEqual([1]);
   });
 
+  it('envia tip (>0) e couponCode (só o código) no pedido — §8.9', () => {
+    service.setPedidoRestaurante({ id: 7 } as never);
+    service.addItem({ id: 3, preco: 10 } as never, 1, []);
+    service.setFormaPagamento('pix');
+    service.setGorjeta(5);
+    service.setCupom({ codigo: 'BEMVINDO10', desconto: 1, descricao: '10%' });
+    service.criarPedido().subscribe();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/food-orders') && r.method === 'POST');
+    expect(req.request.body.tip).toBe(5);
+    expect(req.request.body.couponCode).toBe('BEMVINDO10');
+    // O desconto da prévia NÃO vai como entrada.
+    expect('discount' in req.request.body).toBe(false);
+    req.flush({ message: 'ok', foodOrder: { id: 1 } });
+  });
+
+  it('omite tip quando 0 e couponCode quando não há cupom', () => {
+    service.setPedidoRestaurante({ id: 7 } as never);
+    service.addItem({ id: 3, preco: 10 } as never, 1, []);
+    service.setFormaPagamento('pix');
+    service.setGorjeta(0);
+    service.criarPedido().subscribe();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/food-orders'));
+    expect(req.request.body.tip).toBeUndefined();
+    expect(req.request.body.couponCode).toBeUndefined();
+    req.flush({ message: 'ok', foodOrder: { id: 1 } });
+  });
+
+  it('calcularTotal soma gorjeta e subtrai o desconto do cupom (prévia)', () => {
+    service.setPedidoRestaurante({ id: 7 } as never);
+    service.addItem({ id: 3, preco: 10 } as never, 2, []); // subtotal 20
+    expect(service.calcularSubtotal()).toBe(20);
+    service.setGorjeta(5);
+    service.setCupom({ codigo: 'X', desconto: 8, descricao: '' });
+    expect(service.calcularTotal()).toBe(17); // 20 + 5 − 8
+  });
+
+  it('gorjeta é limitada a 0–1000 e o total nunca fica negativo', () => {
+    service.setPedidoRestaurante({ id: 7 } as never);
+    service.addItem({ id: 3, preco: 10 } as never, 1, []); // subtotal 10
+    service.setGorjeta(5000);
+    expect(service.getPedidoAtual().gorjeta).toBe(1000);
+    service.setGorjeta(0);
+    service.setCupom({ codigo: 'X', desconto: 999, descricao: '' });
+    expect(service.calcularTotal()).toBe(0); // max(0, 10 − 999)
+  });
+
   it('mapeia "debito" → DebitCard', () => {
     service.setPedidoRestaurante({ id: 1 } as never);
     service.addItem({ id: 1, preco: 5 } as never, 1, []);

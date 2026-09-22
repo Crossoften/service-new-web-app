@@ -83,6 +83,18 @@ export class RevisaoPedidoComponent implements OnInit {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
+  get subtotal(): number {
+    return this.deliveryService.calcularSubtotal();
+  }
+
+  get gorjeta(): number {
+    return this.pedido?.gorjeta ?? 0;
+  }
+
+  get cupom() {
+    return this.pedido?.cupom;
+  }
+
   get total(): number {
     return this.deliveryService.calcularTotal();
   }

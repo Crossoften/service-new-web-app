@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
 
 import { SacolaComponent } from './sacola';
@@ -11,6 +11,7 @@ describe('SacolaComponent', () => {
   let component: SacolaComponent;
   let fixture: ComponentFixture<SacolaComponent>;
   let service: DeliveryService;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -21,9 +22,12 @@ describe('SacolaComponent', () => {
     fixture = TestBed.createComponent(SacolaComponent);
     component = fixture.componentInstance;
     service = TestBed.inject(DeliveryService);
+    httpMock = TestBed.inject(HttpTestingController);
     service.setPedidoRestaurante({ id: 7 } as never);
     await fixture.whenStable();
   });
+
+  afterEach(() => httpMock.verify());
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -60,5 +64,38 @@ describe('SacolaComponent', () => {
     component.ngOnInit(); // sem itens
     component.continuar();
     expect(nav).not.toHaveBeenCalled();
+  });
+
+  it('selecionarGorjeta guarda a gorjeta e entra no total (§8.9)', () => {
+    service.addItem({ id: 3, preco: 10 } as never, 1, []);
+    component.ngOnInit();
+    component.selecionarGorjeta(5);
+    expect(component.gorjeta).toBe(5);
+    expect(component.total).toBe(15); // subtotal 10 + gorjeta 5
+  });
+
+  it('aplicarCupom valida (POST /coupons/validate) e aplica a prévia', () => {
+    service.addItem({ id: 3, preco: 100 } as never, 1, []);
+    component.ngOnInit();
+    component.cupomCodigo = 'BEMVINDO10';
+    component.aplicarCupom();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/coupons/validate') && r.method === 'POST');
+    expect(req.request.body).toEqual({ code: 'BEMVINDO10', restaurantId: 7, itemsValue: 100 });
+    req.flush({ code: 'BEMVINDO10', type: 'Percent', discount: '10.00', description: '10%' });
+    expect(component.cupom?.desconto).toBe(10);
+    expect(component.total).toBe(90); // 100 − 10
+  });
+
+  it('cupom inválido (400) mostra a mensagem e não aplica', () => {
+    service.addItem({ id: 3, preco: 50 } as never, 1, []);
+    component.ngOnInit();
+    component.cupomCodigo = 'ZZZ';
+    component.aplicarCupom();
+    httpMock
+      .expectOne((r) => r.url.endsWith('/coupons/validate'))
+      .flush({ message: 'Cupom fora da validade' }, { status: 400, statusText: 'Bad Request' });
+    // Erro exibido (o texto exato da API vem do errorInterceptor em produção) e cupom não aplicado.
+    expect(component.cupom).toBeFalsy();
+    expect(component.cupomErro.length).toBeGreaterThan(0);
   });
 });

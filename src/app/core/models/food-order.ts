@@ -37,6 +37,13 @@ export interface CreateFoodOrderDto {
   paymentMethod: PaymentMethod;
   notes?: string;
   items: CreateFoodOrderItemDto[];
+  /** Gorjeta em reais (0–1000) — vai inteira ao entregador (§8.9). Opcional. */
+  tip?: number;
+  /**
+   * Código do cupom (§8.9). Só o **código** é enviado; o desconto da prévia
+   * (`/coupons/validate`) NÃO é aceito como entrada — o back recalcula. Opcional.
+   */
+  couponCode?: string;
 }
 
 // ── Resposta / detalhe ───────────────────────────────────────────────────────

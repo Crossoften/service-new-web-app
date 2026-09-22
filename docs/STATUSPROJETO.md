@@ -255,9 +255,10 @@
 
 | **OF-17** | **Aceite e recusa de orçamento (§8.8)** — a **rota de recusa** é nova: `PATCH /budgets/:id/reject { rejectReason? }` (só o solicitante, só em `Responded`; erros 400/403/409). Model `BudgetDto` ganhou `acceptedAt`/`rejectedAt`/`rejectReason`; `RejectBudgetDto` novo; `BudgetService.rejeitar(id, dto)`; VM `Orcamento.motivoRecusa` mapeado. Tela de **aprovação do cliente** (`aprovar-orcamento`): botões **APROVAR/RECUSAR** aparecem só quando `Responded` (`podeDecidir`); recusa abre campo de **motivo opcional** → `PATCH …/reject` e volta à lista; orçamento já terminado mostra **banner de desfecho** (Aceito/Recusado/Cancelado) + o motivo, quando recusado. Erros da API (400/403/409) exibidos na tela. Sem mudança de back. | ✅ (6) | `OF-17-budget-accept-reject` |
 
-> **Próximas (ordem da seção 10 do doc):** **18** gorjeta+cupom na sacola (§8.9 — ⚠️ `POST
-> /coupons/validate` é **só prévia**, o back recalcula) · **19** maquininha própria (§8.6) · **20-22** carteira/Pix/repasses
-> do entregador (§8.5 — inclui `refundedDeliveries`/`refundedAmount` no repasse do admin, §8.7) · **23** agendamento (§8.9) ·
+| **OF-18** | **Gorjeta + cupom na sacola (§8.9)** — 3 campos opcionais entraram no `POST /food-orders`; esta fatia cobre **`tip`** e **`couponCode`** (agendamento `scheduledFor` fica no item 23). Model `CreateFoodOrderDto` ganhou `tip?`/`couponCode?`. Novos **`core/models/coupon.ts`** + **`core/services/coupon.ts`** (`CouponService.validar` → `POST /coupons/validate`). `DeliveryService`: estado de carrinho `gorjeta`/`cupom`, `setGorjeta` (0–1000), `setCupom`, `calcularSubtotal`, `calcularTotal` (subtotal + frete + gorjeta − desconto, nunca negativo); `buildCreateFoodOrderDto` envia `tip` só quando >0 e **só o `couponCode`**. Tela da **sacola**: chips de gorjeta + valor livre; campo de cupom com **Aplicar** (chama `validate`, mostra desconto/descrição ou o erro da API) e Remover; desdobramento Subtotal/Gorjeta/Cupom/Total. **Revisão** mostra o mesmo desdobramento (total já somava via `calcularTotal`). ⚠️ **`validate` é só prévia** — o desconto **não** é enviado como entrada; o back recalcula na criação. Sem mudança de back. | ✅ (12) | `OF-18-sacola-gorjeta-cupom` |
+
+> **Próximas (ordem da seção 10 do doc):** **19** maquininha própria (§8.6) · **20-22** carteira/Pix/repasses
+> do entregador (§8.5 — inclui `refundedDeliveries`/`refundedAmount` no repasse do admin, §8.7) · **23** agendamento (`scheduledFor`, §8.9) ·
 > **24** push/PWA (§8.10 — ⚠️ `publicKey` null ⇒ **não** pedir permissão).
 
 ---

@@ -76,6 +76,13 @@ export type FormaPagamento = 'credito' | 'debito' | 'pix' | 'boleto' | 'dinheiro
 
 export type StatusPedido = 'recebido' | 'preparo' | 'caminho' | 'entregue';
 
+/** Cupom aplicado (prévia) na sacola — só o código vai ao pedido (§8.9). */
+export interface CupomAplicado {
+  codigo: string;
+  desconto: number; // prévia; o back recalcula
+  descricao: string;
+}
+
 export interface Pedido {
   id: number;
   restaurante: Restaurante;
@@ -87,6 +94,8 @@ export interface Pedido {
   total: number;
   data: string;
   status: StatusPedido;
+  gorjeta?: number;
+  cupom?: CupomAplicado;
 }
 
 export const OPCOES_ENTREGA: OpcaoEntrega[] = [
@@ -214,14 +223,32 @@ export class DeliveryService {
     this.pedidoAtual.formaPagamento = forma;
   }
 
-  calcularTotal(): number {
+  /** Gorjeta em reais (§8.9). Limitada a 0–1000; vai inteira ao entregador. */
+  setGorjeta(valor: number) {
+    const v = Number.isFinite(valor) ? valor : 0;
+    this.pedidoAtual.gorjeta = Math.min(1000, Math.max(0, v));
+  }
+
+  /** Aplica a prévia do cupom (só o código vai ao pedido; o back recalcula). */
+  setCupom(cupom?: CupomAplicado) {
+    this.pedidoAtual.cupom = cupom;
+  }
+
+  /** Subtotal dos itens (preço + adicionais) × quantidade. */
+  calcularSubtotal(): number {
     const itens = this.pedidoAtual.itens ?? [];
-    const subtotal = itens.reduce((acc, i) => {
+    return itens.reduce((acc, i) => {
       const extras = i.adicionaisSelecionados.reduce((a, ad) => a + ad.preco, 0);
       return acc + (i.item.preco + extras) * i.quantidade;
     }, 0);
+  }
+
+  calcularTotal(): number {
     const frete = this.pedidoAtual.opcaoEntrega?.preco ?? 0;
-    return subtotal + frete;
+    const gorjeta = this.pedidoAtual.gorjeta ?? 0;
+    const desconto = this.pedidoAtual.cupom?.desconto ?? 0;
+    // Total exibido = subtotal + frete + gorjeta − desconto (prévia). Nunca negativo.
+    return Math.max(0, this.calcularSubtotal() + frete + gorjeta - desconto);
   }
 
   /** Cria o pedido — `POST /v1/food-orders`. Limpa o carrinho em caso de sucesso. */
@@ -233,6 +260,8 @@ export class DeliveryService {
 
   private buildCreateFoodOrderDto(): CreateFoodOrderDto {
     const itens = this.pedidoAtual.itens ?? [];
+    const gorjeta = this.pedidoAtual.gorjeta ?? 0;
+    const cupom = this.pedidoAtual.cupom?.codigo?.trim();
     return {
       // `deliveryFee` não é mais enviado (Fase C): o servidor calcula o frete.
       restaurantId: this.pedidoAtual.restaurante?.id ?? 0,
@@ -243,6 +272,9 @@ export class DeliveryService {
         additionIds: ip.adicionaisSelecionados.map((a) => a.id),
         notes: ip.observacao?.trim() || undefined,
       })),
+      // Opcionais (§8.9): gorjeta só quando > 0; cupom só o CÓDIGO (o back recalcula o desconto).
+      tip: gorjeta > 0 ? gorjeta : undefined,
+      couponCode: cupom || undefined,
     };
   }
 

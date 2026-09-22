@@ -105,13 +105,21 @@
       <h3 class="revisao-secao__titulo">Detalhes da compra</h3>
       <div class="revisao-detalhes">
         <div class="revisao-detalhes__linha">
-          <span>Realizado em</span>
-          <span>{{ pedido?.data ?? '00/00/0000' }}</span>
+          <span>Subtotal</span>
+          <span>{{ formatarPreco(subtotal) }}</span>
         </div>
-        <div class="revisao-detalhes__linha">
-          <span>Valor serviço</span>
-          <span>{{ formatarPreco(total) }}</span>
-        </div>
+        @if (gorjeta > 0) {
+          <div class="revisao-detalhes__linha">
+            <span>Gorjeta</span>
+            <span>{{ formatarPreco(gorjeta) }}</span>
+          </div>
+        }
+        @if (cupom) {
+          <div class="revisao-detalhes__linha">
+            <span>Cupom ({{ cupom.codigo }})</span>
+            <span>−{{ formatarPreco(cupom.desconto) }}</span>
+          </div>
+        }
         <div class="revisao-detalhes__linha revisao-detalhes__linha--total">
           <span>Total</span>
           <span>{{ formatarPreco(total) }}</span>
