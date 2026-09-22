@@ -13,7 +13,7 @@
 | BE-14 | Autorização por `profileType` (403 nas rotas restritas) | ✅ Implementado |
 | BE-15 | Assinatura como pré-condição do fornecedor (403 sem assinatura, inclusive GETs) | ✅ Implementado (Front trata no `errorInterceptor` → `/fornecedor/assinatura`) |
 | BE-16 | Cobrança por vertical (delivery híbrido, payouts) | ✅ Implementado |
-| BE-17 | Repasse/ganhos do **entregador** (sem endpoint próprio) | 🟡 Parcial — expor `GET /v1/deliveries/me/earnings` |
+| BE-17 | Repasse/ganhos do **entregador** | ✅ **Resolvido na v3** — `GET /v1/deliveries/me/earnings` com `available`/`paid` (§8.5); front **OF-20** (carteira). Repasses do admin = **BE-Q15** (painel admin, fora deste PWA). |
 
 ## Delivery — gaps de auditoria (BE-D1…BE-D5)
 
@@ -46,20 +46,24 @@
 | **BE-Q9** | **Categorias não semeadas → cadastro do fornecedor sem opções.** Auditoria (back `@ b60afd0`, `prisma/seeds/index.ts`): o seed roda apenas `seedServiceCategory` e `seedRestaurantCategory`. **Não há seed** para `ProductCategory`, `AccommodationCategory` nem `TransportationCategory`. Como esses `GET /{products\|accommodations\|transportations}/categories` filtram `isActive:true` e a tabela está vazia, o **dropdown de categoria vem vazio** e o fornecedor **não consegue cadastrar** produto (Compra e Venda / Aluguel), hospedagem nem transporte. Serviços e Delivery funcionam porque têm seed. **Front OK** (carrega e renderiza o que a API devolver). | ❗ Semear `ProductCategory`, `AccommodationCategory` e `TransportationCategory` (como já é feito para serviço/restaurante) **ou** expor um CRUD de categorias no admin. Sem isso, os 3 cadastros ficam bloqueados por falta de opção. |
 | **BE-Q8** | **`POST /upload/one-file` retorna `500` no ambiente local/homolog.** Auditoria (back `@ b60afd0`): `UploadService.uploadOneFile` grava **exclusivamente no S3** (`PutObjectCommand`) — **não há fallback de disco local**, apesar da descrição da rota dizer "Armazena local/nuvem". O `example.env` **não traz** nenhuma var `AWS_*`. Sem `AWS_REGION` + `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` + `AWS_BUCKET_NAME` (ou sem rede/permissão ao bucket), o `s3Client.send(...)` estoura e o Nest devolve `500 {"message":"Internal server error"}`. **Front OK** (envia `multipart/form-data`, campo `file`, tipos png/jpg/jpeg/pdf ≤ 8 MB — dentro do contrato). Reproduzido ao salvar imagem de item de cardápio (`add-cardapio`), mas afeta **todo upload** (cardápio, serviços, produtos, hospedagem, transporte, foto de perfil). | ❗ **(a)** Configurar as `AWS_*` no `.env` de homolog/local **e** documentá-las no `example.env`; **ou (b)** implementar o fallback de **armazenamento em disco** quando as credenciais não existirem (como a descrição já promete). Enquanto não resolvido, o cadastro com imagem falha; sem imagem funciona (campo é opcional). |
 
-## Delivery — melhorias de mercado (BE-Q10…BE-Q14)
+## Delivery — melhorias de mercado (BE-Q10…BE-Q14) — ✅ resolvidas na v3
 
 > Levantadas na **revisão do fluxo de delivery** (`docs/analise-fluxo-delivery.md`, benchmark iFood/Zé Delivery).
-> Todo o backlog que **já tinha suporte no back** foi entregue no front (adicionais, observação, editar sacola,
-> busca/filtros, busca global, pedir novamente, avaliar pós-entrega). As demandas abaixo **exigem back-end novo** —
-> o front não consegue fazer sozinho. Auditadas contra o `prisma/schema.prisma` (`@ b60afd0`).
+> **Reconciliação (2026-09-22):** o back **implementou** estas demandas na **v3** do contrato (`ORIENTACOESFRONT.md` v3,
+> §8.9/§8.10) e o **front integrou** cada uma na fase **OF-14…OF-24**. Ficam aqui **fechadas**.
+>
+> ⚠️ **Fonte da confirmação = doc v3, não o clone.** O clone local do back em `ajustes-gerais` (auditado nesta sessão)
+> **ainda não tem** `scheduledFor`/`couponCode`/`tip`/`/coupons/validate`/`/push/*` — está atrás do doc. Ou seja: o
+> **deploy** descrito pelo doc está à frente desse branch. O front foi integrado ao **contrato do doc**; se ao testar
+> contra um back antigo algum endpoint retornar 404, é sinal de que aquele ambiente ainda não subiu a v3.
 
-| # | Demanda | O que falta no back |
+| # | Demanda | Status v3 |
 |---|---|---|
-| **BE-Q10** | **Cupons / promoções.** Padrão de mercado (código de desconto, frete grátis, % ou valor fixo). Hoje **não existe** entidade `Coupon`/`Discount` no schema, nem campo de desconto em `FoodOrder`, nem rota para validar/aplicar cupom. | Modelar `Coupon` (código único, tipo `percent\|fixed\|free_shipping`, valor, validade, uso máximo/por-cliente, restaurante/escopo). Rota **`POST /coupons/validate`** (`{code, restaurantId, subtotal}` → desconto aplicável) e aceitar `couponCode`/`discount` em `CreateFoodOrderDto` + expor `discount` no `ResponseFoodOrderDto`. **Front:** campo "cupom" na sacola/revisão, linha de desconto no total. Pronto para integrar assim que existir. |
-| **BE-Q11** | **Agendar pedido** ("receber às 20h"). `FoodOrder` **não tem** `scheduledFor`. | Adicionar `scheduledFor: DateTime?` em `FoodOrder` + aceitar no `CreateFoodOrderDto`; regra de janelas de horário por restaurante (opcional). **Front:** seletor de "entregar agora / agendar" na revisão. |
-| **BE-Q12** | **Gorjeta ao entregador.** Sem campo de gorjeta em `FoodOrder`/`DeliveryAssignment`. | Adicionar `tip: Decimal?` (ou `courierTip`) em `FoodOrder`, aceitar no `CreateFoodOrderDto`, somar ao total e ao repasse do entregador. **Front:** opção de gorjeta (valores rápidos + custom) na revisão. |
-| **BE-Q13** | **Notificação de status (push).** Avisar "saiu para entrega/entregue" fora do app. Hoje há WebSocket (`/deliveries`, `/chats`) mas **sem Web Push** (sem armazenar subscription nem enviar via VAPID/FCM). | Endpoint para registrar a `PushSubscription` do navegador (`POST /push/subscriptions`) + envio server-side (Web Push/VAPID) nos eventos de mudança de status do pedido. **Front:** service worker + pedir permissão + registrar subscription (PWA). Esforço maior nas duas pontas. |
-| **BE-Q14** | **Ícones das categorias de restaurante.** `restaurant-category.seeds.ts` **não seta `iconUrl`** (diferente de `service-category`, que semeia). Por isso as imagens da tela de Buscar vinham quebradas. | Semear `iconUrl` das categorias de restaurante (mesmo padrão do seed de serviço) **ou** subir os ícones e preencher. **Front já tem fallback** (placeholder quando sem ícone), então não bloqueia — é melhoria visual. |
+| **BE-Q10** | **Cupons / promoções** — `POST /coupons/validate` (prévia) + `couponCode` no `CreateFoodOrderDto`. ⚠️ o desconto da prévia **não** é aceito como entrada; o back recalcula. | ✅ **Resolvido** (doc §8.9) · front **OF-18** (`CouponService`, campo de cupom na sacola, linha de desconto). Criar cupom = só admin (`/admin-coupons`). |
+| **BE-Q11** | **Agendar pedido** — `scheduledFor` (ISO, futuro) no `CreateFoodOrderDto`/`ResponseFoodOrderDto`; não muda o status. | ✅ **Resolvido** (doc §8.9) · front **OF-23** ("Agora/Agendar" na sacola, badge de agendado no restaurante). |
+| **BE-Q12** | **Gorjeta ao entregador** — `tip` (0–1000) no `CreateFoodOrderDto`; vai inteira ao entregador. | ✅ **Resolvido** (doc §8.9) · front **OF-18** (chips + valor livre na sacola, total somando a gorjeta). |
+| **BE-Q13** | **Push/PWA** — `GET /push/public-key`, `POST`/`DELETE /push/subscriptions` (VAPID). | ✅ **Resolvido** (doc §8.10) · front **OF-24** (`PushService` + SW; ⚠️ `publicKey` null ⇒ não pede permissão; `DELETE` no logout). |
+| **BE-Q14** | **Ícones das categorias de restaurante** — semear `iconUrl` (ou subir pelo admin). | 🟡 **Parcial** (doc §8.4a) — o back mantém os ícones **por slug no app** (offline-first, decisão do doc); só categoria criada pelo admin **depois** do release precisa de `iconUrl`, e isso é responsabilidade da **tela de admin**. Front já tem fallback (AJ-cat). **Não bloqueia.** |
 
 ## Observações
 

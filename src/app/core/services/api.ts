@@ -39,6 +39,11 @@ export class ApiService {
     return this.http.delete<T>(this.url(path), { params: this.toHttpParams(params) });
   }
 
+  /** DELETE com corpo (ex.: `/push/subscriptions` recebe o `endpoint`). */
+  deleteBody<T>(path: string, body: unknown): Observable<T> {
+    return this.http.delete<T>(this.url(path), { body });
+  }
+
   /** Upload de um arquivo (multipart) — POST /upload/one-file. */
   uploadOne(file: File): Observable<UploadedFile> {
     const form = new FormData();

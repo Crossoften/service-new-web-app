@@ -209,6 +209,40 @@ isso vira demanda de backend (login por telefone, envio e verificação de SMS).
 
 ---
 
+## Reconciliação — ORIENTACOESFRONT v3 (itens 14-24) ✅
+
+> **2026-09-22.** O back publicou a **v3** do contrato (`ORIENTACOESFRONT.md` v3). Vários itens antes listados como
+> "demanda de back" **já foram implementados** e o front integrou cada um na fase **OF-14…OF-24**. Fecham aqui.
+>
+> ⚠️ **Fonte da confirmação = doc v3.** O clone local do back em `ajustes-gerais` (auditado nesta sessão) **ainda não
+> tem** vários desses campos/rotas (`usesOwnCardMachine`, `card-machine`, `scheduledFor`, `couponCode`, `tip`,
+> `/coupons/validate`, `/push/*`, `pixKey`). Ou seja, o **deploy** descrito pelo doc está **à frente** desse branch;
+> a integração seguiu o **contrato do doc** (fonte da verdade). Se um ambiente antigo devolver 404 nessas rotas, é
+> porque ainda não subiu a v3.
+
+| Área (doc) | O que o back entregou | Front |
+|---|---|---|
+| §8.8 | `Service.price` opcional (serviço sob orçamento) | **OF-14** |
+| §8.7 | `PaymentStatusEnum` + `Refunded` (≠ `Cancelled`) | **OF-15** |
+| §8.8 | `BudgetStatusEnum` + `Accepted`/`Rejected` (≠ `Cancelled`) | **OF-16** |
+| §8.8 | `PATCH /budgets/:id/reject` + `acceptedAt`/`rejectedAt`/`rejectReason` | **OF-17** |
+| §8.9 | Cupom (`POST /coupons/validate`, `couponCode`) — **BE-Q10** | **OF-18** |
+| §8.9 | Gorjeta (`tip`) — **BE-Q12** | **OF-18** |
+| §8.6 | Maquininha própria (`PATCH /restaurants/me/card-machine`, `usesOwnCardMachine`) | **OF-19** |
+| §8.5 | Carteira do entregador (`available`/`paid` em `/deliveries/me/earnings`) | **OF-20** |
+| §8.5 | Chave Pix (`pixKeyType`/`pixKey` em `/bank-accounts/me`) | **OF-21** |
+| §8.9 | Agendamento (`scheduledFor`) — **BE-Q11** | **OF-23** |
+| §8.10 | Push/PWA (`/push/public-key`, `/push/subscriptions`) — **BE-Q13** | **OF-24** |
+
+> **Detalhes de contrato notados na integração:**
+> - A rota de confirmação de pagamento em dinheiro é **`PATCH /food-orders/:id/confirm-payment`** (o doc §8.6 escreve
+>   `confirm-cash-payment`, mas o controller usa `confirm-payment` — mantido o existente).
+> - **BE-Q14** (ícones das categorias de restaurante) fica **parcial/por design**: o app resolve por slug (offline-first);
+>   só categoria criada pelo admin depois do release precisa de `iconUrl`, e isso é da tela de admin. Ver `backenddemandas.md`.
+> - **Item 22** (repasses do admin) **não** virou tela aqui — é painel administrativo, fora deste PWA. Ver **BE-Q15** abaixo.
+
+---
+
 ## BE-Q15 — Repasses do entregador: tela de painel admin (§8.5, item 22) 🟡
 
 As rotas de repasse já existem no back (§8.5) e **não** exigem trabalho de back-end novo:

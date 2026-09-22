@@ -191,6 +191,20 @@
 
     }
 
+    <!-- NOTIFICAÇÕES (§8.10) -->
+    <div class="perfil-secao">
+      <span class="perfil-secao__titulo">Notificações</span>
+      <p class="perfil-secao__hint">Receba avisos sobre seus pedidos e serviços neste aparelho.</p>
+      @if (notificacoesAtivas) {
+        <span class="perfil-notif__ok">✔ Notificações ativadas neste aparelho.</span>
+      } @else {
+        <button class="perfil-btn perfil-btn--outline" (click)="ativarNotificacoes()" [disabled]="ativandoPush">
+          {{ ativandoPush ? 'ATIVANDO…' : 'ATIVAR NOTIFICAÇÕES' }}
+        </button>
+      }
+      @if (pushMsg) { <span class="perfil-notif__msg">{{ pushMsg }}</span> }
+    </div>
+
     <button class="perfil-sair-btn" (click)="sair()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>

@@ -5,8 +5,20 @@ import {
   HttpTestingController,
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
+import { SwPush } from '@angular/service-worker';
+import { of } from 'rxjs';
+import { vi } from 'vitest';
 
 import { PerfilComponent } from './perfil';
+import { PushService } from '../../../core/services/push';
+
+// Sem service worker no teste: SwPush inativo.
+const swPushStub = {
+  isEnabled: false,
+  subscription: of(null),
+  requestSubscription: () => Promise.reject(new Error('sem sw')),
+  unsubscribe: () => Promise.resolve(),
+};
 
 describe('PerfilComponent', () => {
   let component: PerfilComponent;
@@ -16,7 +28,12 @@ describe('PerfilComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PerfilComponent],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: SwPush, useValue: swPushStub },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PerfilComponent);
@@ -79,5 +96,20 @@ describe('PerfilComponent', () => {
     expect(component.editandoEndereco).toBe(true);
     component.cancelarEndereco();
     expect(component.editandoEndereco).toBe(false);
+  });
+
+  it('ativarNotificacoes sem service worker informa indisponível (não quebra) — §8.10', async () => {
+    await component.ativarNotificacoes();
+    expect(component.notificacoesAtivas).toBe(false);
+    expect(component.pushMsg.length).toBeGreaterThan(0);
+  });
+
+  it('sair() cancela a inscrição push antes de deslogar (§8.10)', async () => {
+    const push = TestBed.inject(PushService);
+    const desativar = vi.spyOn(push, 'desativar').mockResolvedValue();
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    await component.sair();
+    expect(desativar).toHaveBeenCalled();
+    expect(nav).toHaveBeenCalledWith(['/login']);
   });
 });

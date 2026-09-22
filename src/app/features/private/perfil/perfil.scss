@@ -289,3 +289,14 @@
 
   &:active { opacity: 0.85; }
 }
+
+.perfil-notif__ok {
+  font-size: 13px;
+  font-weight: 600;
+  color: #15803D;
+}
+
+.perfil-notif__msg {
+  font-size: 12px;
+  color: var(--color-gray-600);
+}

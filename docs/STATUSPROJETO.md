@@ -265,8 +265,11 @@
 
 | **OF-23** | **Agendamento do pedido (`scheduledFor`, §8.9)** — 3º campo opcional do `POST /food-orders`. Model `CreateFoodOrderDto.scheduledFor?` + `ResponseFoodOrderDto.scheduledFor?`. `DeliveryService`: estado `agendamento` no carrinho, `setAgendamento`, envio no `buildCreateFoodOrderDto` só quando definido (ISO). **Cliente** (sacola): seção "Quando entregar" com **Agora / Agendar** + `datetime-local` (mínimo = agora); valida **futuro** antes de continuar e guarda em ISO. **Restaurante**: VM `PedidoFornecedor.agendadoPara` mapeado de `scheduledFor`; **badge "🗓 Agendado para…"** no kitchen list (home-fornecedor) e linha "Agendado para" no detalhe do pedido — separa o que é para já do que é para depois (o campo **não** muda o status). Sem mudança de back. | ✅ (5) | `OF-23-agendamento-pedido` |
 
-> **Próxima (ordem da seção 10 do doc):** **24** push/PWA (§8.10 — ⚠️ `publicKey` null ⇒ **não** pedir permissão).
->
+| **OF-24** | **Notificações push / PWA (§8.10)** — o back já envia; o trabalho é do navegador. SW já configurado (`provideServiceWorker`). Novos `core/models/push.ts` + `core/services/push.ts` (usa `SwPush`): `publicKey()` → `GET /push/public-key`; `enviarInscricao` → `POST /push/subscriptions` (idempotente por `endpoint`); `removerInscricao` → `DELETE /push/subscriptions` (via `ApiService.deleteBody` novo). `ativar()` **só pede permissão depois de confirmar `publicKey`** — se vier **`null`** (VAPID não configurado), retorna `sem-vapid` **sem tocar na permissão** (não queima o "sim"); trata `indisponivel` (SW off/dev) e `negado`. **Perfil**: seção "Notificações" com botão **Ativar** (gesto do usuário, nunca no load) + status; `sair()` chama `push.desativar()` (cancela a inscrição + `DELETE`) **antes** de deslogar. Sem mudança de back. | ✅ (14 no lote) | `OF-24-push-pwa` |
+
+> ✅ **Fase ORIENTACOESFRONT v3 concluída** (itens 14-24). Só o **item 22** (repasses do admin) não virou código — é
+> painel admin, fora deste PWA (ver abaixo). Todo o restante do doc já estava ✅ ou foi coberto.
+
 > **Fora do escopo deste app — item 22 (repasses do admin, §8.5):** as rotas `GET/POST /admin-delivery-payouts…`
 > (com `refundedDeliveries`/`refundedAmount` do §8.7) exigem papel de **admin + permissão `Financial`** e vivem num
 > **painel administrativo**, que **não existe neste PWA** (não há nenhuma tela `admin` em `features/`). Documentado em

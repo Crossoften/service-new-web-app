@@ -9,6 +9,7 @@ import {
 import { ProfileService } from '../../../core/services/profile';
 import { AuthService } from '../../../core/services/auth';
 import { SessionService } from '../../../core/services/session';
+import { PushService } from '../../../core/services/push';
 import { ApiError } from '../../../core/models/common';
 import { BillingType } from '../../../core/models/enums';
 import { ResponseProfileDto } from '../../../core/models/profile';
@@ -29,8 +30,14 @@ export class PerfilComponent implements OnInit {
   private readonly profileService = inject(ProfileService);
   private readonly auth = inject(AuthService);
   private readonly session = inject(SessionService);
+  private readonly push = inject(PushService);
 
   perfil: ResponseProfileDto | null = null;
+
+  // Notificações push (§8.10)
+  notificacoesAtivas = false;
+  ativandoPush = false;
+  pushMsg = '';
 
   // Dados
   nome = '';
@@ -68,6 +75,13 @@ export class PerfilComponent implements OnInit {
 
   ngOnInit() {
     this.carregar();
+    // Dica inicial: ler a permissão NÃO dispara o prompt (§8.10).
+    try {
+      this.notificacoesAtivas =
+        typeof Notification !== 'undefined' && Notification.permission === 'granted';
+    } catch {
+      this.notificacoesAtivas = false;
+    }
   }
 
   get isSupplier(): boolean {
@@ -262,7 +276,34 @@ export class PerfilComponent implements OnInit {
     });
   }
 
-  sair() {
+  /** Ativa push a partir do clique (gesto do usuário) — §8.10. */
+  async ativarNotificacoes() {
+    if (this.ativandoPush) return;
+    this.ativandoPush = true;
+    this.pushMsg = '';
+    const r = await this.push.ativar();
+    this.ativandoPush = false;
+    switch (r) {
+      case 'ativado':
+        this.notificacoesAtivas = true;
+        this.pushMsg = 'Notificações ativadas.';
+        break;
+      case 'sem-vapid':
+        // publicKey null: não pedimos permissão. Apenas informa.
+        this.pushMsg = 'Notificações ainda não disponíveis (em configuração no servidor).';
+        break;
+      case 'indisponivel':
+        this.pushMsg = 'Notificações não são suportadas neste ambiente.';
+        break;
+      case 'negado':
+        this.pushMsg = 'Permissão de notificações negada.';
+        break;
+    }
+  }
+
+  async sair() {
+    // Cancela a inscrição push antes de encerrar a sessão (§8.10).
+    await this.push.desativar().catch(() => undefined);
     this.auth.logout();
     this.router.navigate(['/login']);
   }
