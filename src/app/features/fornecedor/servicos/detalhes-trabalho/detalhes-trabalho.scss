@@ -309,3 +309,47 @@
   color: #d33;
   font-size: 13px;
 }
+
+/* Garantia (fatia 1) */
+.dt-garantia {
+  padding: 0 16px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  &__titulo {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-gray-800);
+  }
+
+  &__label {
+    margin: 10px 0 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-gray-600);
+  }
+
+  &__texto {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: var(--color-gray-800);
+    white-space: pre-wrap;
+  }
+}
+
+.dt-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.status--laranja { background: #FFEDD5; color: #C2410C; }
+.status--verde   { background: #DCFCE7; color: #15803D; }
+.status--cinza   { background: var(--color-gray-100); color: var(--color-gray-600); }
+.status--vermelho { background: #FEE2E2; color: #DC2626; }

@@ -8,14 +8,14 @@ import {
   WorkQuery,
   CreateWorkDto,
   FinishWorkDto,
-  PayWorkDto,
+  PayWorkResponseDto,
   RequestWorkWarrantyDto,
   RespondWorkWarrantyDto,
   RequestWorkExtraDto,
   RespondWorkExtraDto,
   CancelWorkDto,
 } from '../models/work';
-import { WorkStatus } from '../models/enums';
+import { WorkStatus, WarrantyRequestStatus } from '../models/enums';
 
 /** Status do mock (cliente) — 4 estados usados pelas telas de solicitação. */
 export type StatusSolicitacao = 'em_andamento' | 'em_garantia' | 'finalizada' | 'cancelada';
@@ -60,6 +60,12 @@ export interface Solicitacao {
   extraPendente: boolean;
   extraValor: number;
   extraDescricao: string;
+  // Garantia (fatia 1): status da solicitação + descrições, para exibir e responder.
+  garantiaStatus?: WarrantyRequestStatus;
+  garantiaDescricao?: string; // problema descrito pelo cliente (só no detalhe)
+  garantiaResposta?: string; // justificativa do fornecedor (só no detalhe)
+  garantiaSolicitadaEm?: string;
+  garantiaRespondidaEm?: string;
 }
 
 /** View-model do trabalho no lado do fornecedor (adapta `/works?scope=Received`). */
@@ -77,6 +83,12 @@ export interface TrabalhoFornecedor {
   arquivosCliente: { nome: string; tipo: string }[];
   chatId?: number;
   extraPendente: boolean;
+  // Garantia (fatia 1): status + descrições para responder (aprovar/recusar).
+  garantiaStatus?: WarrantyRequestStatus;
+  garantiaDescricao?: string; // problema descrito pelo cliente (só no detalhe)
+  garantiaResposta?: string; // justificativa já enviada (só no detalhe)
+  garantiaSolicitadaEm?: string;
+  garantiaRespondidaEm?: string;
 }
 
 interface ResponseFindAllWorkDto {
@@ -110,9 +122,17 @@ export class WorkService {
     return this.api.patch<WorkDto>(`/works/${id}/confirm-arrival`, {});
   }
 
-  /** Cliente paga o trabalho concluído — `POST /v1/works/{id}/pay`. */
-  pagar(id: number, dto: PayWorkDto): Observable<WorkDto> {
-    return this.api.post<WorkDto>(`/works/${id}/pay`, dto);
+  /**
+   * Cliente paga o trabalho concluído — `POST /v1/works/{id}/pay`.
+   * Gera um checkout Mercado Pago (split); o front leva o cliente à `checkoutUrl`
+   * e a confirmação chega depois por webhook (`Payment` Pending → Paid). O
+   * `payerEmail` é opcional (só pré-preenche o checkout).
+   */
+  pagar(id: number, payerEmail?: string): Observable<PayWorkResponseDto> {
+    return this.api.post<PayWorkResponseDto>(
+      `/works/${id}/pay`,
+      payerEmail ? { payerEmail } : {},
+    );
   }
 
   /** Cliente solicita garantia — `POST /v1/works/{id}/request-warranty`. */
@@ -253,6 +273,8 @@ export class WorkService {
       extraPendente: w.extraRequestStatus === 'Pending',
       extraValor: 0,
       extraDescricao: '',
+      garantiaStatus: w.warrantyRequestStatus,
+      garantiaSolicitadaEm: this.data(w.warrantyRequestedAt),
     };
   }
 
@@ -288,6 +310,11 @@ export class WorkService {
       extraPendente: w.extraRequestStatus === 'Pending',
       extraValor: Number(w.extraRequestValue ?? 0),
       extraDescricao: w.extraRequestDescription ?? '',
+      garantiaStatus: w.warrantyRequestStatus,
+      garantiaDescricao: w.warrantyRequestDescription ?? '',
+      garantiaResposta: w.warrantyResponseDescription ?? '',
+      garantiaSolicitadaEm: this.data(w.warrantyRequestedAt),
+      garantiaRespondidaEm: this.data(w.warrantyRespondedAt),
     };
   }
 
@@ -306,6 +333,8 @@ export class WorkService {
       arquivosCliente: [],
       chatId: w.chat?.id,
       extraPendente: w.extraRequestStatus === 'Pending',
+      garantiaStatus: w.warrantyRequestStatus,
+      garantiaSolicitadaEm: this.data(w.warrantyRequestedAt),
     };
   }
 
@@ -326,6 +355,41 @@ export class WorkService {
         .map((f) => ({ nome: f.fileName, tipo: f.type })),
       chatId: w.chat?.id,
       extraPendente: w.extraRequestStatus === 'Pending',
+      garantiaStatus: w.warrantyRequestStatus,
+      garantiaDescricao: w.warrantyRequestDescription ?? '',
+      garantiaResposta: w.warrantyResponseDescription ?? '',
+      garantiaSolicitadaEm: this.data(w.warrantyRequestedAt),
+      garantiaRespondidaEm: this.data(w.warrantyRespondedAt),
     };
+  }
+
+  // ── Garantia — rótulos/estilos compartilhados (fatia 1) ────────────────────
+
+  /** Rótulo curto do status da garantia para badges/telas. */
+  garantiaStatusLabel(status?: WarrantyRequestStatus): string {
+    switch (status) {
+      case 'Pending':
+        return 'Garantia solicitada';
+      case 'Approved':
+        return 'Garantia aprovada';
+      case 'Rejected':
+        return 'Garantia recusada';
+      default:
+        return '';
+    }
+  }
+
+  /** Classe de cor (reaproveita a paleta de status: laranja/verde/vermelho). */
+  garantiaStatusClass(status?: WarrantyRequestStatus): string {
+    switch (status) {
+      case 'Pending':
+        return 'status--laranja';
+      case 'Approved':
+        return 'status--verde';
+      case 'Rejected':
+        return 'status--vermelho';
+      default:
+        return '';
+    }
   }
 }

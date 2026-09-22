@@ -68,6 +68,14 @@ export class TrabalhosFornecedorComponent implements OnInit {
     return classes[status];
   }
 
+  garantiaLabel(t: TrabalhoFornecedor): string {
+    return this.works.garantiaStatusLabel(t.garantiaStatus);
+  }
+
+  garantiaClass(t: TrabalhoFornecedor): string {
+    return this.works.garantiaStatusClass(t.garantiaStatus);
+  }
+
   abrirTrabalho(trabalho: TrabalhoFornecedor) {
     this.router.navigate(['/fornecedor/servicos/trabalho', trabalho.id]);
   }

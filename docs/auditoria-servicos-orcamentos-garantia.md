@@ -10,7 +10,19 @@
 >
 > **Nota de escopo:** este documento é **diagnóstico e definição** — não implementa nada.
 > Nenhuma alteração de back-end é feita aqui; necessidades ficam registradas em `docs/backend-demandas.md`.
-> Decisões de produto em aberto estão na §6 e **precisam do cliente** antes de fatiarmos a implementação.
+> As decisões de produto (§6) foram **tomadas pelo cliente** (ver "Decisões travadas") e orientam o fatiamento.
+
+> ### ✅ Decisões travadas (cliente)
+> - **Q-A — Modelo de execução:** **Opção B** — garantia aprovada gera um **Work de garantia vinculado**
+>   (rastreável à parte), e as garantias (concluídas **ou não**) **viram um número no perfil do fornecedor**.
+> - **Q-B — Recusa:** **decisão final do fornecedor** — o sistema apenas **computa** e a **lista no admin**.
+> - **Q-C — Validade:** definida **na conclusão** (`FinishWorkDto.warrantyExpiresAt`) — sem back novo para a data.
+> - **Q-D — Notificação:** **não** por enquanto.
+> - **Q-E — Custo:** **garantia sem custo** (Work de garantia com `serviceValue = 0`).
+>
+> **Fatia 1 (entregue — GAR-1):** garantia *respondível* só no front (responder pelo fornecedor, solicitar por
+> modal no cliente, status/badges) — usa o que o back já expõe. Execução (Work de garantia) e contador no
+> perfil aguardam **BE-W1/BE-W7**.
 
 ---
 
@@ -217,18 +229,13 @@ decente no cliente (substituir o `window.prompt`, aceitar anexos); (d) badges de
 uma garantia **auditável e respondível**, mesmo que a "aprovação" ainda não dispare o reparo — que entra
 depois, conforme §6.
 
-### ❓ Decisões de produto pendentes (precisam do cliente)
-- **Q-A — Modelo de execução:** garantia aprovada = **reparo no mesmo trabalho** (Opção A) ou **novo
-  trabalho de garantia rastreável** (Opção B, recomendada)?
-- **Q-B — Recusa:** a recusa de garantia pelo fornecedor é **decisão final**, ou precisa de **mediação do
-  admin** (e portanto de superfície no portal admin)?
-- **Q-C — Onde nasce a validade:** o "tempo de garantia" é definido **na resposta do orçamento** (exige
-  campo novo no back) ou **na conclusão do serviço** (`FinishWorkDto.warrantyExpiresAt`, sem back novo —
-  recomendado)?
-- **Q-D — Notificação:** garantia deve **notificar** (WhatsApp/push) cliente e fornecedor a cada
-  pedido/resposta, como start/finish já fazem? (implica back — G6.)
-- **Q-E — Custo:** confirmamos "garantia = sempre sem custo"? Se puder haver reparo cobrado, o modelo muda
-  (Opção B com `serviceValue > 0` e novo `pay`).
+### ✅ Decisões de produto (respondidas pelo cliente)
+- **Q-A:** **Opção B** (novo Work de garantia rastreável) **+ contador de garantias no perfil do fornecedor**
+  (concluídas ou não). → BE-W1 / BE-W7.
+- **Q-B:** **decisão final do fornecedor**; o sistema **computa** e **lista no portal admin** — sem mediação.
+- **Q-C:** validade **na conclusão** (`FinishWorkDto.warrantyExpiresAt`). **Sem back novo** para a data.
+- **Q-D:** **não** por enquanto.
+- **Q-E:** **sem custo** — Work de garantia com `serviceValue = 0`.
 
 ---
 

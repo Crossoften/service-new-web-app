@@ -264,10 +264,10 @@ GET  /v1/admin-delivery-payouts?courierId=42     (histórico de um entregador)
 
 ---
 
-## BE-W1…BE-W6 — Garantia e pagamento de Trabalhos (auditoria Serviços/Orçamentos/Trabalhos) 🔴
+## BE-W1…BE-W7 — Garantia e pagamento de Trabalhos (auditoria Serviços/Orçamentos/Trabalhos) 🔴
 
 > Levantadas na auditoria do módulo (`docs/auditoria-servicos-orcamentos-garantia.md`), back `@ b60afd0`.
-> **Aguardam decisões de produto Q-A…Q-E** (ver §6 do doc) antes de virar contrato.
+> Decisões de produto **Q-A…Q-E travadas** pelo cliente (ver nota ao fim da seção e §6 do doc).
 
 | ID | Demanda | O que falta no back | Depende de |
 |---|---|---|---|
@@ -277,10 +277,16 @@ GET  /v1/admin-delivery-payouts?courierId=42     (histórico de um entregador)
 | **BE-W4** | **Histórico de garantia (slot único).** Colunas no próprio `Work`; nova solicitação sobrescreve a anterior, sem histórico de múltiplos acionamentos. | Se produto exigir múltiplos acionamentos: tabela `WarrantyRequest[]` (ou reaproveitar Work-filho da Opção B). | **Q-A/Q-E** |
 | **BE-W5** | **Recusa de garantia sem mediação.** Recusa do fornecedor é final; não há trilha para o admin mediar. | Se produto exigir mediação: estado/rota de contestação + superfície no **portal admin** (fora deste PWA). | **Q-B** |
 | **BE-W6** | **Status do Work não reflete pagamento; `Cash` sem caminho.** Após `Paid` (webhook MP), `Work.status` continua `Finished`; "pago" só existe no `Payment` (`referenceType=Work`). `PaymentMethodEnum.Cash` existe mas Work só paga via Mercado Pago (exige provider com conta MP vinculada). | Confirmar se o Work deve expor um estado "pago/concluído-pago" (ou o front junta por `Payment`). Confirmar se haverá pagamento manual/dinheiro para Work ou se é **só MP**. Acréscimo aprovado após pagamento **não re-cobra** (`request-extra` liberado em quase todo status). | **Q-E** |
+| **BE-W7** | **Contador de garantias no perfil do fornecedor.** Produto quer exibir no perfil quantas garantias o fornecedor teve — **concluídas ou não**. Front mostra "Garantias totais/atendidas" **hardcoded 0**; o back **não expõe** agregado. | Expor agregado por provider: **total solicitadas**, **concluídas** (Work de garantia `Finished`), **em aberto/recusadas**. Incluir no perfil/`ResponseServiceDto` ou endpoint próprio. Base: Works de garantia (BE-W1) + `respondWarranty` recusados. | ✅ **Q-A** |
 
-> **Nota front (sem back):** a fatia de front "garantia respondível" (mapear `warrantyRequestStatus`/descrições
-> + tela de resposta do fornecedor `respond-warranty` + tela de solicitação do cliente com anexos) **não depende**
-> destas demandas — usa o que o back já expõe. O reparo (BE-W1) é que exige back novo após Q-A.
+> **Decisões travadas (cliente):** Q-A → **Opção B** (Work de garantia vinculado, `serviceValue=0`) + contador no
+> perfil (BE-W7); Q-B → recusa **final**, só **listar no admin** (BE-W5, sem contestação); Q-C → validade **na
+> conclusão** (`FinishWorkDto.warrantyExpiresAt`, **sem back** — BE-W3 dispensada); Q-D → **sem** notificação
+> (BE-W2 adiada); Q-E → **sem custo**. Prioridade de back: **BE-W1** (execução) e **BE-W7** (contador).
+
+> **Nota front (sem back):** a **Fatia 1** de front "garantia respondível" (mapear `warrantyRequestStatus`/descrições
+> + tela de resposta do fornecedor `respond-warranty` + modal de solicitação do cliente) foi entregue e **não depende**
+> destas demandas — usa o que o back já expõe. O reparo (**BE-W1**) e o contador (**BE-W7**) exigem back novo.
 
 ---
 

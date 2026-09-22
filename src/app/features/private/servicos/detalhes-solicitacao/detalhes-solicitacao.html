@@ -79,6 +79,26 @@
       }
     </div>
 
+    <!-- GARANTIA -->
+    @if (solicitacao?.garantiaStatus) {
+      <div class="solicitacao-garantia">
+        <div class="solicitacao-garantia__head">
+          <span class="solicitacao-garantia__titulo">Garantia</span>
+          <span class="solicitacao-status" [ngClass]="works.garantiaStatusClass(solicitacao?.garantiaStatus)">
+            {{ works.garantiaStatusLabel(solicitacao?.garantiaStatus) }}
+          </span>
+        </div>
+        @if (solicitacao?.garantiaDescricao) {
+          <p class="solicitacao-garantia__label">Problema relatado:</p>
+          <p class="solicitacao-garantia__texto">{{ solicitacao?.garantiaDescricao }}</p>
+        }
+        @if (solicitacao?.garantiaResposta) {
+          <p class="solicitacao-garantia__label">Resposta do prestador:</p>
+          <p class="solicitacao-garantia__texto">{{ solicitacao?.garantiaResposta }}</p>
+        }
+      </div>
+    }
+
   </div>
 
   <!-- BOTÕES POR STEP -->
@@ -100,7 +120,11 @@
 
     @if (stepAtual === 'concluido') {
       <button class="solicitacao-btn solicitacao-btn--primary" (click)="servicoConcluido()">SERVIÇO CONCLUÍDO</button>
-      <button class="solicitacao-btn solicitacao-btn--outline" (click)="solicitarGarantia()">SOLICITAR GARANTIA</button>
+      @if (solicitacao?.garantiaStatus === 'Pending') {
+        <button class="solicitacao-btn solicitacao-btn--outline" disabled>GARANTIA SOLICITADA</button>
+      } @else if (podeSolicitarGarantia) {
+        <button class="solicitacao-btn solicitacao-btn--outline" (click)="solicitarGarantia()">SOLICITAR GARANTIA</button>
+      }
     }
 
   </div>
@@ -136,6 +160,32 @@
         <div class="modal__acoes">
           <button class="solicitacao-btn solicitacao-btn--primary" (click)="confirmarModal()" [disabled]="processando">CONFIRMAR</button>
           <button class="solicitacao-btn solicitacao-btn--outline" (click)="recusarModal()" [disabled]="processando">RECUSAR</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL GARANTIA -->
+  @if (mostrarModalGarantia) {
+    <div class="modal-overlay" (click)="cancelarGarantia()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h3 class="modal__titulo">Solicitar garantia</h3>
+        <p class="modal__descricao">Descreva o problema apresentado após a conclusão do serviço.</p>
+
+        <textarea
+          class="modal__textarea"
+          placeholder="Descreva o problema"
+          [(ngModel)]="descricaoGarantia"
+          rows="4">
+        </textarea>
+
+        @if (solicitacao?.validadeGarantia) {
+          <p class="modal__hint">Garantia válida até {{ solicitacao?.validadeGarantia }}.</p>
+        }
+
+        <div class="modal__acoes">
+          <button class="solicitacao-btn solicitacao-btn--primary" (click)="enviarGarantia()" [disabled]="processando">ENVIAR</button>
+          <button class="solicitacao-btn solicitacao-btn--outline" (click)="cancelarGarantia()" [disabled]="processando">CANCELAR</button>
         </div>
       </div>
     </div>

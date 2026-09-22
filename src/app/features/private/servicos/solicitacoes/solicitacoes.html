@@ -67,6 +67,11 @@
             <span class="solicitacao-status" [ngClass]="statusClass(solicitacao.status)">
               {{ statusLabel(solicitacao.status) }}
             </span>
+            @if (solicitacao.garantiaStatus) {
+              <span class="solicitacao-status" [ngClass]="garantiaClass(solicitacao)">
+                {{ garantiaLabel(solicitacao) }}
+              </span>
+            }
             @if (solicitacao.status === 'em_garantia' && solicitacao.validadeGarantia) {
               <span class="solicitacao-card__garantia">Val: {{ solicitacao.validadeGarantia }}</span>
             }

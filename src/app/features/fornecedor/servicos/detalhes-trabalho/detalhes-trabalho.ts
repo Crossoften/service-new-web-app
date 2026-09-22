@@ -34,6 +34,9 @@ export class DetalhesTrabalhoComponent implements OnInit {
   justificativa = '';
   valorAcrescimo = '';
 
+  // Garantia (fatia 1): justificativa opcional ao responder.
+  respostaGarantia = '';
+
   ngOnInit() {
     this.trabalhoId = Number(this.route.snapshot.paramMap.get('id'));
     this.carregar();
@@ -120,6 +123,47 @@ export class DetalhesTrabalhoComponent implements OnInit {
   finalizarServico() {
     // Trabalho já concluído — retorna à lista.
     this.router.navigate(['/fornecedor/servicos/trabalhos']);
+  }
+
+  // ── Garantia (fatia 1) ──────────────────────────────────────────────────────
+
+  /** Há uma solicitação de garantia aguardando resposta do fornecedor. */
+  get garantiaPendente(): boolean {
+    return this.trabalho?.garantiaStatus === 'Pending';
+  }
+
+  garantiaLabel(): string {
+    return this.works.garantiaStatusLabel(this.trabalho?.garantiaStatus);
+  }
+
+  garantiaClass(): string {
+    return this.works.garantiaStatusClass(this.trabalho?.garantiaStatus);
+  }
+
+  aprovarGarantia() {
+    this.responderGarantia('Approved');
+  }
+
+  recusarGarantia() {
+    this.responderGarantia('Rejected');
+  }
+
+  private responderGarantia(status: 'Approved' | 'Rejected') {
+    if (this.processando || !this.garantiaPendente) return;
+    this.processando = true;
+    this.erro = '';
+    const description = this.respostaGarantia.trim() || undefined;
+    this.works.responderGarantia(this.trabalhoId, { status, description }).subscribe({
+      next: () => {
+        this.processando = false;
+        this.respostaGarantia = '';
+        this.carregar();
+      },
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível responder à garantia.';
+        this.processando = false;
+      },
+    });
   }
 
   cancelar() {

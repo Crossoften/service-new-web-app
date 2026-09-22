@@ -52,9 +52,14 @@
             <span class="tf-card__descricao">{{ trabalho.descricao }}</span>
           </div>
 
-          @if (trabalho.status === 'em_garantia') {
+          @if (trabalho.status === 'em_garantia' || trabalho.garantiaStatus) {
             <div class="tf-card__status-col">
-              <span class="tf-status status--verde">Em garantia</span>
+              @if (trabalho.status === 'em_garantia') {
+                <span class="tf-status status--verde">Em garantia</span>
+              }
+              @if (trabalho.garantiaStatus) {
+                <span class="tf-status" [ngClass]="garantiaClass(trabalho)">{{ garantiaLabel(trabalho) }}</span>
+              }
               @if (trabalho.validadeGarantia) {
                 <span class="tf-card__garantia">Val: {{ trabalho.validadeGarantia }}</span>
               }

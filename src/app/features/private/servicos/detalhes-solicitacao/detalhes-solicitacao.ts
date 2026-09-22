@@ -25,6 +25,10 @@ export class DetalhesSolicitacaoComponent implements OnInit {
   processando = false;
   erro = '';
 
+  // Garantia (fatia 1): modal de solicitação com descrição.
+  mostrarModalGarantia = false;
+  descricaoGarantia = '';
+
   ngOnInit() {
     this.solicitacaoId = Number(this.route.snapshot.paramMap.get('id'));
     const stepHint = this.route.snapshot.queryParamMap.get('step') as StepSolicitacao | null;
@@ -104,14 +108,31 @@ export class DetalhesSolicitacaoComponent implements OnInit {
     this.router.navigate(['/servicos/pagamento', this.solicitacaoId]);
   }
 
+  /** Cliente pode acionar garantia: dentro da validade e sem pedido pendente. */
+  get podeSolicitarGarantia(): boolean {
+    return !!this.solicitacao?.sobGarantia && this.solicitacao?.garantiaStatus !== 'Pending';
+  }
+
   solicitarGarantia() {
-    const description = window.prompt('Descreva o problema para solicitar a garantia:');
-    if (!description || !description.trim()) return;
+    if (!this.podeSolicitarGarantia) return;
+    this.descricaoGarantia = '';
+    this.erro = '';
+    this.mostrarModalGarantia = true;
+  }
+
+  enviarGarantia() {
+    if (this.processando) return;
+    const description = this.descricaoGarantia.trim();
+    if (!description) {
+      this.erro = 'Descreva o problema para solicitar a garantia.';
+      return;
+    }
     this.processando = true;
     this.erro = '';
-    this.works.solicitarGarantia(this.solicitacaoId, { description: description.trim() }).subscribe({
+    this.works.solicitarGarantia(this.solicitacaoId, { description }).subscribe({
       next: () => {
         this.processando = false;
+        this.mostrarModalGarantia = false;
         this.carregar();
       },
       error: (err: ApiError) => {
@@ -119,6 +140,10 @@ export class DetalhesSolicitacaoComponent implements OnInit {
         this.processando = false;
       },
     });
+  }
+
+  cancelarGarantia() {
+    this.mostrarModalGarantia = false;
   }
 
   confirmarModal() {

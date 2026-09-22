@@ -78,6 +78,14 @@ export class SolicitacoesComponent implements OnInit {
     return classes[status];
   }
 
+  garantiaLabel(s: Solicitacao): string {
+    return this.works.garantiaStatusLabel(s.garantiaStatus);
+  }
+
+  garantiaClass(s: Solicitacao): string {
+    return this.works.garantiaStatusClass(s.garantiaStatus);
+  }
+
   abrirDetalhes(solicitacao: Solicitacao) {
     this.router.navigate(['/servicos/solicitacao', solicitacao.id]);
   }

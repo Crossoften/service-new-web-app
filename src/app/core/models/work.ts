@@ -142,12 +142,21 @@ export interface FinishWorkDto {
   completionFiles?: CreateWorkFileDto[];
 }
 
-/** Corpo de `POST /v1/works/{id}/pay` (PayWorkDto). */
+/**
+ * Corpo de `POST /v1/works/{id}/pay` (PayWorkDto).
+ * O back gera um **checkout Mercado Pago** com split; o único campo é o e-mail
+ * do pagador (opcional, só pré-preenche o checkout). O método de pagamento é
+ * escolhido na própria página do Mercado Pago.
+ */
 export interface PayWorkDto {
-  method: PaymentMethod;
-  holderName?: string;
-  cardBrand?: string;
-  cardNumber?: string;
+  payerEmail?: string;
+}
+
+/** Retorno de `POST /v1/works/{id}/pay` (checkout Mercado Pago). */
+export interface PayWorkResponseDto {
+  message?: string;
+  checkoutUrl: string;
+  work: WorkDto;
 }
 
 /** Corpo de `POST /v1/works/{id}/request-warranty` (RequestWorkWarrantyDto) — cliente. */

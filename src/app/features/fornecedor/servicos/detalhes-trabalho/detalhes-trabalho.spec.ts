@@ -92,4 +92,59 @@ describe('DetalhesTrabalhoComponent', () => {
     expect(finish.request.body.completionDescription).toBe('Serviço concluído conforme combinado.');
     finish.flush(workResponse({ status: 'Finished' }));
   });
+
+  it('detecta garantia pendente e mapeia descrição do cliente', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({
+        status: 'Finished',
+        isUnderWarranty: true,
+        warrantyRequestStatus: 'Pending',
+        warrantyRequestDescription: 'Vazamento voltou após 3 dias.',
+      }),
+    );
+    expect(component.stepAtual).toBe('concluido');
+    expect(component.garantiaPendente).toBe(true);
+    expect(component.trabalho?.garantiaDescricao).toBe('Vazamento voltou após 3 dias.');
+  });
+
+  it('aprova garantia enviando PATCH respond-warranty (Approved + justificativa)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', isUnderWarranty: true, warrantyRequestStatus: 'Pending' }),
+    );
+    component.respostaGarantia = 'Vamos ajustar sem custo.';
+    component.aprovarGarantia();
+    const resp = httpMock.expectOne(
+      (r) => r.url.endsWith('/works/1/respond-warranty') && r.method === 'PATCH',
+    );
+    expect(resp.request.body.status).toBe('Approved');
+    expect(resp.request.body.description).toBe('Vamos ajustar sem custo.');
+    resp.flush(workResponse({ status: 'Finished', warrantyRequestStatus: 'Approved' }));
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', warrantyRequestStatus: 'Approved' }),
+    );
+  });
+
+  it('recusa garantia enviando status Rejected', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', isUnderWarranty: true, warrantyRequestStatus: 'Pending' }),
+    );
+    component.recusarGarantia();
+    const resp = httpMock.expectOne(
+      (r) => r.url.endsWith('/works/1/respond-warranty') && r.method === 'PATCH',
+    );
+    expect(resp.request.body.status).toBe('Rejected');
+    resp.flush(workResponse({ status: 'Finished', warrantyRequestStatus: 'Rejected' }));
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', warrantyRequestStatus: 'Rejected' }),
+    );
+  });
+
+  it('não responde garantia quando não há pedido pendente', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', warrantyRequestStatus: 'Approved' }),
+    );
+    expect(component.garantiaPendente).toBe(false);
+    component.aprovarGarantia();
+    httpMock.expectNone((r) => r.url.endsWith('/works/1/respond-warranty'));
+  });
 });

@@ -43,6 +43,7 @@
 | **Sessão** | `guestGuard` bloqueia telas de auth com sessão ativa; `login()` limpa sessão anterior. Logout via perfil. |
 | **Fornecedor multi-vertical** | `Supplier` é genérico (contrato não distingue delivery dos demais). Landing = **hub** (`/fornecedor`); cada vertical tem listagem + form próprios sob `/fornecedor/<vertical>`. |
 | **Aluguel × Compra-venda** | No back são o **mesmo recurso** (`products` com `transactionType` Sale/Rent/RentAndSale). **Decisão:** separar **por tela, sem dropdown** — Compra-venda cria `Sale`, Aluguel cria `Rent`; itens `RentAndSale` aparecem nas duas listagens; ao **editar**, o tipo é preservado. |
+| **Garantia de serviços** | (Q-A) garantia aprovada gera **Work de garantia vinculado** rastreável (Opção B) + vira **número no perfil do fornecedor**; (Q-B) recusa é **decisão final** do fornecedor, só **listada no admin**; (Q-C) validade nasce **na conclusão** (`warrantyExpiresAt`); (Q-D) **sem** notificação por ora; (Q-E) garantia **sem custo** (`serviceValue=0`). Execução (Work de garantia) e contador dependem de back novo (BE-W1/BE-W7). |
 
 ---
 
@@ -56,6 +57,7 @@
 | `backend-demandas.md` | Demandas de back-end (BE-01…17, D, F, Q) |
 | `blueprint-perfis-e-regras.md` | Perfis, regras de negócio e matriz por vertical |
 | `inventario-*.md` | Auditorias detalhadas por módulo (auth, delivery, entregador, parceiro, marketplace, serviços) |
+| `auditoria-servicos-orcamentos-garantia.md` | Auditoria 3-fontes de Serviços/Orçamentos/Trabalhos + desenho da **garantia** (decisões Q-A…Q-E, BE-W1…W7) |
 
 ---
 
@@ -274,6 +276,36 @@
 > (com `refundedDeliveries`/`refundedAmount` do §8.7) exigem papel de **admin + permissão `Financial`** e vivem num
 > **painel administrativo**, que **não existe neste PWA** (não há nenhuma tela `admin` em `features/`). Documentado em
 > `backend-demandas.md` (BE-Q15) como tela de painel admin, a ser construída onde o admin operar — não nesta base.
+
+---
+
+## 🛡️ Garantia de serviços — Fatia 1 (respondível, só front)
+
+Primeira fatia da feature de garantia (ver `auditoria-servicos-orcamentos-garantia.md`). **Sem back novo** —
+usa o que a API já expõe (`request-warranty`, `respond-warranty`, campos de garantia no `WorkDto`).
+
+| Patch | Escopo |
+|---|---|
+| **GAR-1** | **(a)** view-models de Work expõem `garantiaStatus`/descrições/datas (`work.ts`) + helpers `garantiaStatusLabel/Class`. **(b)** Fornecedor **responde garantia** em `detalhes-trabalho` (Aprovar/Recusar + justificativa → `PATCH /works/:id/respond-warranty`) — antes o método `responderGarantia()` era órfão. **(c)** Cliente solicita garantia por **modal** (substitui `window.prompt`) em `detalhes-solicitacao`, com gate por validade/pendência, e vê o **status/resposta**. **(d)** Badges de status de garantia (Pendente/Aprovada/Recusada) nas listas `solicitacoes` e `trabalhos-fornecedor`. |
+
+- **Fora desta fatia (próximas):** validade na conclusão (enviar `warrantyExpiresAt` no `finish`); pagamento MP do
+  serviço; execução do reparo (Work de garantia) + contador no perfil — estes dois dependem de **BE-W1/BE-W7**.
+- **Anexos na solicitação:** adiados junto do upload (bloqueado por **BE-Q8**, S3 sem credencial/fallback).
+- Testes: specs de `detalhes-trabalho` e `detalhes-solicitacao` cobrindo aprovar/recusar/solicitar garantia (verdes).
+  Falhas pré-existentes de ambiente (Google Maps/título) não relacionadas.
+
+### Pagamento do serviço — checkout Mercado Pago (patch MP-SVC-1)
+
+O back mudou o pagamento de Work para **checkout Mercado Pago** (`POST /works/:id/pay` com corpo `{ payerEmail? }`
+→ `{ checkoutUrl, work }`; confirmação assíncrona por webhook). O front estava no **contrato antigo** (seletor de
+método + `PayWorkDto` com dados de cartão + mapeamento errado `debito→CreditCard`/`dinheiro→BankSlip`).
+
+| Patch | Escopo |
+|---|---|
+| **MP-SVC-1** | **(a)** `PayWorkDto` vira `{ payerEmail? }` + `PayWorkResponseDto { checkoutUrl, work }` (`models/work.ts`). **(b)** `WorkService.pagar(id, payerEmail?)` retorna o checkout (`services/work.ts`). **(c)** `pagamento-servico` reescrito: remove o seletor de método (a forma é escolhida no MP), mostra aviso do checkout + detalhes, botão **PAGAR COM MERCADO PAGO** → `window.location.href = checkoutUrl`; gate `podePagar` (Finished + não pago); trata erro "fornecedor sem conta MP" com a mensagem da API. Mesmo padrão do delivery (`status-pedido`). |
+
+- **Confirmação:** o `Work.status` continua `Finished` após pagar; "pago" vem do `Payment` (via webhook) — coberto por
+  **BE-W6** (avaliar expor estado "pago" no Work). Sem status de pagamento em tela por ora (o back não expõe no Work).
 
 ---
 

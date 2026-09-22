@@ -81,4 +81,57 @@ describe('DetalhesSolicitacaoComponent', () => {
     httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(workResponse());
     expect(component.mostrarModal).toBe(false);
   });
+
+  it('abre o modal de garantia quando dentro da validade (sem window.prompt)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', isUnderWarranty: true, warrantyExpiresAt: '2026-09-16T00:00:00.000Z' }),
+    );
+    expect(component.podeSolicitarGarantia).toBe(true);
+    component.solicitarGarantia();
+    expect(component.mostrarModalGarantia).toBe(true);
+    httpMock.expectNone((r) => r.url.endsWith('/works/1/request-warranty'));
+  });
+
+  it('envia a solicitação de garantia com a descrição (POST request-warranty)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', isUnderWarranty: true }),
+    );
+    component.solicitarGarantia();
+    component.enviarGarantia();
+    expect(component.erro).toContain('Descreva');
+    httpMock.expectNone((r) => r.url.endsWith('/works/1/request-warranty'));
+
+    component.descricaoGarantia = 'O problema voltou.';
+    component.enviarGarantia();
+    const req = httpMock.expectOne(
+      (r) => r.url.endsWith('/works/1/request-warranty') && r.method === 'POST',
+    );
+    expect(req.request.body.description).toBe('O problema voltou.');
+    req.flush(workResponse({ status: 'Finished', warrantyRequestStatus: 'Pending' }));
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', warrantyRequestStatus: 'Pending' }),
+    );
+    expect(component.mostrarModalGarantia).toBe(false);
+  });
+
+  it('bloqueia nova solicitação quando já há garantia pendente', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', isUnderWarranty: true, warrantyRequestStatus: 'Pending' }),
+    );
+    expect(component.podeSolicitarGarantia).toBe(false);
+    expect(component.solicitacao?.garantiaStatus).toBe('Pending');
+  });
+
+  it('expõe a resposta do fornecedor quando a garantia foi respondida', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({
+        status: 'Finished',
+        warrantyRequestStatus: 'Approved',
+        warrantyResponseDescription: 'Ajuste sem custo agendado.',
+      }),
+    );
+    expect(component.solicitacao?.garantiaStatus).toBe('Approved');
+    expect(component.solicitacao?.garantiaResposta).toBe('Ajuste sem custo agendado.');
+    expect(component.works.garantiaStatusLabel('Approved')).toBe('Garantia aprovada');
+  });
 });
