@@ -6,6 +6,7 @@ import {
   BudgetDto,
   BudgetListItemDto,
   BudgetQuery,
+  RejectBudgetDto,
   RequestBudgetInformationDto,
   RespondBudgetExtraDto,
   UpdateBudgetDto,
@@ -47,6 +48,8 @@ export interface Orcamento {
   comentario: string;
   descricao: string;
   temAcrescimoPendente: boolean;
+  /** Motivo da recusa, quando o cliente recusou o preço (§8.8). */
+  motivoRecusa?: string;
 }
 
 interface ResponseFindAllBudgetDto {
@@ -111,6 +114,15 @@ export class BudgetService {
   /** Cliente aprova um orçamento respondido (gera o trabalho) — `PATCH /v1/budgets/{id}/approve`. */
   aprovar(id: number): Observable<unknown> {
     return this.api.patch(`/budgets/${id}/approve`, {});
+  }
+
+  /**
+   * Cliente recusa o preço proposto — `PATCH /v1/budgets/{id}/reject` (§8.8).
+   * Só o solicitante e só em `Responded`. `rejectReason` é opcional.
+   * Erros: 400 (não respondido/já recusado), 403 (não é o solicitante), 409 (já aceito/virou trabalho).
+   */
+  rejeitar(id: number, dto: RejectBudgetDto = {}): Observable<BudgetDto> {
+    return this.api.patch<BudgetDto>(`/budgets/${id}/reject`, dto);
   }
 
   /** Cliente responde a um acréscimo — `PATCH /v1/budgets/{id}/respond-extra`. */
@@ -239,6 +251,7 @@ export class BudgetService {
       comentario: b.responseDescription ?? '',
       descricao: b.description ?? '',
       temAcrescimoPendente: b.extraRequestStatus === 'Pending',
+      motivoRecusa: b.rejectReason,
     };
   }
 }

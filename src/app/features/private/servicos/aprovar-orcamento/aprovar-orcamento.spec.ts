@@ -49,4 +49,40 @@ describe('AprovarOrcamentoComponent', () => {
     req.flush({ message: 'ok', work: { id: 5 } });
     expect(component.erro).toBe('');
   });
+
+  it('podeDecidir só em Responded', () => {
+    expect(component.podeDecidir).toBe(true); // carregado como Responded
+    component.orcamento!.statusApi = 'Accepted';
+    expect(component.podeDecidir).toBe(false);
+    component.orcamento!.statusApi = 'Rejected';
+    expect(component.podeDecidir).toBe(false);
+  });
+
+  it('recusa o orçamento com motivo (PATCH reject) — §8.8', () => {
+    component.alternarRecusa();
+    expect(component.mostrandoRecusa).toBe(true);
+    component.motivoRecusa = '  Achei o prazo longo demais.  ';
+    component.rejeitar();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/budgets/1/reject') && r.method === 'PATCH');
+    expect(req.request.body).toEqual({ rejectReason: 'Achei o prazo longo demais.' });
+    req.flush({ id: 1, status: 'Rejected' });
+    expect(component.erro).toBe('');
+  });
+
+  it('recusa sem motivo omite rejectReason', () => {
+    component.motivoRecusa = '   ';
+    component.rejeitar();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/budgets/1/reject'));
+    expect(req.request.body).toEqual({ rejectReason: undefined });
+    req.flush({ id: 1, status: 'Rejected' });
+  });
+
+  it('desfechoLabel reflete o status terminal', () => {
+    component.orcamento!.statusApi = 'Accepted';
+    expect(component.desfechoLabel).toBe('Orçamento aceito');
+    component.orcamento!.statusApi = 'Rejected';
+    expect(component.desfechoLabel).toBe('Orçamento recusado');
+    component.orcamento!.statusApi = 'Cancelled';
+    expect(component.desfechoLabel).toBe('Pedido cancelado');
+  });
 });

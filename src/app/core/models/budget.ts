@@ -49,6 +49,12 @@ export interface BudgetDto {
   providerId: number;
   provider: BudgetUserDto;
   files: BudgetFileDto[];
+  /** Preenchido quando o cliente aprovou (§8.8). */
+  acceptedAt?: string;
+  /** Preenchido quando o cliente recusou o preço (§8.8). */
+  rejectedAt?: string;
+  /** Motivo opcional informado na recusa (§8.8). */
+  rejectReason?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -93,6 +99,11 @@ export interface RequestBudgetExtraDto {
 
 export interface RespondBudgetExtraDto {
   status: 'Approved' | 'Rejected';
+}
+
+/** Corpo de `PATCH /v1/budgets/{id}/reject` — cliente recusa o preço (§8.8). */
+export interface RejectBudgetDto {
+  rejectReason?: string;
 }
 
 export interface RequestBudgetInformationDto {

@@ -127,10 +127,27 @@
       @if (orcamento.temAcrescimoPendente) {
         <button class="aprovar-btn" style="background:#fff;color:var(--color-text);border:1px solid var(--color-gray-100);" (click)="responderAcrescimo('Rejected')" [disabled]="processando">RECUSAR ACRÉSCIMO</button>
         <button class="aprovar-btn" (click)="responderAcrescimo('Approved')" [disabled]="processando">APROVAR ACRÉSCIMO</button>
-      } @else {
-        <button class="aprovar-btn" (click)="solicitar()" [disabled]="processando">
-          {{ processando ? 'AGUARDE…' : 'APROVAR ORÇAMENTO' }}
-        </button>
+      } @else if (podeDecidir) {
+        @if (mostrandoRecusa) {
+          <textarea class="aprovar-recusa__motivo" rows="3" placeholder="Motivo da recusa (opcional)"
+            [(ngModel)]="motivoRecusa"></textarea>
+          <button class="aprovar-btn" (click)="rejeitar()" [disabled]="processando">
+            {{ processando ? 'AGUARDE…' : 'CONFIRMAR RECUSA' }}
+          </button>
+          <button class="aprovar-btn aprovar-btn--secundario" (click)="alternarRecusa()" [disabled]="processando">VOLTAR</button>
+        } @else {
+          <button class="aprovar-btn aprovar-btn--secundario" (click)="alternarRecusa()" [disabled]="processando">RECUSAR ORÇAMENTO</button>
+          <button class="aprovar-btn" (click)="solicitar()" [disabled]="processando">
+            {{ processando ? 'AGUARDE…' : 'APROVAR ORÇAMENTO' }}
+          </button>
+        }
+      } @else if (desfechoLabel) {
+        <div class="aprovar-desfecho">
+          <span class="aprovar-desfecho__label">{{ desfechoLabel }}</span>
+          @if (orcamento.statusApi === 'Rejected' && orcamento.motivoRecusa) {
+            <span class="aprovar-desfecho__motivo">Motivo: {{ orcamento.motivoRecusa }}</span>
+          }
+        </div>
       }
     </div>
   }
