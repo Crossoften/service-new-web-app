@@ -30,6 +30,10 @@ export class DetalhesTrabalhoComponent implements OnInit {
   respostaDescricao = '';
   respostaArquivos: { id: number; nome: string; tipo: string }[] = [];
 
+  // Garantia (fatia 2): prazo informado na conclusão → vira warrantyExpiresAt.
+  garantiaQtd = '';
+  garantiaUnidade: 'Day' | 'Month' = 'Month';
+
   // Modal acréscimo
   justificativa = '';
   valorAcrescimo = '';
@@ -111,13 +115,20 @@ export class DetalhesTrabalhoComponent implements OnInit {
     }
     this.processando = true;
     this.erro = '';
-    this.works.finalizar(this.trabalhoId, { completionDescription }).subscribe({
-      next: () => this.router.navigate(['/fornecedor/servicos/trabalhos']),
-      error: (err: ApiError) => {
-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível finalizar o serviço.';
-        this.processando = false;
-      },
-    });
+    // Garantia (fatia 2): converte o prazo informado em warrantyExpiresAt (opcional).
+    const warrantyExpiresAt = this.works.prazoGarantiaISO(
+      Number(this.garantiaQtd),
+      this.garantiaUnidade,
+    );
+    this.works
+      .finalizar(this.trabalhoId, { completionDescription, warrantyExpiresAt })
+      .subscribe({
+        next: () => this.router.navigate(['/fornecedor/servicos/trabalhos']),
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível finalizar o serviço.';
+          this.processando = false;
+        },
+      });
   }
 
   finalizarServico() {

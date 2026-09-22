@@ -97,6 +97,24 @@
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
           </button>
+
+          <!-- TEMPO DE GARANTIA (opcional) -->
+          <div class="dt-garantia-prazo">
+            <label class="dt-garantia-prazo__label">Tempo de garantia (opcional)</label>
+            <div class="dt-garantia-prazo__campos">
+              <input
+                type="number"
+                min="0"
+                inputmode="numeric"
+                placeholder="Ex.: 6"
+                [(ngModel)]="garantiaQtd" />
+              <select [(ngModel)]="garantiaUnidade">
+                <option value="Month">Meses</option>
+                <option value="Day">Dias</option>
+              </select>
+            </div>
+            <span class="dt-garantia-prazo__hint">Contado a partir da conclusão do serviço.</span>
+          </div>
         </div>
       }
 

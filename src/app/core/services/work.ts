@@ -207,6 +207,23 @@ export class WorkService {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
+  /**
+   * Calcula `warrantyExpiresAt` (ISO 8601) a partir de um prazo de garantia
+   * (quantidade + unidade) contado da conclusão. Retorna `undefined` quando não
+   * há prazo válido (garantia é opcional). Usado ao finalizar o trabalho (fatia 2).
+   */
+  prazoGarantiaISO(
+    quantidade: number,
+    unidade: 'Day' | 'Month',
+    base: Date = new Date(),
+  ): string | undefined {
+    if (!Number.isFinite(quantidade) || quantidade <= 0) return undefined;
+    const d = new Date(base.getTime());
+    if (unidade === 'Month') d.setMonth(d.getMonth() + Math.trunc(quantidade));
+    else d.setDate(d.getDate() + Math.trunc(quantidade));
+    return d.toISOString();
+  }
+
   // ── Mapeamento DTO → view-model ────────────────────────────────────────────
 
   private params(query: WorkQuery) {

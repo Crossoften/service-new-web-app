@@ -93,6 +93,32 @@ describe('DetalhesTrabalhoComponent', () => {
     finish.flush(workResponse({ status: 'Finished' }));
   });
 
+  it('finaliza com prazo de garantia → envia warrantyExpiresAt no futuro (fatia 2)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'InProgress' }),
+    );
+    component.respostaDescricao = 'Concluído.';
+    component.garantiaQtd = '6';
+    component.garantiaUnidade = 'Month';
+    component.enviarResposta();
+    const finish = httpMock.expectOne((r) => r.url.endsWith('/works/1/finish') && r.method === 'PATCH');
+    const iso = finish.request.body.warrantyExpiresAt as string;
+    expect(iso).toBeTruthy();
+    expect(new Date(iso).getTime()).toBeGreaterThan(Date.now());
+    finish.flush(workResponse({ status: 'Finished' }));
+  });
+
+  it('finaliza sem prazo → não envia warrantyExpiresAt', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'InProgress' }),
+    );
+    component.respostaDescricao = 'Concluído.';
+    component.enviarResposta();
+    const finish = httpMock.expectOne((r) => r.url.endsWith('/works/1/finish') && r.method === 'PATCH');
+    expect(finish.request.body.warrantyExpiresAt).toBeUndefined();
+    finish.flush(workResponse({ status: 'Finished' }));
+  });
+
   it('detecta garantia pendente e mapeia descrição do cliente', () => {
     httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
       workResponse({

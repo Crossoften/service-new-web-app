@@ -290,6 +290,103 @@ GET  /v1/admin-delivery-payouts?courierId=42     (histórico de um entregador)
 
 ---
 
+## BE-W1 — Especificação: execução da garantia (Opção B, Work de garantia vinculado) 🔴
+
+> **Alvo:** `service-new-ws` (módulo `works`), Prisma/MySQL. Baseado no código auditado `@ b60afd0`
+> (`works.service.ts`, `schema.prisma`). Decisões travadas: Q-A **Opção B**, Q-E **sem custo**, Q-B recusa final.
+> **Regra de ouro:** um reparo em garantia é um **novo `Work`** ligado ao original — reaproveita todo o ciclo
+> (`start`/`confirm-arrival`/`finish`/`cancel`) sem endpoints novos. Nada de reabrir o Work original.
+
+### 1. Schema (`Work`) — colunas novas
+| Coluna | Tipo | Observação |
+|---|---|---|
+| `parentWorkId` | `Int?` | FK auto-relacional para o Work original. **Presente ⇒ é um Work de garantia.** |
+| `isWarranty` | `Boolean @default(false)` | Redundante com `parentWorkId != null`, mas explícito p/ filtro/badge (recomendado). |
+| `budgetId` | `Int?` **@unique** | **Tornar opcional.** Hoje é `Int @unique` obrigatório; o Work de garantia **não tem budget**. Em MySQL o `@unique` permite múltiplos `NULL`, então continua válido. |
+
+Relações Prisma sugeridas:
+```prisma
+model Work {
+  // ...
+  parentWorkId  Int?
+  parentWork    Work?   @relation("WorkWarranty", fields: [parentWorkId], references: [id])
+  warrantyWorks Work[]  @relation("WorkWarranty")
+  isWarranty    Boolean @default(false)
+  budgetId      Int?    @unique   // era obrigatório
+  budget        Budget? @relation(fields: [budgetId], references: [id])
+}
+```
+
+### 2. `respondWarranty(user, id, { status, description })` — efeito colateral
+Hoje só grava `warrantyRequestStatus/warrantyResponseDescription/warrantyRespondedAt`. Passa a, **em transação**:
+- **`status = Rejected`** → mantém o comportamento atual (só registra; nada é criado). Fica consultável no admin (**BE-W5**).
+- **`status = Approved`** → registra a resposta **e cria um `Work` de garantia**:
+  - `parentWorkId = <work original>.id`, `isWarranty = true`, `budgetId = null`;
+  - `serviceId/requesterId/providerId` **copiados** do Work original;
+  - `status = Pending` (inicia um ciclo próprio: o fornecedor vai `start` → `finish`);
+  - `serviceValue = 0`, `totalValue = 0` (**Q-E — sem custo**);
+  - `details` = algo como `"Reparo em garantia do trabalho #<id> — <warrantyRequestDescription>"`;
+  - **anexos**: copiar os `WorkFile` do pedido de garantia (`type = WarrantyRequest`) para o novo Work como `Requester` (opcional, recomendado);
+  - **chat**: criar um `ChatRoom` próprio para o Work de garantia (mesmo padrão de `create`/`approve`) **ou** reutilizar o chat do Work pai — **decisão de produto Q-F** (recomendo chat próprio p/ isolar a conversa do reparo).
+
+### 3. Travas / regras
+- **Idempotência:** `respondWarranty` já exige `warrantyRequestStatus === Pending`; manter, para não criar dois Works de garantia p/ o mesmo acionamento.
+- **Sem cobrança:** `pay` deve **recusar** Work com `isWarranty = true` ou `amount === 0` (hoje `amount = totalValue || serviceValue`; com 0 o checkout MP não faz sentido). Retornar erro claro.
+- **Garantia de garantia:** bloquear `requestWarranty` quando o Work já é `isWarranty = true` (não encadear reparo de reparo) — ou permitir, **decisão Q-G** (recomendo bloquear no MVP).
+- **`request-extra` no Work de garantia:** como é sem custo, bloquear `request-extra` em Work `isWarranty` (senão reintroduz cobrança). 
+- **Listagem/rotas:** nenhuma rota nova. O Work de garantia aparece em `GET /works` (provider `Received`, requester `my-requests`) como qualquer trabalho.
+
+### 4. Contrato de resposta (DTOs)
+Expor nos `ResponseWorkDto` / `ResponseWorkListItemDto`:
+- `parentWorkId?: number` e `isWarranty: boolean` (front badgea "Garantia" e liga pai↔filho);
+- opcional: no Work **pai**, um resumo `warrantyWorks: { id, status }[]` (ou `warrantyWorkId`) para navegar do original ao reparo.
+
+### 5. Filtro (opcional, melhora UX de listagem)
+Aceitar `?isWarranty=true|false` em `GET /works` para o front separar "trabalhos" de "reparos em garantia" nas abas, se o produto quiser. Sem isso, o front distingue pelo campo `isWarranty` no item.
+
+---
+
+## BE-W7 — Especificação: contador de garantias no perfil do fornecedor 🔴
+
+> **Objetivo (Q-A):** o perfil do fornecedor exibe **quantas garantias** ele teve — **concluídas ou não**.
+> Hoje o front mostra "Garantias totais/atendidas" **hardcoded 0** (`ServiceCatalogService.mapDetail`), pois o
+> back **não expõe** agregado. Fonte natural do dado: os acionamentos de garantia (`warrantyRequestStatus` nos
+> Works) + os **Works de garantia** criados por BE-W1.
+
+### 1. Agregados por `providerId`
+| Campo sugerido | Definição (SQL/Prisma) |
+|---|---|
+| `warrantiesTotal` | nº de **acionamentos** de garantia recebidos = `count(Work where providerId = X and warrantyRequestStatus != null)` |
+| `warrantiesApproved` | `count(... and warrantyRequestStatus = Approved)` |
+| `warrantiesRejected` | `count(... and warrantyRequestStatus = Rejected)` |
+| `warrantiesCompleted` | reparos concluídos = `count(Work where providerId = X and isWarranty = true and status = Finished)` |
+| `warrantiesInProgress` | reparos em aberto = `count(Work where providerId = X and isWarranty = true and status in (Pending, InProgress))` |
+
+> "Concluídas ou não" = `warrantiesTotal` (todas), com `warrantiesCompleted` como "atendidas/resolvidas".
+> Mapeamento p/ o front (G20): `garantiasTotais = warrantiesTotal`, `garantiasAtendidas = warrantiesCompleted`
+> (ou `warrantiesApproved`, **decisão Q-H** — "atendida" = reparo concluído vs. garantia aprovada).
+
+### 2. Onde expor
+- **Perfil do fornecedor** (`ResponseProfileDto` de `GET /profile/me`) — para o próprio fornecedor ver seu histórico.
+- **Perfil público do prestador** consumido pelo cliente: o front usa **`GET /services/:id`** (`detalhes-prestador`)
+  e a tela de aprovação de orçamento. Expor o agregado em `ResponseServiceDto` (ex.: bloco `provider.stats` ou
+  campos `providerWarranties*`). Assim as telas que hoje mostram 0 passam a mostrar o número real **sem rota nova**.
+
+### 3. Notas de implementação
+- Pode ser **calculado on-the-fly** (queries `count` agrupadas) — volume baixo, não precisa desnormalizar.
+- Cuidado para **não contar reparos de reparo** em dobro caso Q-G permita encadear (filtrar `parentWorkId` de 1º nível).
+- Sem BE-W1, dá para expor **parcialmente** já: `warrantiesTotal/Approved/Rejected` saem só dos `warrantyRequestStatus`
+  (não dependem do Work de garantia). `warrantiesCompleted/InProgress` só fazem sentido depois de BE-W1.
+
+---
+
+## Decisões de produto abertas (geradas por BE-W1/BE-W7)
+- **Q-F — Chat do reparo:** o Work de garantia tem **chat próprio** ou **reutiliza o chat do trabalho original**? (recomendo próprio.)
+- **Q-G — Reparo de reparo:** permitir acionar garantia sobre um Work de garantia, ou bloquear? (recomendo bloquear no MVP.)
+- **Q-H — "Garantia atendida":** no contador do perfil, "atendida" = **reparo concluído** (`warrantiesCompleted`) ou **garantia aprovada** (`warrantiesApproved`)?
+
+---
+
 ## Observações (sem ação obrigatória de back-end)
 
 - **Serviços gerais = assinatura** (ata) → coberto por `/plans` + `/subscriptions`.

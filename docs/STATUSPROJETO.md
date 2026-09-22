@@ -307,6 +307,20 @@ método + `PayWorkDto` com dados de cartão + mapeamento errado `debito→Credit
 - **Confirmação:** o `Work.status` continua `Finished` após pagar; "pago" vem do `Payment` (via webhook) — coberto por
   **BE-W6** (avaliar expor estado "pago" no Work). Sem status de pagamento em tela por ora (o back não expõe no Work).
 
+### Garantia — validade na conclusão (patch GAR-2, Fatia 2)
+
+Decisão Q-C: a validade da garantia nasce **na conclusão**. Antes, o `finish` só enviava `completionDescription`
+e o `warrantyExpiresAt` **nunca era definido** pelo front (garantia nunca ficava válida). **Sem back novo**
+(`FinishWorkDto.warrantyExpiresAt` já existe).
+
+| Patch | Escopo |
+|---|---|
+| **GAR-2** | **(a)** `WorkService.prazoGarantiaISO(qtd, unidade, base?)` calcula `warrantyExpiresAt` (ISO) a partir de agora + prazo (Meses/Dias); retorna `undefined` se não houver prazo (garantia opcional). **(b)** `detalhes-trabalho` (step "em andamento"): campo **Tempo de garantia** (número + unidade) ao concluir; `enviarResposta()` envia `warrantyExpiresAt` no `finish`. |
+
+- Habilita a Fatia 1: com `warrantyExpiresAt` setado, `isUnderWarranty` fica `true` na janela e o cliente pode
+  **acionar** a garantia (o botão da Fatia 1 depende de `sobGarantia`).
+- Testes: `detalhes-trabalho.spec` cobre finish **com** prazo (envia ISO futuro) e **sem** prazo (não envia).
+
 ---
 
 ## ▶️ Ordem de aplicação dos patches (resumo)
