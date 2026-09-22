@@ -332,6 +332,7 @@ fornecedor**; Q-UX1 mesma conversa segue no trabalho).
 | Patch | Escopo |
 |---|---|
 | **UX-NAV-CLIENTE (Fatia 1)** | **(a)** `BottomNavClienteComponent` compartilhado (**Início · Atividade · Perfil**; Mensagens entra com **BE-Q5**) — substitui os navs hardcoded em `home`, `solicitacoes`, `orcamentos`. **(b)** Nova tela **`/atividade`**: central cross-vertical que agrega **Serviços** (orçamentos `Pending/Responded/WaitingInformation` + solicitações `em_andamento/em_garantia`, sem jargão) e **Delivery** (pedidos ativos), com filtros Todos/Serviços/Delivery e destaque "Responder" para o que precisa de ação. Cada card leva ao detalhe certo (`aprovar-orcamento`/`detalhes-solicitacao`/`delivery/status`). |
+| **UX-HOME-SERVICOS (Fatia 2)** | Card **"Serviço(s) em andamento"** na home do cliente (espelha o card de delivery): resume solicitações ativas + orçamentos em jogo, prioriza um item que precisa de ação (badge **"Responder"** p/ orçamento respondido / acréscimo / mais-informações), e leva à **`/atividade`**. `home.ts` passa a carregar `works.minhasSolicitacoes` + `budgets.meus({scope:Requested})`. |
 
 - **Não removido nesta fatia:** as telas `/servicos/solicitacoes` e `/servicos/orcamentos` seguem acessíveis
   (agora com o nav novo, aba Atividade). Aposentá-las (redirect → `/atividade`) fica para fatia posterior.
