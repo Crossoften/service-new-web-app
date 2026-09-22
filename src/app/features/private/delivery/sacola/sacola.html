@@ -104,6 +104,32 @@
       </div>
     }
 
+    <!-- QUANDO ENTREGAR (§8.9) -->
+    @if (itens.length) {
+      <div class="sacola-secao">
+        <h3 class="sacola-secao__titulo">Quando entregar</h3>
+        <div class="sacola-agenda">
+          <button
+            class="sacola-agenda__chip"
+            [class.sacola-agenda__chip--ativo]="!agendar"
+            (click)="selecionarAgendar(false)">
+            Agora
+          </button>
+          <button
+            class="sacola-agenda__chip"
+            [class.sacola-agenda__chip--ativo]="agendar"
+            (click)="selecionarAgendar(true)">
+            Agendar
+          </button>
+        </div>
+        @if (agendar) {
+          <input class="sacola-agenda__data" type="datetime-local"
+            [min]="minAgenda" [(ngModel)]="dataAgendada" />
+          @if (agendaErro) { <span class="sacola-agenda__erro">{{ agendaErro }}</span> }
+        }
+      </div>
+    }
+
     <!-- PAGAMENTO -->
     <div class="sacola-secao">
       <h3 class="sacola-secao__titulo">Pagamento</h3>

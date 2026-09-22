@@ -69,6 +69,12 @@
           <div class="pedido-f-detalhes__linha">
             <span>Realizado em</span><span>{{ pedido.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
           </div>
+          @if (pedido.scheduledFor) {
+            <div class="pedido-f-detalhes__linha">
+              <span>Agendado para</span>
+              <span class="pedido-f-agendado">{{ pedido.scheduledFor | date: 'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          }
           <div class="pedido-f-detalhes__linha">
             <span>Pagamento</span><span>{{ formaPagamentoLabel }}</span>
           </div>

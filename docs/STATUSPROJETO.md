@@ -263,8 +263,9 @@
 
 | **OF-21** | **Chave Pix no cadastro bancário (§8.5, item 21)** — `POST`/`PATCH /bank-accounts/me` aceitam `pixKeyType` (`Cpf·Cnpj·Email·Phone·Random`) e `pixKey`, **opcionais e que andam juntos** (um sem o outro = 400). Enum `PixKeyType`; model `Create/Response BankAccountDto` + campos Pix. Form **`novo-banco`** (conta única, usado por parceiro/entregador): dropdown de tipo (com "Nenhuma") + campo da chave, **validação client-side** de que tipo e chave vão juntos (evita o 400), enviados só quando ambos preenchidos (com máscara — o back normaliza); dica "é por onde você recebe seus repasses". Sem mudança de back. | ✅ (4) | `OF-21-pix-cadastro-bancario` |
 
-> **Próximas (ordem da seção 10 do doc):** **23** agendamento (`scheduledFor`, §8.9) · **24** push/PWA (§8.10 —
-> ⚠️ `publicKey` null ⇒ **não** pedir permissão).
+| **OF-23** | **Agendamento do pedido (`scheduledFor`, §8.9)** — 3º campo opcional do `POST /food-orders`. Model `CreateFoodOrderDto.scheduledFor?` + `ResponseFoodOrderDto.scheduledFor?`. `DeliveryService`: estado `agendamento` no carrinho, `setAgendamento`, envio no `buildCreateFoodOrderDto` só quando definido (ISO). **Cliente** (sacola): seção "Quando entregar" com **Agora / Agendar** + `datetime-local` (mínimo = agora); valida **futuro** antes de continuar e guarda em ISO. **Restaurante**: VM `PedidoFornecedor.agendadoPara` mapeado de `scheduledFor`; **badge "🗓 Agendado para…"** no kitchen list (home-fornecedor) e linha "Agendado para" no detalhe do pedido — separa o que é para já do que é para depois (o campo **não** muda o status). Sem mudança de back. | ✅ (5) | `OF-23-agendamento-pedido` |
+
+> **Próxima (ordem da seção 10 do doc):** **24** push/PWA (§8.10 — ⚠️ `publicKey` null ⇒ **não** pedir permissão).
 >
 > **Fora do escopo deste app — item 22 (repasses do admin, §8.5):** as rotas `GET/POST /admin-delivery-payouts…`
 > (com `refundedDeliveries`/`refundedAmount` do §8.7) exigem papel de **admin + permissão `Financial`** e vivem num

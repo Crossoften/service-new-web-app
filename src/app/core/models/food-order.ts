@@ -44,6 +44,12 @@ export interface CreateFoodOrderDto {
    * (`/coupons/validate`) NÃO é aceito como entrada — o back recalcula. Opcional.
    */
   couponCode?: string;
+  /**
+   * Agendamento em ISO 8601, **no futuro** (§8.9). Omitido = para agora.
+   * Não muda o status do pedido — serve para o restaurante separar o que é
+   * para já do que é para depois.
+   */
+  scheduledFor?: string;
 }
 
 // ── Resposta / detalhe ───────────────────────────────────────────────────────
@@ -101,6 +107,8 @@ export interface ResponseFoodOrderDto {
   paymentStatus?: PaymentStatus;
   notes?: string;
   cancelReason?: string;
+  /** Agendamento (§8.9) — presente quando o pedido é para depois; ausente = para agora. */
+  scheduledFor?: string;
   chatRoomId: number;
   restaurant: ResponseFoodOrderRestaurantDto;
   customer: ResponseFoodOrderUserDto;

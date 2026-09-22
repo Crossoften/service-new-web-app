@@ -112,6 +112,9 @@
               </svg>
             </button>
           </div>
+          @if (pedido.agendadoPara) {
+            <span class="home-f-pedido__agendado">🗓 Agendado para {{ pedido.agendadoPara | date: 'dd/MM HH:mm' }}</span>
+          }
           <span class="home-f-pedido__item">{{ pedido.item }}</span>
           <span class="home-f-pedido__pagamento">Pagamento: {{ pedido.pagamento }}</span>
           <div class="home-f-pedido__footer">

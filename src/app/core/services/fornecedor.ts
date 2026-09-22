@@ -76,6 +76,8 @@ export interface PedidoFornecedor {
   total: number;
   status: StatusPedidoFornecedor;
   adicionais: { nome: string; valor: number }[];
+  /** Agendamento em ISO (§8.9); ausente = pedido para agora. */
+  agendadoPara?: string;
 }
 
 // ─── Service ─────────────────────────────────────────────────────────────────
@@ -292,6 +294,7 @@ export class FornecedorService {
       total: Number(o.totalValue),
       status: this.statusPt(o.status),
       adicionais: [],
+      agendadoPara: o.scheduledFor,
     };
   }
 

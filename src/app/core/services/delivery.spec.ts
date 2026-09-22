@@ -133,6 +133,25 @@ describe('DeliveryService', () => {
     req.flush({ message: 'ok', foodOrder: { id: 1 } });
   });
 
+  it('envia scheduledFor quando agendado e omite quando não (§8.9)', () => {
+    service.setPedidoRestaurante({ id: 7 } as never);
+    service.addItem({ id: 3, preco: 10 } as never, 1, []);
+    service.setFormaPagamento('pix');
+    service.setAgendamento('2026-12-31T23:00:00.000Z');
+    service.criarPedido().subscribe();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/food-orders') && r.method === 'POST');
+    expect(req.request.body.scheduledFor).toBe('2026-12-31T23:00:00.000Z');
+    req.flush({ message: 'ok', foodOrder: { id: 1 } });
+
+    service.setPedidoRestaurante({ id: 7 } as never);
+    service.addItem({ id: 3, preco: 10 } as never, 1, []);
+    service.setFormaPagamento('pix');
+    service.criarPedido().subscribe();
+    const req2 = httpMock.expectOne((r) => r.url.endsWith('/food-orders'));
+    expect(req2.request.body.scheduledFor).toBeUndefined();
+    req2.flush({ message: 'ok', foodOrder: { id: 2 } });
+  });
+
   it('calcularTotal soma gorjeta e subtrai o desconto do cupom (prévia)', () => {
     service.setPedidoRestaurante({ id: 7 } as never);
     service.addItem({ id: 3, preco: 10 } as never, 2, []); // subtotal 20

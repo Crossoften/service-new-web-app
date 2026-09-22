@@ -97,6 +97,8 @@ export interface Pedido {
   status: StatusPedido;
   gorjeta?: number;
   cupom?: CupomAplicado;
+  /** Agendamento em ISO 8601 (§8.9); ausente = pedido para agora. */
+  agendamento?: string;
 }
 
 export const OPCOES_ENTREGA: OpcaoEntrega[] = [
@@ -235,6 +237,11 @@ export class DeliveryService {
     this.pedidoAtual.cupom = cupom;
   }
 
+  /** Agenda o pedido (§8.9). `iso` no futuro; `undefined` = para agora. */
+  setAgendamento(iso?: string) {
+    this.pedidoAtual.agendamento = iso;
+  }
+
   /** Subtotal dos itens (preço + adicionais) × quantidade. */
   calcularSubtotal(): number {
     const itens = this.pedidoAtual.itens ?? [];
@@ -276,6 +283,8 @@ export class DeliveryService {
       // Opcionais (§8.9): gorjeta só quando > 0; cupom só o CÓDIGO (o back recalcula o desconto).
       tip: gorjeta > 0 ? gorjeta : undefined,
       couponCode: cupom || undefined,
+      // Agendamento só quando definido (ISO no futuro); omitido = para agora.
+      scheduledFor: this.pedidoAtual.agendamento || undefined,
     };
   }
 

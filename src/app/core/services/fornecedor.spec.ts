@@ -74,6 +74,21 @@ describe('FornecedorService', () => {
     req.flush({ id: 3, name: 'Borda', price: '8.00', isActive: false });
   });
 
+  it('getPedidosRecebidos mapeia agendadoPara (scheduledFor, §8.9)', () => {
+    let lista: { agendadoPara?: string }[] = [];
+    service.getPedidosRecebidos().subscribe((l) => (lista = l));
+    const req = httpMock.expectOne((r) => r.url.endsWith('/food-orders') && r.method === 'GET');
+    req.flush({
+      foodOrders: [
+        { id: 1, status: 'Received', totalValue: '30.00', paymentMethod: 'Pix', customer: { name: 'Ana' }, items: [], scheduledFor: '2026-12-31T23:00:00.000Z' },
+        { id: 2, status: 'Received', totalValue: '20.00', paymentMethod: 'Pix', customer: { name: 'Bia' }, items: [] },
+      ],
+      currentPage: 1, totalPages: 1, totalRecords: 2,
+    });
+    expect(lista[0].agendadoPara).toBe('2026-12-31T23:00:00.000Z');
+    expect(lista[1].agendadoPara).toBeUndefined();
+  });
+
   it('atualizarMaquininha faz PATCH /restaurants/me/card-machine (§8.6)', () => {
     let r: unknown;
     service.atualizarMaquininha({ usesOwnCardMachine: true, acceptResponsibility: true }).subscribe((x) => (r = x));

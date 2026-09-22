@@ -30,6 +30,11 @@ export class SacolaComponent implements OnInit {
   validandoCupom = false;
   cupomErro = '';
 
+  // Agendamento (§8.9) — "agora" ou data/hora futura
+  agendar = false;
+  dataAgendada = ''; // valor do <input type="datetime-local">
+  agendaErro = '';
+
   formasPagamento: { id: FormaPagamento; label: string; icone: string }[] = [
     { id: 'credito',  label: 'Cartão de Crédito', icone: 'card' },
     { id: 'debito',   label: 'Cartão de Débito',  icone: 'card' },
@@ -142,8 +147,46 @@ export class SacolaComponent implements OnInit {
     return this.pedido?.cupom;
   }
 
+  // ── Agendamento (§8.9) ───────────────────────────────────────────────────────
+
+  /** Mínimo do input = agora (formato datetime-local, sem timezone). */
+  get minAgenda(): string {
+    const d = new Date(Date.now() + 60_000); // pelo menos 1 min à frente
+    const off = d.getTimezoneOffset() * 60_000;
+    return new Date(d.getTime() - off).toISOString().slice(0, 16);
+  }
+
+  selecionarAgendar(valor: boolean) {
+    this.agendar = valor;
+    this.agendaErro = '';
+    if (!valor) {
+      this.dataAgendada = '';
+      this.deliveryService.setAgendamento(undefined);
+    }
+  }
+
+  /** Valida futuro e guarda em ISO; retorna false se inválido. */
+  private aplicarAgendamento(): boolean {
+    if (!this.agendar) {
+      this.deliveryService.setAgendamento(undefined);
+      return true;
+    }
+    if (!this.dataAgendada) {
+      this.agendaErro = 'Escolha a data e a hora da entrega.';
+      return false;
+    }
+    const quando = new Date(this.dataAgendada);
+    if (isNaN(quando.getTime()) || quando.getTime() <= Date.now()) {
+      this.agendaErro = 'O horário do agendamento precisa ser no futuro.';
+      return false;
+    }
+    this.deliveryService.setAgendamento(quando.toISOString());
+    return true;
+  }
+
   continuar() {
     if (!this.itens.length) return;
+    if (!this.aplicarAgendamento()) return;
     this.deliveryService.setFormaPagamento(this.formaSelecionada);
     this.router.navigate(['/delivery/endereco']);
   }

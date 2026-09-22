@@ -480,3 +480,44 @@
 
   &:active { opacity: 0.85; }
 }
+.sacola-agenda {
+  display: flex;
+  gap: 8px;
+
+  &__chip {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--color-gray-100);
+    background: var(--color-white);
+    font-size: 13px;
+    color: var(--color-text);
+    cursor: pointer;
+
+    &--ativo {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+  }
+
+  &__data {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: none;
+    background: var(--color-gray-100);
+    font-size: 14px;
+    color: var(--color-text);
+    outline: none;
+    font-family: inherit;
+  }
+
+  &__erro {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #DC2626;
+  }
+}
