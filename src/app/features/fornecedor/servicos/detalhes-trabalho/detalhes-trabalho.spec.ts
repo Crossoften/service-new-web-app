@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
@@ -163,6 +163,15 @@ describe('DetalhesTrabalhoComponent', () => {
     httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
       workResponse({ status: 'Finished', warrantyRequestStatus: 'Rejected' }),
     );
+  });
+
+  it('abre o chat real do trabalho (/chat/:chatId) quando há chat', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'InProgress', chat: { id: 77 } }),
+    );
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component.abrirChat();
+    expect(nav).toHaveBeenCalledWith(['/chat', 77]);
   });
 
   it('não responde garantia quando não há pedido pendente', () => {

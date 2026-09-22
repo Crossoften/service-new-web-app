@@ -117,7 +117,6 @@ export class AprovarOrcamentoComponent implements OnInit {
     history.back();
   }
 
-  abrirChat() {}
   abrirNotificacoes() {}
 
   formatarPreco(valor: number): string {

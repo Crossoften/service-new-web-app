@@ -49,10 +49,6 @@ export class DetalhesPrestadorComponent implements OnInit {
     history.back();
   }
 
-  abrirChat() {
-    this.router.navigate(['/servicos/chat', this.prestador?.id]);
-  }
-
   abrirNotificacoes() {
     // implementar depois
   }

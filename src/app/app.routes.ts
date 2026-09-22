@@ -33,7 +33,6 @@ import { DetalhesPrestadorComponent } from './features/private/servicos/detalhes
 import { OrcamentosComponent } from './features/private/servicos/orcamentos/orcamentos';
 import { AprovarOrcamentoComponent } from './features/private/servicos/aprovar-orcamento/aprovar-orcamento';
 import { SolicitacoesComponent } from './features/private/servicos/solicitacoes/solicitacoes';
-import { ChatPrestadorComponent } from './features/private/servicos/chat-prestador/chat-prestador';
 import { DetalhesSolicitacaoComponent } from './features/private/servicos/detalhes-solicitacao/detalhes-solicitacao';
 import { PagamentoServicoComponent } from './features/private/servicos/pagamento-servico/pagamento-servico';
 import { HomeParceiroComponent } from './features/parceiro/home-parceiro/home-parceiro';
@@ -127,7 +126,6 @@ export const routes: Routes = [
   { path: 'servicos/orcamentos', component: OrcamentosComponent, canActivate: [authGuard] },
   { path: 'servicos/orcamento/:id', component: AprovarOrcamentoComponent, canActivate: [authGuard] },
   { path: 'servicos/solicitacoes', component: SolicitacoesComponent, canActivate: [authGuard] },
-  { path: 'servicos/chat/:id', component: ChatPrestadorComponent, canActivate: [authGuard] },
   { path: 'servicos/solicitacao/:id', component: DetalhesSolicitacaoComponent, canActivate: [authGuard] },
   { path: 'servicos/pagamento/:id', component: PagamentoServicoComponent, canActivate: [authGuard] },
 
