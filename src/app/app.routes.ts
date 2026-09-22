@@ -50,6 +50,7 @@ import { GerenciarCardapioComponent } from './features/fornecedor/gerenciar-card
 import { AddCardapioComponent } from './features/fornecedor/add-cardapio/add-cardapio';
 import { DetalhesPedidoFornecedorComponent } from './features/fornecedor/detalhes-pedido-fornecedor/detalhes-pedido-fornecedor';
 import { ListagemServicosFornecedorComponent } from './features/fornecedor/servicos/listagem-servicos-fornecedor/listagem-servicos-fornecedor';
+import { PainelServicosComponent } from './features/fornecedor/servicos/painel-servicos/painel-servicos';
 import { CriarServicoComponent } from './features/fornecedor/servicos/criar-servico/criar-servico';
 import { OrcamentosFornecedorComponent } from './features/fornecedor/servicos/orcamentos-fornecedor/orcamentos-fornecedor';
 import { FazerOrcamentoComponent } from './features/fornecedor/servicos/fazer-orcamento/fazer-orcamento';
@@ -153,7 +154,8 @@ export const routes: Routes = [
   { path: 'fornecedor/pedido/:id', component: DetalhesPedidoFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
 
   // Fornecedor Serviços (Supplier)
-  { path: 'fornecedor/servicos', component: ListagemServicosFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/servicos', component: PainelServicosComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/servicos/meus', component: ListagemServicosFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/servicos/categoria', component: CategoriaServicosComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/servicos/criar', component: CriarServicoComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/servicos/orcamentos', component: OrcamentosFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },

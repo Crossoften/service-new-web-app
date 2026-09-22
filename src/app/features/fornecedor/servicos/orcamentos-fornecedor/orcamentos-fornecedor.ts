@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -18,6 +18,7 @@ type TabOrcamento = 'todos' | 'respondidos' | 'nao_respondidos';
 export class OrcamentosFornecedorComponent implements OnInit {
   readonly router = inject(Router);
   private readonly budgets = inject(BudgetService);
+  private readonly route = inject(ActivatedRoute);
 
   orcamentos: OrcamentoFornecedor[] = [];
   tabAtiva: TabOrcamento = 'todos';
@@ -25,6 +26,8 @@ export class OrcamentosFornecedorComponent implements OnInit {
   filtroAberto = false;
   carregando = false;
   erro = '';
+  /** Aviso "orçamento enviado" ao voltar de fazer-orcamento (?enviado=1). */
+  enviado = false;
 
   tabs: { id: TabOrcamento; label: string }[] = [
     { id: 'todos', label: 'Todos' },
@@ -33,6 +36,10 @@ export class OrcamentosFornecedorComponent implements OnInit {
   ];
 
   ngOnInit() {
+    if (this.route.snapshot.queryParamMap.get('enviado') === '1') {
+      this.enviado = true;
+      this.tabAtiva = 'respondidos';
+    }
     this.carregar();
   }
 

@@ -129,7 +129,12 @@ export class FazerOrcamentoComponent implements OnInit {
       })
       .pipe(finalize(() => (this.enviando = false)))
       .subscribe({
-        next: () => this.router.navigate(['/fornecedor/servicos/trabalhos']),
+        // Vai para Orçamentos → "Respondidos" (não Trabalhos: só vira trabalho quando o
+        // cliente aprova), com aviso de envio. Antes caía numa lista onde o item não aparecia.
+        next: () =>
+          this.router.navigate(['/fornecedor/servicos/orcamentos'], {
+            queryParams: { enviado: '1' },
+          }),
         error: (err: ApiError) => {
           this.erro = err?.message?.trim() ? err.message : 'Não foi possível enviar o orçamento.';
         },

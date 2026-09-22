@@ -4,15 +4,7 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
       <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
     </svg>
-    <span>Home</span>
-  </div>
-
-  <div class="nav-item" [class.nav-item--ativo]="tabAtiva === 'trabalhos'" (click)="navegar('trabalhos')">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-    </svg>
-    <span>Trabalhos</span>
+    <span>Painel</span>
   </div>
 
   <div class="nav-item" [class.nav-item--ativo]="tabAtiva === 'orcamentos'" (click)="navegar('orcamentos')">
@@ -25,6 +17,14 @@
     <span>Orçamentos</span>
   </div>
 
+  <div class="nav-item" [class.nav-item--ativo]="tabAtiva === 'trabalhos'" (click)="navegar('trabalhos')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+    </svg>
+    <span>Trabalhos</span>
+  </div>
+
   <div class="nav-item" [class.nav-item--ativo]="tabAtiva === 'perfil'" (click)="navegar('perfil')">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -35,10 +35,10 @@
 
   <div class="nav-item" [class.nav-item--ativo]="tabAtiva === 'categorias'" (click)="navegar('categorias')">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-      <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
     </svg>
-    <span>Categorias</span>
+    <span>Início</span>
   </div>
 
 </div>

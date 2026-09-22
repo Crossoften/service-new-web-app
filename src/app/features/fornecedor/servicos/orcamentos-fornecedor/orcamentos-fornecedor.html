@@ -17,6 +17,10 @@
     </div>
   </div>
 
+  @if (enviado) {
+    <div class="of-aviso">✓ Orçamento enviado ao cliente. Aguarde a aprovação.</div>
+  }
+
   <!-- TABS -->
   <div class="of-tabs">
     @for (tab of tabs; track tab.id) {

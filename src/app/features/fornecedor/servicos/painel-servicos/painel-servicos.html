@@ -1,0 +1,85 @@
+<div class="page-container">
+
+  <div class="painel-header">
+    <span class="painel-header__titulo">Serviços</span>
+  </div>
+
+  <div class="page-content">
+
+    @if (carregando) {
+      <p class="painel-loading">Carregando…</p>
+    } @else {
+
+      <!-- ORÇAMENTOS A RESPONDER -->
+      <div class="painel-secao">
+        <button class="painel-secao__head" (click)="irOrcamentos()">
+          <span class="painel-secao__titulo">Orçamentos a responder</span>
+          <span class="painel-secao__count" [class.painel-secao__count--alerta]="orcamentosPendentes.length > 0">
+            {{ orcamentosPendentes.length }}
+          </span>
+        </button>
+
+        @if (orcamentosPendentes.length === 0) {
+          <p class="painel-vazio">Nenhum orçamento aguardando resposta.</p>
+        } @else {
+          @for (o of orcamentosPendentes.slice(0, 3); track o.id) {
+            <button class="painel-card" (click)="abrirOrcamento(o)">
+              <div class="painel-card__info">
+                <span class="painel-card__nome">{{ o.cliente }}</span>
+                <span class="painel-card__sub">{{ o.descricao || 'Pedido de orçamento' }}</span>
+              </div>
+              <span class="painel-card__acao">Responder</span>
+            </button>
+          }
+          @if (orcamentosPendentes.length > 3) {
+            <button class="painel-vertodos" (click)="irOrcamentos()">Ver todos ({{ orcamentosPendentes.length }})</button>
+          }
+        }
+      </div>
+
+      <!-- TRABALHOS ATIVOS -->
+      <div class="painel-secao">
+        <button class="painel-secao__head" (click)="irTrabalhos()">
+          <span class="painel-secao__titulo">Trabalhos ativos</span>
+          <span class="painel-secao__count">{{ trabalhosAtivos.length }}</span>
+        </button>
+
+        @if (trabalhosAtivos.length === 0) {
+          <p class="painel-vazio">Nenhum trabalho em andamento.</p>
+        } @else {
+          @for (t of trabalhosAtivos.slice(0, 3); track t.id) {
+            <button class="painel-card" (click)="abrirTrabalho(t)">
+              <div class="painel-card__info">
+                <span class="painel-card__nome">{{ t.cliente }}</span>
+                <span class="painel-card__sub">{{ t.descricao }}</span>
+              </div>
+              @if (t.status === 'em_garantia') {
+                <span class="painel-card__tag">Em garantia</span>
+              }
+            </button>
+          }
+          @if (trabalhosAtivos.length > 3) {
+            <button class="painel-vertodos" (click)="irTrabalhos()">Ver todos ({{ trabalhosAtivos.length }})</button>
+          }
+        }
+      </div>
+
+      <!-- MEUS SERVIÇOS (catálogo) -->
+      <button class="painel-catalogo" (click)="irMeusServicos()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span>Meus serviços (catálogo)</span>
+        <svg class="painel-catalogo__seta" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+
+    }
+
+  </div>
+
+  <app-bottom-nav-fornecedor-servicos tabAtiva="home"></app-bottom-nav-fornecedor-servicos>
+
+</div>

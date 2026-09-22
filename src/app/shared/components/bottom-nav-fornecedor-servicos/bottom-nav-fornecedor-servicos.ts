@@ -4,11 +4,15 @@ import { CommonModule } from '@angular/common';
 
 export type TabFornecedorServicos = 'home' | 'trabalhos' | 'orcamentos' | 'perfil' | 'categorias';
 
+/**
+ * Menu inferior da área de Serviços do fornecedor.
+ * "Painel" (landing) · Orçamentos · Trabalhos · Perfil · Início (hub).
+ */
 @Component({
   selector: 'app-bottom-nav-fornecedor-servicos',
   imports: [CommonModule],
   templateUrl: './bottom-nav-fornecedor-servicos.html',
-  styleUrl: './bottom-nav-fornecedor-servicos.scss'
+  styleUrl: './bottom-nav-fornecedor-servicos.scss',
 })
 export class BottomNavFornecedorServicosComponent {
   @Input() tabAtiva: TabFornecedorServicos = 'home';
@@ -17,10 +21,10 @@ export class BottomNavFornecedorServicosComponent {
 
   navegar(tab: TabFornecedorServicos) {
     const rotas: Record<TabFornecedorServicos, string> = {
-      home:       '/fornecedor/servicos',
-      trabalhos:  '/fornecedor/servicos/trabalhos',
+      home: '/fornecedor/servicos',
+      trabalhos: '/fornecedor/servicos/trabalhos',
       orcamentos: '/fornecedor/servicos/orcamentos',
-      perfil:     '/fornecedor/servicos/perfil',
+      perfil: '/fornecedor/servicos/perfil',
       categorias: '/fornecedor',
     };
     this.router.navigate([rotas[tab]]);

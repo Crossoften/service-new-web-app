@@ -1,0 +1,149 @@
+.painel-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 20px;
+  padding-top: calc(16px + var(--safe-top));
+
+  &__titulo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+}
+
+.painel-loading {
+  padding: 24px 16px;
+  color: var(--color-gray-500);
+  font-size: 14px;
+}
+
+.painel-secao {
+  margin: 8px 16px 20px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0 0 10px;
+    cursor: pointer;
+  }
+
+  &__titulo {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__count {
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 12px;
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 24px;
+    text-align: center;
+
+    &--alerta {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+  }
+}
+
+.painel-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-100);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__nome {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__sub {
+    font-size: 12px;
+    color: var(--color-gray-600);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__acao {
+    flex-shrink: 0;
+    background: #FFEDD5;
+    color: #C2410C;
+    border-radius: 50px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  &__tag {
+    flex-shrink: 0;
+    background: #DCFCE7;
+    color: #15803D;
+    border-radius: 50px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+}
+
+.painel-vazio {
+  font-size: 13px;
+  color: var(--color-gray-500);
+  padding: 4px 0 0;
+}
+
+.painel-vertodos {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.painel-catalogo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: calc(100% - 32px);
+  margin: 0 16px 16px;
+  padding: 14px 16px;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 14px;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  span { flex: 1; text-align: left; }
+  &__seta { flex-shrink: 0; color: var(--color-gray-400); }
+}

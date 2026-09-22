@@ -333,11 +333,15 @@ fornecedor**; Q-UX1 mesma conversa segue no trabalho).
 |---|---|
 | **UX-NAV-CLIENTE (Fatia 1)** | **(a)** `BottomNavClienteComponent` compartilhado (**Início · Atividade · Perfil**; Mensagens entra com **BE-Q5**) — substitui os navs hardcoded em `home`, `solicitacoes`, `orcamentos`. **(b)** Nova tela **`/atividade`**: central cross-vertical que agrega **Serviços** (orçamentos `Pending/Responded/WaitingInformation` + solicitações `em_andamento/em_garantia`, sem jargão) e **Delivery** (pedidos ativos), com filtros Todos/Serviços/Delivery e destaque "Responder" para o que precisa de ação. Cada card leva ao detalhe certo (`aprovar-orcamento`/`detalhes-solicitacao`/`delivery/status`). |
 | **UX-HOME-SERVICOS (Fatia 2)** | Card **"Serviço(s) em andamento"** na home do cliente (espelha o card de delivery): resume solicitações ativas + orçamentos em jogo, prioriza um item que precisa de ação (badge **"Responder"** p/ orçamento respondido / acréscimo / mais-informações), e leva à **`/atividade`**. `home.ts` passa a carregar `works.minhasSolicitacoes` + `budgets.meus({scope:Requested})`. |
+| **UX-FORN-PAINEL (Fatia 3)** | **(a)** Novo **`PainelServicosComponent`** como landing de `/fornecedor/servicos`: mostra **orçamentos a responder** + **trabalhos ativos** (com contadores e preview) e um card **"Meus serviços (catálogo)"**. O catálogo virou secundário em **`/fornecedor/servicos/meus`**. **(b)** Nav de Serviços renomeada: "Home"→**Painel**, "Categorias"→**Início** (hub). **(c)** `fazer-orcamento` ao enviar volta para **Orçamentos → Respondidos** (`?enviado=1`) com **aviso "Orçamento enviado"** — antes caía em Trabalhos (onde o item nem aparecia). |
 
 - **Não removido nesta fatia:** as telas `/servicos/solicitacoes` e `/servicos/orcamentos` seguem acessíveis
   (agora com o nav novo, aba Atividade). Aposentá-las (redirect → `/atividade`) fica para fatia posterior.
 - **Fora desta fatia:** cards de atividade de Serviços **na home** (Fatia 2, UX-HOME-SERVICOS); nav nas telas
   de categoria/listagem de serviços; painel do fornecedor (Fatia 3).
+- **Nota (Fatia 3):** badges de pendência **no nav** do fornecedor ficaram para depois — exigem um estado
+  reativo compartilhado; auto-fetch no nav compartilhado corrompe o `HttpTestingController` entre specs. Os
+  contadores aparecem **no Painel** (landing), que é onde importa.
 - Testes: `atividade.spec` (agregação, filtros, esconder terminais, tolerância a falha) + build verde.
   Falhas pré-existentes de ambiente (Maps/título) não relacionadas.
 
