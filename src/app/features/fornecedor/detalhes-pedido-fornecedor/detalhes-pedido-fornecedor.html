@@ -72,10 +72,10 @@
           <div class="pedido-f-detalhes__linha">
             <span>Pagamento</span><span>{{ formaPagamentoLabel }}</span>
           </div>
-          @if (pedido.paymentMethod === 'Cash') {
+          @if (mostrarStatusPagamento) {
             <div class="pedido-f-detalhes__linha">
               <span>Status do pagamento</span>
-              <span>{{ pedido.paymentStatus === 'Paid' ? 'Recebido' : 'A receber' }}</span>
+              <span [class.pedido-f-estornado]="pagamentoEstornado">{{ pagamentoStatusLabel }}</span>
             </div>
           }
           <div class="pedido-f-detalhes__linha">

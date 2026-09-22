@@ -57,7 +57,7 @@ export class CriarServicoComponent implements OnInit {
           this.nome = s.nome;
           this.tipo = s.tipo;
           this.registro = s.registro;
-          this.valor = formatBRL(Number(s.valor));
+          this.valor = s.valor != null ? formatBRL(Number(s.valor)) : '';
           this.descricao = s.descricao;
           this.imagem = s.imagem;
           this.imageKey = s.imageKey ?? '';
@@ -113,17 +113,18 @@ export class CriarServicoComponent implements OnInit {
       this.erro = 'Informe o nome do serviço.';
       return;
     }
-    const valorNum = parseBRL(this.valor);
-    if (!valorNum || valorNum <= 0) {
-      this.erro = 'Informe um valor válido.';
+    // Valor é opcional: em branco = serviço sob orçamento (§8.8). Só valida se preenchido.
+    const temValor = this.valor.trim().length > 0;
+    const valorNum = temValor ? parseBRL(this.valor) : 0;
+    if (temValor && (!valorNum || valorNum <= 0)) {
+      this.erro = 'Informe um valor válido ou deixe em branco (sob orçamento).';
       return;
     }
 
-    const dto = {
+    const base = {
       name: this.nome.trim(),
       type: this.catalog.tipoApi(this.tipo),
       registrationCode: this.registro.trim() || undefined,
-      price: valorNum,
       description: this.descricao.trim() || undefined,
       imageUrl: this.imagem || undefined,
       imageKey: this.imageKey || undefined,
@@ -133,8 +134,15 @@ export class CriarServicoComponent implements OnInit {
     this.salvando = true;
     const req$ =
       this.modoEdicao && this.servicoId
-        ? this.catalog.atualizarServico(this.servicoId, dto)
-        : this.catalog.criarServico(dto);
+        ? // PATCH: em branco → price null apaga o preço; preenchido → novo valor.
+          this.catalog.atualizarServico(this.servicoId, {
+            ...base,
+            price: temValor ? valorNum : null,
+          })
+        : // POST: em branco → omite price (100% sob orçamento).
+          this.catalog.criarServico(
+            temValor ? { ...base, price: valorNum } : base,
+          );
 
     req$.pipe(finalize(() => (this.salvando = false))).subscribe({
       next: () => this.router.navigate(['/fornecedor/servicos']),

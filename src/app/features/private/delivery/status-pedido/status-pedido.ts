@@ -156,6 +156,8 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
     switch (this.pedido?.paymentStatus) {
       case 'Paid':
         return 'Pago';
+      case 'Refunded':
+        return 'Estornado';
       case 'Cancelled':
         return 'Pagamento cancelado';
       case 'Pending':

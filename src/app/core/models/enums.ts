@@ -34,7 +34,12 @@ export type ReviewType = 'Positive' | 'Negative';
 // ── Pagamentos ───────────────────────────────────────────────────────────────
 /** `PaymentMethodEnum` do contrato (delivery Fase C incluiu DebitCard e Cash). */
 export type PaymentMethod = 'CreditCard' | 'DebitCard' | 'Pix' | 'BankSlip' | 'Cash';
-export type PaymentStatus = 'Pending' | 'Paid' | 'Cancelled';
+/**
+ * `PaymentStatusEnum` do contrato. `Refunded` (§8.7) = **entrou e voltou**
+ * (estorno/contestação) — diferente de `Cancelled` (nunca entrou: Pix vencido,
+ * cartão recusado). No estornado há dinheiro que já foi creditado.
+ */
+export type PaymentStatus = 'Pending' | 'Paid' | 'Cancelled' | 'Refunded';
 
 // ── Produtos / Negociações ───────────────────────────────────────────────────
 export type ProductTransactionType = 'Rent' | 'Sale' | 'RentAndSale';

@@ -242,6 +242,24 @@
 
 ---
 
+### Fase ORIENTACOESFRONT v3 — alinhamento ao back (item 14…)
+
+> Base: `ORIENTACOESFRONT.md` v3 (doc vivo do back). A **seção 10** dá a ordem sugerida. Começando pelo **item 14**,
+> o **único que quebra tela que hoje funciona**. Fatias seguintes (15..24) entram uma a uma, sempre auditando antes.
+
+| Fatia | Escopo | Specs | Patch |
+|---|---|---|---|
+| **OF-14** | **Serviço sem preço (§8.8)** — `Service.price` virou **opcional** no cadastro e na resposta. Model: `ServiceListItemDto.price?` e `CreateServiceDto.price?`; `UpdateServiceDto` aceita `price: number \| null` (**`null` apaga** o preço). Mappers (`service-catalog`) mapeiam preço ausente para `undefined` (nunca `NaN`) → `ServicoFornecedor.valor?` e `Prestador.preco?`. Tela do **fornecedor**: lista mostra **"Sob orçamento"** (antes caía em `R$ 0,00`); form de criar/editar deixa o **valor opcional** (em branco = sob orçamento; POST omite `price`, PATCH manda `price: null`). Telas do **cliente** (listagem/detalhe de prestador) já **não exibiam** preço — só ordenam (VF-2 já trata preço ausente ao fim). Sem mudança de back. | ✅ (9) | `OF-14-service-price-opcional` |
+| **OF-15** | **Estorno de pagamento (§8.7)** — `PaymentStatusEnum` ganhou **`Refunded`** ("entrou e voltou", ≠ `Cancelled` que nunca entrou). Enum `PaymentStatus` + `Refunded`. **Cliente** (`status-pedido`): `pagamentoLabel` passa a distinguir estorno → **"Estornado"** (antes caía no `default` vazio) em vermelho; `podePagar` continua exigindo `Pending` (estornado **não** reabre pagamento). **Fornecedor** (`detalhes-pedido`): a linha "Status do pagamento" (antes só p/ dinheiro) passa a aparecer **também em pagamento online quando estornado** — é caso de suporte (já produziu/entregou e o dinheiro voltou), com label "Estornado" em vermelho. Sem `Record` exaustivo afetado; marketplace/works não exibem `PaymentStatus` cru. Sem mudança de back. | ✅ (17) | `OF-15-payment-refunded` |
+
+> **Próximas (ordem da seção 10 do doc):** **16** `Cancelled` ≠ `Rejected`
+> no orçamento (§8.8) · **17** aceite/recusa de orçamento (§8.8) · **18** gorjeta+cupom na sacola (§8.9 — ⚠️ `POST
+> /coupons/validate` é **só prévia**, o back recalcula) · **19** maquininha própria (§8.6) · **20-22** carteira/Pix/repasses
+> do entregador (§8.5 — inclui `refundedDeliveries`/`refundedAmount` no repasse do admin, §8.7) · **23** agendamento (§8.9) ·
+> **24** push/PWA (§8.10 — ⚠️ `publicKey` null ⇒ **não** pedir permissão).
+
+---
+
 ## ▶️ Ordem de aplicação dos patches (resumo)
 
 Fundação → Auth (1..3) → Perfil → Delivery (DC/DF) + fixes → Entregador → Parceiro → Marketplace → Aluguel →

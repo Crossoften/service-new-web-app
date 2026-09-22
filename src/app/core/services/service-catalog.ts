@@ -22,7 +22,8 @@ export interface ServicoFornecedor {
   tipo: string; // rótulo em pt (Online/Presencial/Em domicílio)
   tipoApi: ServiceType;
   registro: string;
-  valor: number;
+  /** Preço de referência; ausente = serviço sob orçamento (§8.8). */
+  valor?: number;
   descricao: string;
   imagem: string;
   imageKey?: string;
@@ -146,7 +147,7 @@ export class ServiceCatalogService {
       tipo: TIPO_LABEL[s.type] ?? 'Online',
       tipoApi: s.type,
       registro: (s as ServiceDto).registrationCode ?? '',
-      valor: Number(s.price),
+      valor: s.price != null ? Number(s.price) : undefined,
       descricao: s.description ?? '',
       imagem: s.imageUrl ?? '',
       imageKey: (s as ServiceDto).imageKey,
@@ -170,7 +171,7 @@ export class ServiceCatalogService {
       gostei: s.positiveReviews,
       naoGostei: s.negativeReviews,
       negociacoes: s.completedWorks,
-      preco: Number(s.price),
+      preco: s.price != null ? Number(s.price) : undefined,
       selecionado: false,
     };
   }

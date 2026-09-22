@@ -72,6 +72,32 @@ export class DetalhesPedidoFornecedorComponent implements OnInit {
     return this.pedido ? PAYMENT_METHOD_LABEL[this.pedido.paymentMethod] : '';
   }
 
+  /**
+   * Mostra a linha "Status do pagamento" para dinheiro (a receber/recebido) e,
+   * sempre, quando o pedido foi **estornado** (§8.7): já produzido e entregue, o
+   * dinheiro voltou — é caso de suporte, precisa aparecer na tela do restaurante.
+   */
+  get mostrarStatusPagamento(): boolean {
+    return this.pedido?.paymentMethod === 'Cash' || this.pedido?.paymentStatus === 'Refunded';
+  }
+
+  get pagamentoStatusLabel(): string {
+    switch (this.pedido?.paymentStatus) {
+      case 'Paid':
+        return 'Recebido';
+      case 'Refunded':
+        return 'Estornado';
+      case 'Cancelled':
+        return 'Cancelado';
+      default:
+        return 'A receber';
+    }
+  }
+
+  get pagamentoEstornado(): boolean {
+    return this.pedido?.paymentStatus === 'Refunded';
+  }
+
   confirmarPagamento() {
     if (this.processando) return;
     this.processando = true;

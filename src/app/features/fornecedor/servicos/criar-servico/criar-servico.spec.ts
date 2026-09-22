@@ -70,4 +70,15 @@ describe('CriarServicoComponent', () => {
     expect(req.request.body.price).toBe(150);
     req.flush({ message: 'ok', service: { id: 1 } });
   });
+
+  it('cria serviço sob orçamento quando o valor fica em branco (§8.8): omite price', () => {
+    component.categoryId = 3;
+    component.nome = 'Consultoria';
+    component.valor = '';
+    component.criarServico();
+    expect(component.erro).toBe('');
+    const req = httpMock.expectOne((r) => r.url.endsWith('/services') && r.method === 'POST');
+    expect('price' in req.request.body).toBe(false);
+    req.flush({ message: 'ok', service: { id: 1 } });
+  });
 });

@@ -70,6 +70,20 @@ describe('StatusPedidoComponent', () => {
     httpMock.expectNone((r) => r.url.endsWith('/food-orders/5/pay'));
   });
 
+  it('pagamentoLabel distingue estorno de pago/cancelado/pendente (§8.7)', () => {
+    component.pedido = pedido({ paymentStatus: 'Paid' });
+    expect(component.pagamentoLabel).toBe('Pago');
+    component.pedido = pedido({ paymentStatus: 'Refunded' });
+    expect(component.pagamentoLabel).toBe('Estornado');
+    component.pedido = pedido({ paymentStatus: 'Cancelled' });
+    expect(component.pagamentoLabel).toBe('Pagamento cancelado');
+  });
+
+  it('podePagar: false para pedido estornado (não reabre pagamento)', () => {
+    component.pedido = pedido({ paymentMethod: 'Pix', paymentStatus: 'Refunded' });
+    expect(component.podePagar).toBe(false);
+  });
+
   it('podeAvaliar só quando entregue e ainda não avaliou', () => {
     component.pedido = pedido({ status: 'OnTheWay' });
     expect(component.podeAvaliar).toBe(false);

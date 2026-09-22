@@ -54,8 +54,9 @@ export class ListagemServicosFornecedorComponent implements OnInit {
     this.carregarServicos();
   }
 
-  formatarPreco(valor: number): string {
-    return (Number.isFinite(valor) ? valor : 0).toLocaleString('pt-BR', {
+  formatarPreco(valor?: number): string {
+    if (valor == null || !Number.isFinite(valor)) return 'Sob orçamento';
+    return valor.toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     });

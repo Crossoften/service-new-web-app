@@ -57,6 +57,11 @@
     color: var(--color-gray-600);
   }
 
+  &__opcional {
+    font-weight: 400;
+    color: var(--color-gray-500, var(--color-gray-600));
+  }
+
   input, textarea {
     width: 100%;
     padding: 14px 16px;

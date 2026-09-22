@@ -110,7 +110,10 @@
         @if (pagamentoLabel) {
           <div class="status-detalhes__linha">
             <span>Pagamento</span>
-            <span [class.status-pago]="pedido.paymentStatus === 'Paid'">{{ pagamentoLabel }}</span>
+            <span
+              [class.status-pago]="pedido.paymentStatus === 'Paid'"
+              [class.status-estornado]="pedido.paymentStatus === 'Refunded'"
+            >{{ pagamentoLabel }}</span>
           </div>
         }
       </div>

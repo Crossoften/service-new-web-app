@@ -61,6 +61,24 @@ describe('DetalhesPedidoFornecedorComponent', () => {
     expect(component.pedido?.paymentStatus).toBe('Paid');
   });
 
+  it('exibe pedido estornado como "Estornado" mesmo em pagamento online (§8.7)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/food-orders/1')).flush(
+      order({ paymentMethod: 'Pix', paymentStatus: 'Refunded' }),
+    );
+    expect(component.mostrarStatusPagamento).toBe(true);
+    expect(component.pagamentoStatusLabel).toBe('Estornado');
+    expect(component.pagamentoEstornado).toBe(true);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Estornado');
+  });
+
+  it('pagamento online normal (não estornado) não mostra a linha de status', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/food-orders/1')).flush(
+      order({ paymentMethod: 'Pix', paymentStatus: 'Paid' }),
+    );
+    expect(component.mostrarStatusPagamento).toBe(false);
+  });
+
   it('mostra os adicionais escolhidos em cada item (para a cozinha)', () => {
     httpMock.expectOne((r) => r.url.endsWith('/food-orders/1')).flush(
       order({

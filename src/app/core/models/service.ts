@@ -26,12 +26,15 @@ export interface ServiceListCategoryDto {
   iconUrl?: string;
 }
 
-/** Item da listagem — `GET /v1/services` (ResponseServiceListItemDto). `price` é string. */
+/**
+ * Item da listagem — `GET /v1/services` (ResponseServiceListItemDto). `price` é
+ * string e **pode vir ausente** (serviço sob orçamento; §8.8).
+ */
 export interface ServiceListItemDto {
   id: number;
   name: string;
   type: ServiceType;
-  price: string;
+  price?: string;
   description?: string;
   imageUrl?: string;
   isActive: boolean;
@@ -54,12 +57,15 @@ export interface ServiceDto extends ServiceListItemDto {
   updatedAt: string;
 }
 
-/** Corpo de `POST /v1/services` (CreateServiceDto). `price` é number. */
+/**
+ * Corpo de `POST /v1/services` (CreateServiceDto). `price` é number e **opcional**
+ * — sem `price` o serviço fica 100% sob orçamento (§8.8).
+ */
 export interface CreateServiceDto {
   name: string;
   type: ServiceType;
   registrationCode?: string;
-  price: number;
+  price?: number;
   description?: string;
   imageUrl?: string;
   imageKey?: string;
@@ -67,7 +73,13 @@ export interface CreateServiceDto {
   isActive?: boolean;
 }
 
-export type UpdateServiceDto = Partial<CreateServiceDto>;
+/**
+ * Corpo de `PATCH /v1/services/{id}`. Campo ausente = não mexe; `price: null`
+ * **apaga** o preço de um serviço que já tinha (§8.8).
+ */
+export type UpdateServiceDto = Partial<Omit<CreateServiceDto, 'price'>> & {
+  price?: number | null;
+};
 
 export interface ServiceQuery {
   search?: string;

@@ -61,4 +61,15 @@ describe('ListagemServicosFornecedorComponent', () => {
     });
     expect(component.formatarPreco(150).replace(/\s/g, ' ')).toBe('R$ 150,00');
   });
+
+  it('serviço sem preço vira "Sob orçamento" (§8.8), sem quebrar', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/services/my-services')).flush({
+      services: [
+        { id: 2, name: 'Consultoria', type: 'Online', isActive: true, category: { id: 4, name: 'Consultor', slug: 'c' }, user: { id: 9, name: 'Ana' }, positiveReviews: 0, negativeReviews: 0, completedWorks: 0 },
+      ],
+      currentPage: 1, totalPages: 1, totalRecords: 1,
+    });
+    expect(component.servicos[0].valor).toBeUndefined();
+    expect(component.formatarPreco(component.servicos[0].valor)).toBe('Sob orçamento');
+  });
 });

@@ -68,8 +68,8 @@
 
       <!-- VALOR -->
       <div class="cs-field">
-        <label>Valor</label>
-        <input type="text" inputmode="numeric" placeholder="R$ 0,00"
+        <label>Valor <span class="cs-field__opcional">(opcional)</span></label>
+        <input type="text" inputmode="numeric" placeholder="Deixe em branco para sob orçamento"
           [ngModel]="valor" (ngModelChange)="onValorInput($event)" />
       </div>
 
