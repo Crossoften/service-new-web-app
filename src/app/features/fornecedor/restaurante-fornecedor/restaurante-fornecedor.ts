@@ -60,6 +60,13 @@ export class RestauranteFornecedorComponent implements OnInit {
   aviso = '';
   precisaAssinatura = false;
 
+  // Maquininha própria (§8.6)
+  usaMaquininha = false;
+  mostrandoTermoMaquininha = false;
+  aceitouResponsabilidade = false;
+  salvandoMaquininha = false;
+  erroMaquininha = '';
+
   get modoEdicao(): boolean {
     return this.restaurante !== null;
   }
@@ -120,6 +127,52 @@ export class RestauranteFornecedorComponent implements OnInit {
     this.cepEnd = r.address?.zipCode ?? '';
     this.latEnd = r.address?.latitude;
     this.lngEnd = r.address?.longitude;
+    this.usaMaquininha = r.usesOwnCardMachine ?? false;
+  }
+
+  // ── Maquininha própria (§8.6) ───────────────────────────────────────────────
+
+  /** Abre o termo antes de ligar (o back grava quem aceitou, quando e a versão do texto). */
+  abrirTermoMaquininha() {
+    this.mostrandoTermoMaquininha = true;
+    this.aceitouResponsabilidade = false;
+    this.erroMaquininha = '';
+  }
+
+  cancelarTermoMaquininha() {
+    this.mostrandoTermoMaquininha = false;
+    this.aceitouResponsabilidade = false;
+  }
+
+  /** Liga a maquininha — exige o aceite do termo (`acceptResponsibility: true`). */
+  confirmarLigarMaquininha() {
+    if (!this.aceitouResponsabilidade || this.salvandoMaquininha) return;
+    this.enviarMaquininha(true, true);
+  }
+
+  /** Desliga a maquininha — não exige aceite; limpa o registro no back. */
+  desligarMaquininha() {
+    if (this.salvandoMaquininha) return;
+    this.enviarMaquininha(false, false);
+  }
+
+  private enviarMaquininha(usesOwnCardMachine: boolean, acceptResponsibility: boolean) {
+    this.salvandoMaquininha = true;
+    this.erroMaquininha = '';
+    this.fornecedorService
+      .atualizarMaquininha({ usesOwnCardMachine, acceptResponsibility })
+      .pipe(finalize(() => (this.salvandoMaquininha = false)))
+      .subscribe({
+        next: (r) => {
+          if (this.restaurante) this.restaurante.usesOwnCardMachine = r.usesOwnCardMachine;
+          this.usaMaquininha = r.usesOwnCardMachine ?? usesOwnCardMachine;
+          this.mostrandoTermoMaquininha = false;
+          this.aceitouResponsabilidade = false;
+        },
+        error: (err: ApiError) => {
+          this.erroMaquininha = err?.message?.trim() ? err.message : 'Não foi possível atualizar a maquininha.';
+        },
+      });
   }
 
   onCoordenadas(c: Coordenadas) {

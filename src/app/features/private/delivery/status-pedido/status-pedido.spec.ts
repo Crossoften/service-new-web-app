@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   HttpTestingController,
   provideHttpClientTesting,
@@ -8,6 +8,7 @@ import {
 
 import { StatusPedidoComponent } from './status-pedido';
 import { ResponseFoodOrderDto } from '../../../../core/models/food-order';
+import { errorInterceptor } from '../../../../core/interceptors/error-interceptor';
 
 function pedido(over: Partial<ResponseFoodOrderDto>): ResponseFoodOrderDto {
   return {
@@ -27,7 +28,11 @@ describe('StatusPedidoComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [StatusPedidoComponent],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(withInterceptors([errorInterceptor])),
+        provideHttpClientTesting(),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(StatusPedidoComponent);
@@ -82,6 +87,21 @@ describe('StatusPedidoComponent', () => {
   it('podePagar: false para pedido estornado (não reabre pagamento)', () => {
     component.pedido = pedido({ paymentMethod: 'Pix', paymentStatus: 'Refunded' });
     expect(component.podePagar).toBe(false);
+  });
+
+  it('pagar() em restaurante com maquininha (400) vira "pagamento na entrega" e esconde o botão (§8.6)', () => {
+    component.pedidoId = 5;
+    component.pedido = pedido({ paymentMethod: 'CreditCard', paymentStatus: 'Pending' });
+    expect(component.podePagar).toBe(true);
+    component.pagar();
+    httpMock
+      .expectOne((r) => r.url.endsWith('/food-orders/5/pay'))
+      .flush({ message: 'Pedido pago na maquininha do restaurante.' }, { status: 400, statusText: 'Bad Request' });
+    // recarrega o pedido após o erro
+    httpMock.expectOne((r) => r.url.endsWith('/food-orders/5') && r.method === 'GET').flush(pedido({ paymentMethod: 'CreditCard' }));
+    expect(component.pagamentoNaEntrega).toBe(true);
+    expect(component.podePagar).toBe(false);
+    expect(component.erro).toBe('');
   });
 
   it('podeAvaliar só quando entregue e ainda não avaliou', () => {

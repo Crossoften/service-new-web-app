@@ -69,6 +69,16 @@ describe('RevisaoPedidoComponent', () => {
     expect(component.erro.toLowerCase()).toContain('dinheiro');
   });
 
+  it('pagamentoNaMaquininha: true só com maquininha própria + cartão (§8.6)', () => {
+    Object.assign(service.getPedidoAtual().restaurante ?? {}, { usaMaquininhaPropria: true });
+    service.setFormaPagamento('credito');
+    component.pedido = service.getPedidoAtual();
+    expect(component.pagamentoNaMaquininha).toBe(true);
+    // Pix continua pela plataforma → não é na maquininha.
+    service.setFormaPagamento('pix');
+    expect(component.pagamentoNaMaquininha).toBe(false);
+  });
+
   it('pagarEmDinheiro reenvia o pedido como Cash e vai para o status', () => {
     const router = TestBed.inject(Router);
     const nav = vi.spyOn(router, 'navigate');

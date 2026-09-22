@@ -73,4 +73,13 @@ describe('FornecedorService', () => {
     expect(req.request.body.isActive).toBe(false);
     req.flush({ id: 3, name: 'Borda', price: '8.00', isActive: false });
   });
+
+  it('atualizarMaquininha faz PATCH /restaurants/me/card-machine (§8.6)', () => {
+    let r: unknown;
+    service.atualizarMaquininha({ usesOwnCardMachine: true, acceptResponsibility: true }).subscribe((x) => (r = x));
+    const req = httpMock.expectOne((rq) => rq.url.endsWith('/restaurants/me/card-machine') && rq.method === 'PATCH');
+    expect(req.request.body).toEqual({ usesOwnCardMachine: true, acceptResponsibility: true });
+    req.flush({ id: 1, name: 'R', usesOwnCardMachine: true });
+    expect((r as { usesOwnCardMachine: boolean }).usesOwnCardMachine).toBe(true);
+  });
 });

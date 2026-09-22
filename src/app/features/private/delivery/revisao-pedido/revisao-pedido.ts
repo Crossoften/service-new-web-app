@@ -83,6 +83,12 @@ export class RevisaoPedidoComponent implements OnInit {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
+  /** Restaurante com maquininha própria + cartão: o pagamento é na entrega, sem checkout online (§8.6). */
+  get pagamentoNaMaquininha(): boolean {
+    const forma = this.pedido?.formaPagamento;
+    return !!this.pedido?.restaurante?.usaMaquininhaPropria && (forma === 'credito' || forma === 'debito');
+  }
+
   get subtotal(): number {
     return this.deliveryService.calcularSubtotal();
   }

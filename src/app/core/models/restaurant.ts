@@ -60,11 +60,25 @@ export interface ResponseRestaurantDto {
   deliveryTimeMaxMinutes?: number;
   /** Endereço do estabelecimento (Fase 8.4), com coordenadas. */
   address?: RestaurantAddressDto;
+  /**
+   * Estabelecimento cobra cartão na **maquininha própria**, na entrega (§8.6).
+   * Nesses pedidos, crédito/débito não geram checkout online.
+   */
+  usesOwnCardMachine?: boolean;
   // (BE-D1) ainda não retornados pela API:
   rating?: number;
   estimatedTime?: string;
   logoUrl?: string;
   deliveryFee?: number;
+}
+
+/**
+ * Corpo de `PATCH /v1/restaurants/me/card-machine` (§8.6).
+ * Ligar exige `acceptResponsibility: true` (senão `400`); desligar não exige nada.
+ */
+export interface UpdateCardMachineDto {
+  usesOwnCardMachine: boolean;
+  acceptResponsibility: boolean;
 }
 
 /** Corpo de `POST /v1/restaurants/{id}/reviews` (CreateReviewDto). */

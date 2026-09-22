@@ -159,6 +159,9 @@
         {{ pagando ? 'REDIRECIONANDO…' : 'PAGAR AGORA' }}
       </button>
     }
+    @if (pagamentoNaEntrega) {
+      <p class="status-maquininha">💳 Pagamento no cartão será na maquininha do restaurante, na entrega.</p>
+    }
     @if (podeCancelar) {
       <button class="status-btn status-btn--cancel" (click)="cancelar()" [disabled]="cancelando">
         {{ cancelando ? 'CANCELANDO…' : 'CANCELAR PEDIDO' }}

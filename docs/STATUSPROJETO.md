@@ -257,8 +257,11 @@
 
 | **OF-18** | **Gorjeta + cupom na sacola (§8.9)** — 3 campos opcionais entraram no `POST /food-orders`; esta fatia cobre **`tip`** e **`couponCode`** (agendamento `scheduledFor` fica no item 23). Model `CreateFoodOrderDto` ganhou `tip?`/`couponCode?`. Novos **`core/models/coupon.ts`** + **`core/services/coupon.ts`** (`CouponService.validar` → `POST /coupons/validate`). `DeliveryService`: estado de carrinho `gorjeta`/`cupom`, `setGorjeta` (0–1000), `setCupom`, `calcularSubtotal`, `calcularTotal` (subtotal + frete + gorjeta − desconto, nunca negativo); `buildCreateFoodOrderDto` envia `tip` só quando >0 e **só o `couponCode`**. Tela da **sacola**: chips de gorjeta + valor livre; campo de cupom com **Aplicar** (chama `validate`, mostra desconto/descrição ou o erro da API) e Remover; desdobramento Subtotal/Gorjeta/Cupom/Total. **Revisão** mostra o mesmo desdobramento (total já somava via `calcularTotal`). ⚠️ **`validate` é só prévia** — o desconto **não** é enviado como entrada; o back recalcula na criação. Sem mudança de back. | ✅ (12) | `OF-18-sacola-gorjeta-cupom` |
 
-> **Próximas (ordem da seção 10 do doc):** **19** maquininha própria (§8.6) · **20-22** carteira/Pix/repasses
-> do entregador (§8.5 — inclui `refundedDeliveries`/`refundedAmount` no repasse do admin, §8.7) · **23** agendamento (`scheduledFor`, §8.9) ·
+| **OF-19** | **Maquininha própria do restaurante (§8.6)** — o estabelecimento pode cobrar cartão na maquininha dele, na entrega. **Fornecedor**: model `usesOwnCardMachine?` + `UpdateCardMachineDto`; `FornecedorService.atualizarMaquininha` → `PATCH /restaurants/me/card-machine`; na tela do restaurante, seção Maquininha com **termo antes do aceite** (ligar exige `acceptResponsibility:true`; desligar não exige) e status "Ligada". **Cliente**: VM `Restaurante.usaMaquininhaPropria` (de `usesOwnCardMachine`); a **revisão** avisa quando cartão+maquininha ("pago na entrega, sem checkout online"); na **tela de status**, o `pagar()` trata o **400** do `/pay` por pedido fora da plataforma → esconde "Pagar", marca `pagamentoNaEntrega` e avisa. ⚠️ Contrato conferido no back: a rota de confirmação real é **`confirm-payment`** (o doc diz `confirm-cash-payment`) — mantido o existente. Sem mudança de back. | ✅ (7 novos/44 no lote) | `OF-19-maquininha-propria` |
+
+> **Próximas (ordem da seção 10 do doc):** **20-22** carteira/Pix/repasses
+> do entregador (§8.5 — inclui `refundedDeliveries`/`refundedAmount` no repasse do admin, §8.7 · **é onde entra o aviso
+> no histórico do entregador de que pedidos com maquininha não somam saldo, §8.6**) · **23** agendamento (`scheduledFor`, §8.9) ·
 > **24** push/PWA (§8.10 — ⚠️ `publicKey` null ⇒ **não** pedir permissão).
 
 ---

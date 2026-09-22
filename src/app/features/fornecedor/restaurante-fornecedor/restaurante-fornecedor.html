@@ -110,6 +110,50 @@
             <div class="rest-toggle__bola"></div>
           </div>
         </div>
+
+        <!-- MAQUININHA PRÓPRIA (§8.6) -->
+        <div class="rest-maquininha">
+          <div class="rest-maquininha__linha">
+            <div>
+              <span class="rest-maquininha__titulo">Maquininha própria</span>
+              <span class="rest-maquininha__sub">Cliente paga cartão na sua maquininha, na entrega.</span>
+            </div>
+            @if (usaMaquininha) {
+              <button class="rest-maquininha__desligar" (click)="desligarMaquininha()" [disabled]="salvandoMaquininha">
+                {{ salvandoMaquininha ? '...' : 'Desligar' }}
+              </button>
+            } @else if (!mostrandoTermoMaquininha) {
+              <button class="rest-maquininha__ligar" (click)="abrirTermoMaquininha()">Ligar</button>
+            }
+          </div>
+
+          @if (usaMaquininha) {
+            <span class="rest-maquininha__status">✔ Ligada — crédito e débito são cobrados na entrega (sem checkout online).</span>
+          }
+
+          @if (mostrandoTermoMaquininha && !usaMaquininha) {
+            <div class="rest-maquininha__termo">
+              <p class="rest-maquininha__termo-texto">
+                Ao ligar a maquininha própria, você assume a responsabilidade por cobrar o cliente
+                no cartão, na entrega. Nesses pedidos, crédito e débito não passam pela plataforma —
+                não há checkout online nem retenção de frete/gorjeta, e o repasse ao entregador fica
+                por sua conta. Pix, boleto e dinheiro seguem como sempre.
+              </p>
+              <label class="rest-maquininha__aceite">
+                <input type="checkbox" [(ngModel)]="aceitouResponsabilidade" />
+                <span>Li e aceito assumir essa responsabilidade.</span>
+              </label>
+              <div class="rest-maquininha__acoes">
+                <button class="rest-btn rest-btn--outline" (click)="cancelarTermoMaquininha()" [disabled]="salvandoMaquininha">CANCELAR</button>
+                <button class="rest-btn" (click)="confirmarLigarMaquininha()" [disabled]="!aceitouResponsabilidade || salvandoMaquininha">
+                  {{ salvandoMaquininha ? 'LIGANDO…' : 'LIGAR MAQUININHA' }}
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (erroMaquininha) { <span class="rest-erro">{{ erroMaquininha }}</span> }
+        </div>
       }
 
       @if (erro) { <span class="rest-erro">{{ erro }}</span> }

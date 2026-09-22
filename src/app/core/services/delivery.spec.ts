@@ -202,6 +202,17 @@ describe('DeliveryService', () => {
     expect(tempoMin).toBe(20);
   });
 
+  it('mapeia usaMaquininhaPropria (usesOwnCardMachine) no restaurante (§8.6)', () => {
+    let usa: boolean | undefined;
+    service.getRestaurante(1).subscribe((r) => (usa = r.usaMaquininhaPropria));
+    httpMock.expectOne((r) => r.url.endsWith('/restaurants/1')).flush({
+      id: 1, name: 'R', isActive: true, isOpen: true,
+      category: { id: 2, name: 'Lanches', slug: 'lanches' },
+      usesOwnCardMachine: true,
+    });
+    expect(usa).toBe(true);
+  });
+
   it('tempo de entrega vazio quando não informado', () => {
     let tempo = 'x';
     service.getRestaurante(2).subscribe((r) => (tempo = r.tempo));

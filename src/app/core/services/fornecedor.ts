@@ -14,6 +14,7 @@ import {
   ResponseRestaurantDto,
   PayoutPeriod,
   ResponseRestaurantPayoutDto,
+  UpdateCardMachineDto,
   UpdateMenuItemAdditionDto,
   UpdateMenuItemDto,
   UpdateRestaurantDto,
@@ -114,6 +115,14 @@ export class FornecedorService {
   /** Abre/fecha a loja — `PATCH /v1/restaurants/{id}` `{isOpen}`. */
   definirAberto(id: number, isOpen: boolean): Observable<ResponseRestaurantDto> {
     return this.atualizarRestaurante(id, { isOpen });
+  }
+
+  /**
+   * Liga/desliga a **maquininha própria** — `PATCH /v1/restaurants/me/card-machine` (§8.6).
+   * Ligar exige `acceptResponsibility: true` (senão `400`); desligar limpa o registro do aceite.
+   */
+  atualizarMaquininha(dto: UpdateCardMachineDto): Observable<ResponseRestaurantDto> {
+    return this.api.patch<ResponseRestaurantDto>('/restaurants/me/card-machine', dto);
   }
 
   // ── Cardápio (API) ────────────────────────────────────────────────────────

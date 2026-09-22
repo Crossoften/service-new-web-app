@@ -53,6 +53,7 @@ export interface Restaurante {
   tempoMinMinutos?: number; // deliveryTimeMinMinutes — para ordenar por tempo
   taxaEntrega: number; // (BE-D1)
   aberto: boolean; // isOpen — para o filtro "aberto agora"
+  usaMaquininhaPropria: boolean; // §8.6 — crédito/débito são pagos na entrega, sem checkout online
   descricao: string;
   imagem: string;
   logo: string; // (BE-D1)
@@ -345,6 +346,7 @@ export class DeliveryService {
       tempoMinMinutos: r.deliveryTimeMinMinutes,
       taxaEntrega: r.deliveryFee ?? 0,
       aberto: r.isOpen ?? true,
+      usaMaquininhaPropria: r.usesOwnCardMachine ?? false,
       descricao: r.description ?? '',
       imagem: r.imageUrl ?? '',
       logo: r.logoUrl ?? '',

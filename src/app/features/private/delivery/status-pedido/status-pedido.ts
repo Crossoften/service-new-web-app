@@ -45,6 +45,8 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
   erro = '';
   cancelando = false;
   pagando = false;
+  /** Pedido liquidado fora da plataforma (maquininha do restaurante, §8.6): pago na entrega. */
+  pagamentoNaEntrega = false;
 
   // Avaliação pós-entrega (RATE-1)
   nota = 0; // 0 = ainda não escolheu
@@ -142,13 +144,17 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
     return this.pedido?.delivery?.currentLng;
   }
 
-  /** Pagamento online só faz sentido para pedido não-dinheiro ainda pendente e não cancelado. */
+  /**
+   * Pagamento online só faz sentido para pedido não-dinheiro ainda pendente e não
+   * cancelado — e que não seja liquidado na maquininha do restaurante (§8.6).
+   */
   get podePagar(): boolean {
     return (
       !!this.pedido &&
       this.pedido.paymentMethod !== 'Cash' &&
       this.pedido.paymentStatus === 'Pending' &&
-      !this.cancelado
+      !this.cancelado &&
+      !this.pagamentoNaEntrega
     );
   }
 
@@ -179,15 +185,27 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
       },
       error: (err: ApiError) => {
         this.pagando = false;
-        // Travas do back (checkout em aberto, já pago, cancelado, restaurante sem MP):
-        // mostra a mensagem da API e reconsulta para atualizar o estado da tela.
-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível iniciar o pagamento.';
+        if (this.ehPagamentoNaMaquininha(err)) {
+          // Restaurante cobra na maquininha própria (§8.6): trata como dinheiro —
+          // sem checkout online, pagamento na entrega. Esconde o botão e avisa.
+          this.pagamentoNaEntrega = true;
+          this.erro = '';
+        } else {
+          // Travas do back (checkout em aberto, já pago, cancelado, restaurante sem MP):
+          // mostra a mensagem da API e reconsulta para atualizar o estado da tela.
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível iniciar o pagamento.';
+        }
         this.deliveryService.getPedido(this.pedidoId).subscribe({
           next: (p) => (this.pedido = p),
           error: () => {},
         });
       },
     });
+  }
+
+  /** 400 do `/pay` por pedido liquidado fora da plataforma (maquininha do restaurante, §8.6). */
+  private ehPagamentoNaMaquininha(err: ApiError): boolean {
+    return err?.status === 400 && /maquin|na entrega|fora da plataforma|estabelecimento/i.test(err?.message ?? '');
   }
 
   cancelar() {

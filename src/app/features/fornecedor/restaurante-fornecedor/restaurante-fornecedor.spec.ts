@@ -80,4 +80,31 @@ describe('RestauranteFornecedorComponent', () => {
     expect(component.erro).toContain('Tempo de entrega');
     httpMock.expectNone((r) => r.url.endsWith('/restaurants') && r.method === 'POST');
   });
+
+  it('ligar maquininha exige aceite e envia acceptResponsibility:true (§8.6)', () => {
+    component.restaurante = { id: 1, name: 'R', usesOwnCardMachine: false } as never;
+    component.abrirTermoMaquininha();
+    expect(component.mostrandoTermoMaquininha).toBe(true);
+    // Sem aceite → não envia.
+    component.confirmarLigarMaquininha();
+    httpMock.expectNone((r) => r.url.endsWith('/restaurants/me/card-machine'));
+    // Com aceite → PATCH liga.
+    component.aceitouResponsabilidade = true;
+    component.confirmarLigarMaquininha();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/restaurants/me/card-machine') && r.method === 'PATCH');
+    expect(req.request.body).toEqual({ usesOwnCardMachine: true, acceptResponsibility: true });
+    req.flush({ id: 1, name: 'R', usesOwnCardMachine: true });
+    expect(component.usaMaquininha).toBe(true);
+    expect(component.mostrandoTermoMaquininha).toBe(false);
+  });
+
+  it('desligar maquininha não exige aceite (acceptResponsibility:false)', () => {
+    component.restaurante = { id: 1, name: 'R', usesOwnCardMachine: true } as never;
+    component.usaMaquininha = true;
+    component.desligarMaquininha();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/restaurants/me/card-machine') && r.method === 'PATCH');
+    expect(req.request.body).toEqual({ usesOwnCardMachine: false, acceptResponsibility: false });
+    req.flush({ id: 1, name: 'R', usesOwnCardMachine: false });
+    expect(component.usaMaquininha).toBe(false);
+  });
 });
