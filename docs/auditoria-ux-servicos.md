@@ -6,6 +6,17 @@
 > factual (arquivo:linha nas auditorias internas); aqui vai a síntese + proposta.
 > **Escopo:** definição — não implementa nada. Cada item vira fatia depois da sua validação.
 
+> ### ✅ Decisões travadas (cliente)
+> - **UX-A:** lançar a **UI de anexos** já (a parte visual/estruturada agora; o upload real espera **BE-Q8**).
+> - **UX-B:** **Atividade unificada.** Menu do cliente = **Início · Atividade · Mensagens · Perfil** (4 abas,
+>   cross-vertical). A aba **Atividade** agrega os itens em andamento de **todas** as verticais (Serviços já sem o
+>   jargão orçamento/trabalho). A **home mantém** o card "em andamento" (glanceável) — é os dois, não um ou outro.
+>   **Mensagens depende de BE-Q5** (inbox `GET /chats`): enquanto não existir, lançar com **3 abas**
+>   (Início · Atividade · Perfil) e adicionar Mensagens depois.
+> - **UX-C:** **Painel único** como landing da área de Serviços do fornecedor (mostra orçamentos a responder +
+>   trabalhos ativos, com contadores); o **catálogo** (cadastrar serviço) vira destino secundário.
+> - **Q-UX1:** o chat do **orçamento continua a mesma conversa** após a aprovação (não recria) — orienta **BE-CHAT-1**.
+
 ---
 
 ## 0. Sumário — os problemas, por severidade
@@ -178,19 +189,25 @@ no nível do Budget**.
 
 ---
 
-## 5. Plano de fatias sugerido (ordem por impacto/independência)
+## 5. Plano de fatias (decisões travadas)
 
-1. **UX-NAV-CLIENTE** — bottom-nav compartilhado e funcional (U2). Alto impacto, só front, destrava navegação.
-2. **UX-HOME-SERVICOS** — cards de "solicitação em andamento" e "orçamento respondido — responda" na home do
-   cliente (U3). Resolve a percepção de "não chegou".
-3. **UX-FORN-FEEDBACK** — `fazer-orcamento` volta para "Respondidos" + toast; status no card de orçamento;
-   badges de pendência nas abas (U6 + parte de U5).
-4. **UX-CHAT-REAL** — ligar o chat real no `detalhes-trabalho` (fornecedor) e remover/religar o mock no cliente (U4).
-5. **UX-NAV-FORN** — renome de abas + landing/painel de Serviços (U5).
-6. **UX-ANEXOS** — bloco de anexos rotulado no pedido de orçamento (U1) — parte visual agora; upload quando **BE-Q8**.
-7. **UX-CHAT-BUDGET** — chat pré-aceite (U7), **depois de BE-CHAT-1**.
+1. **UX-NAV-CLIENTE** — `BottomNavClienteComponent` compartilhado (Início · Atividade · Mensagens¹ · Perfil) +
+   a tela **Atividade** (central cross-vertical). MVP da Atividade: **Serviços** (solicitações + orçamentos
+   unificados, sem jargão) e **Delivery** (pedidos); filtros por categoria; demais verticais entram com o back.
+   Aplicar o nav em todas as telas do cliente, removendo os navs hardcoded. *(¹ Mensagens só quando **BE-Q5**.)*
+2. **UX-HOME-SERVICOS** — card(s) "solicitação em andamento" e "orçamento respondido — responda" na home do
+   cliente (U3), no mesmo padrão do card de delivery. Leva à Atividade/detalhe.
+3. **UX-FORN-PAINEL** — **painel único** como landing de Serviços do fornecedor (U5+U6): orçamentos a responder +
+   trabalhos ativos com contadores; catálogo vira secundário; `fazer-orcamento` volta para "Respondidos" + toast;
+   status no card de orçamento (Aguardando/Aceito/Recusado + motivo); badges de pendência.
+4. **UX-CHAT-REAL** — ligar o chat real: botão no `detalhes-trabalho` (fornecedor) e no cliente; **remover o mock**
+   `chat-prestador` (U4).
+5. **UX-ANEXOS** — bloco de anexos **rotulado** no pedido de orçamento (U1): affordance/UI agora; o upload liga
+   quando **BE-Q8** existir (decisão UX-A = lançar já a parte visual).
+6. **UX-CHAT-BUDGET** — chat **pré-aceite** (U7), **depois de BE-CHAT-1** (chat no nível do Budget, mesma conversa
+   segue no Work — Q-UX1).
 
-> Sugiro começar por **1 → 2 → 3**: são só front, alto impacto na sensação de "app funcional", e independentes entre si.
+> Ordem recomendada: **1 → 2 → 3** (só front, alto impacto, independentes). 4 e 5 na sequência; 6 aguarda o back.
 
 ---
 
@@ -205,10 +222,8 @@ no nível do Budget**.
 
 ---
 
-## 7. Perguntas de definição (para você)
-- **UX-A:** lançar a **UI de anexos** já (mesmo com o upload falhando até BE-Q8) ou segurar a fatia inteira?
-- **UX-B:** os 5 itens do **bottom-nav do cliente** — confirma **Início / Solicitações / Orçamentos / Perfil / Mais**?
-  O "Mais" abre grid de categorias ou lista de opções (config, ajuda, etc.)?
-- **UX-C:** na área de Serviços do fornecedor, **manter 3 abas** (com renome + badges) **ou** unificar num **painel
-  único** (Orçamentos / Trabalhos / Meus serviços) como landing?
-- **Q-UX1:** o **chat do orçamento** deve **continuar no trabalho** após a aprovação (mesma conversa) ou ser separado?
+## 7. Perguntas de definição — ✅ respondidas
+- **UX-A:** ✅ lançar a UI de anexos já (upload liga com BE-Q8).
+- **UX-B:** ✅ **Atividade unificada** — menu Início · Atividade · Mensagens · Perfil (Mensagens depende de BE-Q5).
+- **UX-C:** ✅ **painel único** como landing do fornecedor.
+- **Q-UX1:** ✅ mesma conversa segue do orçamento para o trabalho (orienta BE-CHAT-1).
