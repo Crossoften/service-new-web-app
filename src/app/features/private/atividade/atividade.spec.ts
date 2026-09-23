@@ -26,6 +26,12 @@ function pedido(overrides: Record<string, unknown> = {}) {
   return { id: 20, status: 'Preparing', restaurant: { id: 1, name: 'Pizzaria' }, ...overrides };
 }
 
+interface FlushOpts {
+  works?: unknown[]; budgets?: unknown[]; pedidos?: unknown[];
+  transactions?: unknown[]; rentals?: unknown[]; transportRequests?: unknown[];
+  bookings?: unknown[]; applications?: unknown[];
+}
+
 describe('AtividadeComponent (índice por categoria)', () => {
   let component: AtividadeComponent;
   let fixture: ComponentFixture<AtividadeComponent>;
@@ -45,10 +51,15 @@ describe('AtividadeComponent (índice por categoria)', () => {
 
   afterEach(() => httpMock.verify());
 
-  function flushAll(opts: { works?: unknown[]; budgets?: unknown[]; pedidos?: unknown[] } = {}) {
-    httpMock.expectOne((r) => r.url.endsWith('/works/my-requests')).flush({ works: opts.works ?? [] });
-    httpMock.expectOne((r) => r.url.endsWith('/budgets')).flush({ budgets: opts.budgets ?? [] });
-    httpMock.expectOne((r) => r.url.endsWith('/food-orders')).flush({ foodOrders: opts.pedidos ?? [] });
+  function flushAll(o: FlushOpts = {}) {
+    httpMock.expectOne((r) => r.url.endsWith('/works/my-requests')).flush({ works: o.works ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/budgets')).flush({ budgets: o.budgets ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/food-orders')).flush({ foodOrders: o.pedidos ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/commercial-transactions')).flush({ transactions: o.transactions ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/rentals')).flush({ rentals: o.rentals ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/transport-requests')).flush({ transportRequests: o.transportRequests ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/bookings')).flush({ bookings: o.bookings ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/jobs/applications/me')).flush({ applications: o.applications ?? [] });
   }
 
   it('lista só categorias com atividade, com contador de ativos', () => {
@@ -56,13 +67,30 @@ describe('AtividadeComponent (índice por categoria)', () => {
     const ids = component.categorias.map((c) => c.id);
     expect(ids).toContain('servicos');
     expect(ids).toContain('delivery');
-    expect(component.categorias.find((c) => c.id === 'servicos')?.ativos).toBe(2); // 1 work + 1 budget
+    expect(component.categorias.find((c) => c.id === 'servicos')?.ativos).toBe(2);
     expect(component.categorias.find((c) => c.id === 'delivery')?.ativos).toBe(1);
+    // sem dados nas outras → não aparecem
+    expect(ids).not.toContain('aluguel');
   });
 
-  it('esconde categoria sem atividade (só delivery ativo → só delivery aparece)', () => {
-    flushAll({ works: [work({ status: 'Finished' })], budgets: [budget({ status: 'Rejected' })], pedidos: [pedido()] });
-    expect(component.categorias.map((c) => c.id)).toEqual(['delivery']);
+  it('inclui aluguel quando há aluguel ativo (Active) e ignora terminal (Returned)', () => {
+    flushAll({ rentals: [{ id: 1, status: 'Active' }, { id: 2, status: 'Returned' }] });
+    const aluguel = component.categorias.find((c) => c.id === 'aluguel');
+    expect(aluguel?.ativos).toBe(1);
+  });
+
+  it('conta hospedagem/transporte/compra-venda/empregos ativos', () => {
+    flushAll({
+      bookings: [{ id: 1, status: 'Confirmed' }, { id: 2, status: 'Cancelled' }],
+      transportRequests: [{ id: 1, status: 'InTransit' }],
+      transactions: [{ id: 1, status: 'Paid' }, { id: 2, status: 'Completed' }],
+      applications: [{ id: 1, status: 'Applied' }, { id: 2, status: 'Rejected' }],
+    });
+    const c = (id: string) => component.categorias.find((x) => x.id === id)?.ativos;
+    expect(c('hospedagem')).toBe(1);
+    expect(c('transporte')).toBe(1);
+    expect(c('compra-venda')).toBe(1);
+    expect(c('empregos')).toBe(1);
   });
 
   it('sem nenhuma atividade → lista vazia', () => {
@@ -70,17 +98,22 @@ describe('AtividadeComponent (índice por categoria)', () => {
     expect(component.categorias.length).toBe(0);
   });
 
-  it('abrir Serviços navega para /servicos/atividade', () => {
-    flushAll({ works: [work()] });
+  it('abrir aluguel navega para /aluguel/meus', () => {
+    flushAll({ rentals: [{ id: 1, status: 'Requested' }] });
     const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
-    component.abrir(component.categorias[0]);
-    expect(nav).toHaveBeenCalledWith(['/servicos/atividade']);
+    component.abrir(component.categorias.find((c) => c.id === 'aluguel')!);
+    expect(nav).toHaveBeenCalledWith(['/aluguel/meus']);
   });
 
-  it('tolera falha de uma fonte sem quebrar', () => {
+  it('tolera falha de fontes sem quebrar', () => {
     httpMock.expectOne((r) => r.url.endsWith('/works/my-requests')).flush('x', { status: 500, statusText: 'e' });
     httpMock.expectOne((r) => r.url.endsWith('/budgets')).flush({ budgets: [budget()] });
-    httpMock.expectOne((r) => r.url.endsWith('/food-orders')).flush({ foodOrders: [] });
+    httpMock.expectOne((r) => r.url.endsWith('/food-orders')).flush('x', { status: 500, statusText: 'e' });
+    httpMock.expectOne((r) => r.url.endsWith('/commercial-transactions')).flush('x', { status: 500, statusText: 'e' });
+    httpMock.expectOne((r) => r.url.endsWith('/rentals')).flush('x', { status: 500, statusText: 'e' });
+    httpMock.expectOne((r) => r.url.endsWith('/transport-requests')).flush('x', { status: 500, statusText: 'e' });
+    httpMock.expectOne((r) => r.url.endsWith('/bookings')).flush('x', { status: 500, statusText: 'e' });
+    httpMock.expectOne((r) => r.url.endsWith('/jobs/applications/me')).flush('x', { status: 500, statusText: 'e' });
     expect(component.carregando).toBe(false);
     expect(component.categorias.find((c) => c.id === 'servicos')?.ativos).toBe(1);
   });
