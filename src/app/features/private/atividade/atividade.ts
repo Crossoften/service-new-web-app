@@ -9,34 +9,24 @@ import { DeliveryService } from '../../../core/services/delivery';
 import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../core/models/food-order';
 import { BottomNavClienteComponent } from '../../../shared/components/bottom-nav-cliente/bottom-nav-cliente';
 
-type CategoriaAtividade = 'servicos' | 'delivery';
-type FiltroAtividade = 'todos' | CategoriaAtividade;
+type CategoriaId = 'servicos' | 'delivery';
 
-/** Item unificado exibido na central de Atividade (qualquer vertical). */
-interface AtividadeItem {
-  categoria: CategoriaAtividade;
-  categoriaLabel: string;
-  titulo: string;
-  subtitulo: string;
-  /** Precisa de ação do cliente (responder orçamento/acréscimo). */
-  destaque: boolean;
-  rota: (string | number)[];
+/** Uma categoria no índice de Atividade. */
+interface CategoriaAtividade {
+  id: CategoriaId;
+  label: string;
+  ativos: number;
+  rota: string[];
 }
 
 const STATUS_DELIVERY_ATIVOS: FoodOrderStatus[] = ['Received', 'Accepted', 'Preparing', 'OnTheWay'];
-const STATUS_DELIVERY_LABEL: Record<FoodOrderStatus, string> = {
-  Received: 'Pedido recebido',
-  Accepted: 'Confirmado',
-  Preparing: 'Em preparo',
-  OnTheWay: 'A caminho',
-  Delivered: 'Entregue',
-  Cancelled: 'Cancelado',
-};
 
 /**
- * Central de **Atividade** do cliente — agrega os itens em andamento de todas as
- * verticais num só lugar (decisão UX-B). MVP: Serviços (orçamentos + solicitações,
- * sem o jargão orçamento/trabalho) e Delivery (pedidos). Filtros por categoria.
+ * **Atividade = índice por categoria** (decisão de IA: super-app category-first).
+ * Em vez de um feed único misturando tudo, lista as **categorias em que o cliente
+ * tem atividade** (com contador de ativos); cada uma abre a **tela de atividade
+ * daquela categoria** (Ativos/Histórico + ações do domínio). Só aparecem categorias
+ * com atividade (Q-E2E-1).
  */
 @Component({
   selector: 'app-atividade',
@@ -50,15 +40,8 @@ export class AtividadeComponent implements OnInit {
   private readonly delivery = inject(DeliveryService);
   private readonly router = inject(Router);
 
-  itens: AtividadeItem[] = [];
-  filtro: FiltroAtividade = 'todos';
   carregando = false;
-
-  filtros: { id: FiltroAtividade; label: string }[] = [
-    { id: 'todos', label: 'Todos' },
-    { id: 'servicos', label: 'Serviços' },
-    { id: 'delivery', label: 'Delivery' },
-  ];
+  categorias: CategoriaAtividade[] = [];
 
   ngOnInit() {
     this.carregando = true;
@@ -70,99 +53,32 @@ export class AtividadeComponent implements OnInit {
       pedidos: this.delivery.getMeusPedidos().pipe(catchError(() => of([] as ResponseFoodOrderDto[]))),
     }).subscribe({
       next: ({ solicitacoes, orcamentos, pedidos }) => {
-        this.itens = [
-          ...orcamentos.filter((o) => this.orcamentoAtivo(o)).map((o) => this.deOrcamento(o)),
-          ...solicitacoes.filter((s) => this.solicitacaoAtiva(s)).map((s) => this.deSolicitacao(s)),
-          ...pedidos
-            .filter((p) => STATUS_DELIVERY_ATIVOS.includes(p.status))
-            .map((p) => this.dePedido(p)),
-        ].sort((a, b) => Number(b.destaque) - Number(a.destaque));
+        const servicosAtivos =
+          orcamentos.filter((o) => this.orcamentoAtivo(o)).length +
+          solicitacoes.filter((s) => this.solicitacaoAtiva(s)).length;
+        const deliveryAtivos = pedidos.filter((p) => STATUS_DELIVERY_ATIVOS.includes(p.status)).length;
+
+        const todas: CategoriaAtividade[] = [
+          { id: 'servicos', label: 'Serviços', ativos: servicosAtivos, rota: ['/servicos/atividade'] },
+          { id: 'delivery', label: 'Delivery', ativos: deliveryAtivos, rota: ['/delivery/pedidos'] },
+        ];
+        // Q-E2E-1: só mostra categorias com atividade.
+        this.categorias = todas.filter((c) => c.ativos > 0);
         this.carregando = false;
       },
       error: () => (this.carregando = false),
     });
   }
 
-  get itensFiltrados(): AtividadeItem[] {
-    if (this.filtro === 'todos') return this.itens;
-    return this.itens.filter((i) => i.categoria === this.filtro);
-  }
-
-  selecionarFiltro(f: FiltroAtividade) {
-    this.filtro = f;
-  }
-
-  abrir(item: AtividadeItem) {
-    this.router.navigate(item.rota);
-  }
-
-  // ── Regras de "está ativo" ─────────────────────────────────────────────────
-
-  /** Orçamento aparece enquanto está em jogo (aguardando ou respondido); some ao virar trabalho/recusado. */
-  private orcamentoAtivo(o: Orcamento): boolean {
-    return (
-      o.statusApi === 'Pending' ||
-      o.statusApi === 'Responded' ||
-      o.statusApi === 'WaitingInformation'
-    );
+  abrir(cat: CategoriaAtividade) {
+    this.router.navigate(cat.rota);
   }
 
   private solicitacaoAtiva(s: Solicitacao): boolean {
     return s.status === 'em_andamento' || s.status === 'em_garantia';
   }
 
-  // ── Mapeamento → item unificado ────────────────────────────────────────────
-
-  private deOrcamento(o: Orcamento): AtividadeItem {
-    let subtitulo = 'Aguardando resposta do prestador';
-    let destaque = false;
-    if (o.temAcrescimoPendente) {
-      subtitulo = 'Acréscimo aguardando sua resposta';
-      destaque = true;
-    } else if (o.statusApi === 'Responded') {
-      subtitulo = 'Orçamento respondido — responda';
-      destaque = true;
-    } else if (o.statusApi === 'WaitingInformation') {
-      subtitulo = 'O prestador pediu mais informações';
-      destaque = true;
-    }
-    return {
-      categoria: 'servicos',
-      categoriaLabel: 'Serviços',
-      titulo: o.prestador.profissao || o.prestador.nome,
-      subtitulo,
-      destaque,
-      rota: ['/servicos/orcamento', o.id],
-    };
-  }
-
-  private deSolicitacao(s: Solicitacao): AtividadeItem {
-    let subtitulo = 'Serviço em andamento';
-    let destaque = false;
-    if (s.extraPendente) {
-      subtitulo = 'Acréscimo aguardando sua resposta';
-      destaque = true;
-    } else if (s.status === 'em_garantia') {
-      subtitulo = 'Em garantia';
-    }
-    return {
-      categoria: 'servicos',
-      categoriaLabel: 'Serviços',
-      titulo: s.prestador.profissao || s.prestador.nome,
-      subtitulo,
-      destaque,
-      rota: ['/servicos/solicitacao', s.id],
-    };
-  }
-
-  private dePedido(p: ResponseFoodOrderDto): AtividadeItem {
-    return {
-      categoria: 'delivery',
-      categoriaLabel: 'Delivery',
-      titulo: p.restaurant?.name ?? 'Pedido',
-      subtitulo: STATUS_DELIVERY_LABEL[p.status] ?? 'Em andamento',
-      destaque: false,
-      rota: ['/delivery/status', p.id],
-    };
+  private orcamentoAtivo(o: Orcamento): boolean {
+    return o.statusApi === 'Pending' || o.statusApi === 'Responded' || o.statusApi === 'WaitingInformation';
   }
 }

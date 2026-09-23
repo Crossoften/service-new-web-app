@@ -1,0 +1,58 @@
+<div class="page-container">
+
+  <div class="sa-header">
+    <button class="sa-header__voltar" (click)="voltar()" aria-label="Voltar">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="sa-header__titulo">Serviços</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <!-- ABAS -->
+  <div class="sa-tabs">
+    <button class="sa-tabs__item" [class.sa-tabs__item--ativo]="aba === 'ativos'" (click)="selecionarAba('ativos')">
+      Ativos
+    </button>
+    <button class="sa-tabs__item" [class.sa-tabs__item--ativo]="aba === 'historico'" (click)="selecionarAba('historico')">
+      Histórico
+    </button>
+  </div>
+
+  <div class="page-content">
+
+    @if (carregando) {
+      <p class="sa-loading">Carregando…</p>
+    } @else {
+
+      <div class="sa-lista">
+        @for (item of itensFiltrados; track $index) {
+          <button class="sa-card" [class.sa-card--destaque]="item.destaque" (click)="abrir(item)">
+            <div class="sa-card__info">
+              <span class="sa-card__titulo">{{ item.titulo }}</span>
+              <span class="sa-card__sub">{{ item.subtitulo }}</span>
+            </div>
+            @if (item.destaque) {
+              <span class="sa-card__badge">Responder</span>
+            }
+            <svg class="sa-card__seta" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        }
+      </div>
+
+      @if (itensFiltrados.length === 0) {
+        <div class="sa-vazio">
+          <p>{{ aba === 'ativos' ? 'Nenhum serviço em andamento.' : 'Nenhum serviço no histórico.' }}</p>
+        </div>
+      }
+
+    }
+
+  </div>
+
+  <app-bottom-nav-cliente tabAtiva="atividade"></app-bottom-nav-cliente>
+
+</div>

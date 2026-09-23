@@ -136,9 +136,9 @@ export class HomeComponent implements OnInit {
     return o.statusApi === 'Pending' || o.statusApi === 'Responded' || o.statusApi === 'WaitingInformation';
   }
 
-  /** Abre a central de atividade (serviços + delivery). */
+  /** Abre a atividade de Serviços (orçamentos + trabalhos). */
   verServicos() {
-    this.router.navigate(['/atividade']);
+    this.router.navigate(['/servicos/atividade']);
   }
 
   get nomeExibicao(): string {

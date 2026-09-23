@@ -5,6 +5,7 @@ import { guestGuard } from './core/guards/guest-guard';
 import { SplashComponent } from './features/private/splash/splash';
 import { HomeComponent } from './features/private/home/home';
 import { AtividadeComponent } from './features/private/atividade/atividade';
+import { ServicosAtividadeComponent } from './features/private/servicos/servicos-atividade/servicos-atividade';
 import { CategoriaDeliveryComponent } from './features/private/categoria-delivery/categoria-delivery';
 import { CategoriaServicosComponent } from './features/private/categoria-servicos/categoria-servicos';
 import { CategoriaCompraVenderComponent } from './features/private/categoria-compra-vender/categoria-compra-vender';
@@ -123,6 +124,7 @@ export const routes: Routes = [
   { path: 'servicos/listagem/:categoria', component: ListagemServicosComponent, canActivate: [authGuard] },
   { path: 'servicos/requisitos', component: RequisitosServicoComponent, canActivate: [authGuard] },
   { path: 'servicos/prestador/:id', component: DetalhesPrestadorComponent, canActivate: [authGuard] },
+  { path: 'servicos/atividade', component: ServicosAtividadeComponent, canActivate: [authGuard] },
   { path: 'servicos/orcamentos', component: OrcamentosComponent, canActivate: [authGuard] },
   { path: 'servicos/orcamento/:id', component: AprovarOrcamentoComponent, canActivate: [authGuard] },
   { path: 'servicos/solicitacoes', component: SolicitacoesComponent, canActivate: [authGuard] },
