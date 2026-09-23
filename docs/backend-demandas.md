@@ -8,6 +8,47 @@
 > **Escopo:** apenas pendências do **Back-end**. Nenhuma alteração de API é feita pelo Front. Correções de FE seguem por patches.
 > **Contexto (ata):** projeto ~70% concluído; os 30% restantes = integração FE↔BE + testes. Cadastro real ainda desativado (tudo simulável).
 
+---
+
+## 🎯 Ordem de serviço — Backend (comece por aqui)
+
+> **Estado do front (2026-09-23):** todas as fatias de UX/jornada que **não dependem de back** foram entregues e
+> aplicadas na `integracao` (garantia respondível + validade, pagamento MP do serviço, menu/Atividade do cliente
+> como índice por categoria, painel + urgência do fornecedor, chat real). O que falta no produto **depende do
+> back-end** — esta é a fila priorizada. Cada item aponta para a especificação detalhada neste doc.
+
+| Prioridade | Item | O que é | Spec | Destrava no front |
+|---|---|---|---|---|
+| 1 | **BE-W1** | Execução da garantia: `respondWarranty(Approved)` cria **Work de garantia** vinculado (`parentWorkId`, `serviceValue=0`) | §"BE-W1 — Especificação" (abaixo) | Rastreio do reparo de garantia |
+| 2 | **BE-W7** | Agregado **contador de garantias** por fornecedor (total/concluídas/em aberto) | §"BE-W7 — Especificação" | "Garantias totais/atendidas" no perfil (hoje hardcoded 0) |
+| 3 | **BE-Q5** | **Inbox de chats + não-lidos** (ver spec refinada abaixo) | §"BE-Q5 (refinada)" | Aba **Mensagens** do cliente, card "nova mensagem" no hub, badges de não-lido (E2E-2b/3a/3b) |
+| 4 | **BE-CHAT-1** | **Chat no nível do Budget** (conversar antes de aprovar o orçamento) | §"BE-CHAT-1" (abaixo) | Chat pré-aceite em `aprovar-orcamento`/`fazer-orcamento` |
+| 5 | **BE-Q8** | `POST /upload/one-file` sem credencial S3/fallback → `500` | `backenddemandas.md` (BE-Q8, detalhado) | Anexos reais (pedido de orçamento, conclusão, etc.) |
+
+**Decisões de produto** (recomendações **registradas** em §"Decisões de produto (Q-F/Q-G/Q-H)"; a impl. pode
+seguir por elas): **Q-F** → chat **próprio** do reparo · **Q-G** → **bloquear** reparo-de-reparo · **Q-H** →
+"atendida" = **reparo concluído** · **Q-UX1** → chat do orçamento **segue** no Work (decidido).
+
+### BE-Q5 (refinada) — Inbox de chats + não-lidos 🔴
+Hoje só há `GET /chats/{id}/messages`, `POST .../messages`, `PATCH .../read` e `GET /chats/context/{type}/{refId}`.
+**Falta**, para o front surfaçar conversas e "nova mensagem":
+- **`GET /v1/chats`** (ou `/chats/me`) — lista paginada das conversas do usuário, cada uma com: contraparte
+  (nome/foto), **contexto** (`Work`/`Budget`/`CommercialTransaction`/…) + `referenceId`, **última mensagem**
+  (texto + data) e **`unreadCount`**.
+- **`GET /v1/chats/unread-count`** — total de não-lidos (barato), para os badges do menu/hub/botão de chat.
+
+### BE-CHAT-1 — Chat no nível do orçamento (Budget) 🟠
+Hoje o `ChatRoom` só nasce quando o orçamento é aprovado (vira `Work`), então **não há como conversar durante a
+fase de orçamento**. O `ChatContextType` já prevê `Budget`.
+- **Criar/expor** um `ChatRoom` de contexto **`Budget`** quando o orçamento é criado (ou no 1º "pedir mais
+  informações"), e devolver **`chat.id`** em `ResponseBudgetDto` e `ResponseBudgetListItemDto`.
+- **Ao aprovar** (Budget → Work), **manter a mesma conversa** (revincular ao `Work` ou copiar o histórico) —
+  **decisão Q-UX1 já tomada: a conversa continua**. Assim o chat iniciado no orçamento segue no trabalho.
+- **Front pronto para consumir:** basta o `chat.id` no Budget para ligar o botão de chat em `aprovar-orcamento`
+  (cliente) e criar a entrada em `fazer-orcamento`/`orcamentos-fornecedor` (fornecedor).
+
+---
+
 ## Legenda de prioridade
 
 | Prioridade | Significado |
@@ -380,10 +421,29 @@ Aceitar `?isWarranty=true|false` em `GET /works` para o front separar "trabalhos
 
 ---
 
-## Decisões de produto abertas (geradas por BE-W1/BE-W7)
-- **Q-F — Chat do reparo:** o Work de garantia tem **chat próprio** ou **reutiliza o chat do trabalho original**? (recomendo próprio.)
-- **Q-G — Reparo de reparo:** permitir acionar garantia sobre um Work de garantia, ou bloquear? (recomendo bloquear no MVP.)
-- **Q-H — "Garantia atendida":** no contador do perfil, "atendida" = **reparo concluído** (`warrantiesCompleted`) ou **garantia aprovada** (`warrantiesApproved`)?
+## Decisões de produto (Q-F/Q-G/Q-H) — recomendações registradas
+
+> Recomendações do time de front (aguardam ratificação do cliente; a implementação do back pode seguir por elas).
+
+- **Q-F — Chat do reparo de garantia → ✅ recomendação: CHAT PRÓPRIO.**
+  O Work de garantia (Opção B) tem **seu próprio `ChatRoom`**, separado do trabalho original.
+  *Por quê:* é um novo `Work` com ciclo próprio — um chat dedicado isola a conversa do reparo (evita
+  poluir o histórico do atendimento original), mantém o padrão "cada Work tem seu chat" e simplifica a
+  regra (a criação do chat de garantia usa o mesmo caminho de `create`/`approve`). O vínculo pai↔filho
+  (`parentWorkId`) já permite navegar entre as duas conversas se necessário.
+
+- **Q-G — Reparo de reparo → ✅ recomendação: BLOQUEAR no MVP.**
+  `requestWarranty` deve **recusar** quando o alvo já é um Work `isWarranty = true`.
+  *Por quê:* evita recursão/aninhamento e complexidade de contador; a garantia cobre o **serviço original**.
+  Se o próprio reparo falhar, o tratamento é operacional (novo contato/nova solicitação sobre o trabalho
+  original enquanto na janela), não uma garantia aninhada. Reavaliar só se o produto pedir explicitamente.
+
+- **Q-H — "Garantia atendida" no perfil → ✅ recomendação: REPARO CONCLUÍDO.**
+  O número de destaque "atendidas" = **`warrantiesCompleted`** (Work de garantia `Finished`), não apenas
+  "aprovadas". *Por quê:* para o cliente que olha o perfil, "atendida" significa **problema resolvido**
+  (o reparo foi feito), o que é o sinal de confiança real — "aprovada" só indica intenção. Sugestão de
+  exibição: número principal = **atendidas/total** (`warrantiesCompleted` / `warrantiesTotal`); expor
+  `warrantiesApproved`/`InProgress` como detalhe secundário se o layout quiser.
 
 ---
 
