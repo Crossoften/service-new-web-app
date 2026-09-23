@@ -15,6 +15,47 @@
 
   <p class="hub-descricao">Sua conta pode atuar em várias categorias. Escolha uma para começar.</p>
 
+  <!-- URGÊNCIA / PENDÊNCIAS (E2E-2a) — cards separados por tipo -->
+  @if (trabalhosAprovados > 0) {
+    <button class="hub-alerta" (click)="irTrabalhos()">
+      <div class="hub-alerta__icone">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+      </div>
+      <div class="hub-alerta__info">
+        <span class="hub-alerta__titulo">
+          {{ trabalhosAprovados === 1 ? 'Trabalho aprovado — inicie' : trabalhosAprovados + ' trabalhos aprovados — inicie' }}
+        </span>
+        <span class="hub-alerta__sub">Serviços · o cliente aprovou o orçamento</span>
+      </div>
+      <svg class="hub-alerta__seta" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+  }
+
+  @if (orcamentosPendentes > 0) {
+    <button class="hub-alerta" (click)="irOrcamentos()">
+      <div class="hub-alerta__icone">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </div>
+      <div class="hub-alerta__info">
+        <span class="hub-alerta__titulo">
+          {{ orcamentosPendentes === 1 ? 'Orçamento a responder' : orcamentosPendentes + ' orçamentos a responder' }}
+        </span>
+        <span class="hub-alerta__sub">Serviços · aguardando sua resposta</span>
+      </div>
+      <svg class="hub-alerta__seta" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+  }
+
   <div class="hub-grid">
     @for (vertical of verticais; track vertical.rota) {
       <button class="hub-card" (click)="abrir(vertical)">
