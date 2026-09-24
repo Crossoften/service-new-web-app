@@ -1,0 +1,54 @@
+<div class="page-container">
+
+  <div class="msg-header">
+    <h1 class="msg-header__titulo">Mensagens</h1>
+  </div>
+
+  <div class="page-content">
+
+    @if (carregando) {
+      <p class="msg-msg">Carregando conversas…</p>
+    } @else if (erro) {
+      <p class="msg-msg">{{ erro }}</p>
+    } @else if (conversas.length === 0) {
+      <p class="msg-msg">Você ainda não tem conversas.</p>
+    } @else {
+      <div class="msg-lista">
+        @for (conversa of conversas; track conversa.id) {
+          <button class="msg-item" (click)="abrir(conversa)">
+            <div class="msg-item__foto">
+              @if (conversa.foto) {
+                <img [src]="conversa.foto" [alt]="conversa.titulo" />
+              } @else {
+                <div class="msg-item__foto-placeholder">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+              }
+            </div>
+
+            <div class="msg-item__info">
+              <span class="msg-item__nome">{{ conversa.titulo }}</span>
+              <span class="msg-item__previa" [class.msg-item__previa--forte]="conversa.naoLidas > 0">
+                {{ conversa.previa || 'Sem mensagens ainda' }}
+              </span>
+            </div>
+
+            <div class="msg-item__meta">
+              @if (conversa.quando) { <span class="msg-item__quando">{{ conversa.quando }}</span> }
+              @if (conversa.naoLidas > 0) {
+                <span class="msg-item__badge">{{ conversa.naoLidas > 99 ? '99+' : conversa.naoLidas }}</span>
+              }
+            </div>
+          </button>
+        }
+      </div>
+    }
+
+  </div>
+
+  <app-bottom-nav-cliente tabAtiva="mensagens" [naoLidas]="totalNaoLidas"></app-bottom-nav-cliente>
+
+</div>

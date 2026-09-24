@@ -28,3 +28,25 @@
     color: var(--color-primary);
   }
 }
+
+// Badge de não-lidos na aba Mensagens (BE-Q5).
+.nav-item__icone {
+  position: relative;
+  display: inline-flex;
+}
+
+.nav-item__badge {
+  position: absolute;
+  top: -6px;
+  left: 12px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}

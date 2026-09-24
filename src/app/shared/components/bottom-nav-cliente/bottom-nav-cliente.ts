@@ -10,8 +10,9 @@ export type TabCliente = 'inicio' | 'atividade' | 'mensagens' | 'perfil';
 
 /**
  * Menu inferior compartilhado do CLIENTE. Substitui os navs hardcoded por tela.
- * Lançado com 3 abas (Início · Atividade · Perfil); Mensagens entra quando o
- * inbox de chats existir no back (BE-Q5).
+ * Abas: Início · Atividade · Mensagens · Perfil (Mensagens habilitada com o inbox
+ * de chats — BE-Q5). O componente é **puro**: o total de não-lidos chega por
+ * `@Input() naoLidas`; quem busca o número é a tela (nunca este nav).
  */
 @Component({
   selector: 'app-bottom-nav-cliente',
@@ -21,6 +22,8 @@ export type TabCliente = 'inicio' | 'atividade' | 'mensagens' | 'perfil';
 })
 export class BottomNavClienteComponent {
   @Input() tabAtiva: TabCliente = 'inicio';
+  /** Total de mensagens não lidas para o badge da aba Mensagens (BE-Q5). */
+  @Input() naoLidas = 0;
 
   constructor(public router: Router) {}
 

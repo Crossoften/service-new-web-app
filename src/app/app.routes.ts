@@ -18,6 +18,7 @@ import { SelecionarPerfilComponent } from './features/auth/selecionar-perfil/sel
 import { CadastroComponent } from './features/auth/cadastro/cadastro';
 import { CadastroSucessoComponent } from './features/auth/cadastro-sucesso/cadastro-sucesso';
 import { PerfilComponent } from './features/private/perfil/perfil';
+import { MensagensComponent } from './features/private/mensagens/mensagens';
 import { EsqueciSenhaComponent } from './features/auth/esqueci-senha/esqueci-senha';
 import { RedefinirSenhaComponent } from './features/auth/redefinir-senha/redefinir-senha';
 import { ListagemDeliveryComponent } from './features/private/delivery/listagem-delivery/listagem-delivery';
@@ -107,6 +108,7 @@ export const routes: Routes = [
   // Cliente / área geral (exige sessão)
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
   { path: 'atividade', component: AtividadeComponent, canActivate: [authGuard] },
+  { path: 'mensagens', component: MensagensComponent, canActivate: [authGuard] },
   { path: 'perfil', component: PerfilComponent, canActivate: [authGuard] },
 
   // Delivery Cliente

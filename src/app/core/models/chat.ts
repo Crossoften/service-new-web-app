@@ -59,3 +59,39 @@ export interface CreateChatMessageDto {
   fileUrl?: string;
   fileKey?: string;
 }
+
+/** Total de mensagens não lidas — `GET /v1/chats/unread-count` (BE-Q5). */
+export interface ResponseUnreadCountDto {
+  total: number;
+}
+
+/** Última mensagem de uma conversa no inbox (ResponseChatLastMessageDto). */
+export interface ChatLastMessageDto {
+  id: number;
+  message?: string;
+  fileName?: string;
+  senderId: number;
+  createdAt: string;
+}
+
+/** Item do inbox de conversas (ResponseChatInboxItemDto — BE-Q5). */
+export interface ChatInboxItemDto {
+  id: number;
+  contextType: ChatContextType;
+  referenceId: number;
+  lastMessageAt?: string;
+  otherUser?: ChatOtherUserDto;
+  lastMessage?: ChatLastMessageDto;
+  /** Mensagens da contraparte não lidas nesta conversa. */
+  unreadCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Retorno de `GET /v1/chats` (ResponseFindChatsDto — inbox paginado). */
+export interface ResponseFindChatsDto {
+  chats: ChatInboxItemDto[];
+  currentPage: number;
+  totalPages: number;
+  totalRecords: number;
+}
