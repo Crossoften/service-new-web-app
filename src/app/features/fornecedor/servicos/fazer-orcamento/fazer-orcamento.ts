@@ -146,6 +146,12 @@ export class FazerOrcamentoComponent implements OnInit {
     return Number.isFinite(n) && n > 0 ? n : 7;
   }
 
+  /** Abre a sala de chat do orçamento (BE-CHAT-1). */
+  abrirChat() {
+    const chatId = this.orcamento?.chatId;
+    if (chatId) this.router.navigate(['/chat', chatId]);
+  }
+
   voltar() {
     history.back();
   }

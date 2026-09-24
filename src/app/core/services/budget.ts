@@ -22,6 +22,8 @@ export interface OrcamentoFornecedor {
   descricao: string;
   distancia: string;
   arquivos: { nome: string; tipo: string }[];
+  /** Sala de chat do orçamento (BE-CHAT-1); ausente em orçamentos antigos. */
+  chatId?: number;
 }
 
 /**
@@ -50,6 +52,8 @@ export interface Orcamento {
   temAcrescimoPendente: boolean;
   /** Motivo da recusa, quando o cliente recusou o preço (§8.8). */
   motivoRecusa?: string;
+  /** Sala de chat do orçamento (BE-CHAT-1); ausente em orçamentos antigos. */
+  chatId?: number;
 }
 
 interface ResponseFindAllBudgetDto {
@@ -173,6 +177,7 @@ export class BudgetService {
       descricao: b.description ?? '',
       distancia: '',
       arquivos: [],
+      chatId: b.chat?.id,
     };
   }
 
@@ -184,6 +189,7 @@ export class BudgetService {
       descricao: b.description ?? '',
       distancia: '',
       arquivos: (b.files ?? []).map((f) => ({ nome: f.fileName, tipo: f.type })),
+      chatId: b.chat?.id,
     };
   }
 
@@ -235,6 +241,7 @@ export class BudgetService {
       comentario: '',
       descricao: b.description ?? '',
       temAcrescimoPendente: b.extraRequestStatus === 'Pending',
+      chatId: b.chat?.id,
     };
   }
 
@@ -252,6 +259,7 @@ export class BudgetService {
       descricao: b.description ?? '',
       temAcrescimoPendente: b.extraRequestStatus === 'Pending',
       motivoRecusa: b.rejectReason,
+      chatId: b.chat?.id,
     };
   }
 }

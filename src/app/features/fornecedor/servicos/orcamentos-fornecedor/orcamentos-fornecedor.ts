@@ -80,4 +80,10 @@ export class OrcamentosFornecedorComponent implements OnInit {
   abrirOrcamento(orcamento: OrcamentoFornecedor) {
     this.router.navigate(['/fornecedor/servicos/orcamento', orcamento.id]);
   }
+
+  /** Abre a sala de chat do orçamento (BE-CHAT-1) sem abrir o card. */
+  abrirChat(orcamento: OrcamentoFornecedor, event: Event) {
+    event.stopPropagation();
+    if (orcamento.chatId) this.router.navigate(['/chat', orcamento.chatId]);
+  }
 }

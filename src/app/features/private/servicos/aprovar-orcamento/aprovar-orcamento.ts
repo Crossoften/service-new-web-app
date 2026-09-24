@@ -113,6 +113,12 @@ export class AprovarOrcamentoComponent implements OnInit {
       });
   }
 
+  /** Abre a sala de chat do orçamento (BE-CHAT-1). */
+  abrirChat() {
+    const chatId = this.orcamento?.chatId;
+    if (chatId) this.router.navigate(['/chat', chatId]);
+  }
+
   voltar() {
     history.back();
   }

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
@@ -75,6 +75,20 @@ describe('AprovarOrcamentoComponent', () => {
     const req = httpMock.expectOne((r) => r.url.endsWith('/budgets/1/reject'));
     expect(req.request.body).toEqual({ rejectReason: undefined });
     req.flush({ id: 1, status: 'Rejected' });
+  });
+
+  it('abrirChat navega para a sala do orçamento (BE-CHAT-1)', () => {
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component.orcamento!.chatId = 55;
+    component.abrirChat();
+    expect(nav).toHaveBeenCalledWith(['/chat', 55]);
+  });
+
+  it('abrirChat sem sala (orçamento antigo) não navega', () => {
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component.orcamento!.chatId = undefined;
+    component.abrirChat();
+    expect(nav).not.toHaveBeenCalled();
   });
 
   it('desfechoLabel reflete o status terminal', () => {

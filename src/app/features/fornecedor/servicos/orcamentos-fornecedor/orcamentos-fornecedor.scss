@@ -196,3 +196,21 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+// Botão de chat no card do orçamento (BE-CHAT-1).
+.of-card__chat {
+  flex-shrink: 0;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-gray-100);
+  color: var(--color-primary);
+  cursor: pointer;
+
+  &:active { opacity: 0.85; }
+}

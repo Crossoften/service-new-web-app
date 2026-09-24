@@ -1,5 +1,10 @@
 import { BudgetStatus, BudgetScope, BudgetTimeUnit, ExtraRequestStatus } from './enums';
 
+/** Sala de chat vinculada ao orçamento (ResponseBudgetChatDto — BE-CHAT-1). */
+export interface BudgetChatSummaryDto {
+  id: number;
+}
+
 export interface BudgetServiceSummaryDto {
   id: number;
   name: string;
@@ -49,6 +54,11 @@ export interface BudgetDto {
   providerId: number;
   provider: BudgetUserDto;
   files: BudgetFileDto[];
+  /**
+   * Sala de chat do orçamento (BE-CHAT-1). **Opcional**: orçamentos antigos não
+   * têm sala. Ao aprovar, a mesma sala vira a do trabalho (`budget.chat.id === work.chat.id`).
+   */
+  chat?: BudgetChatSummaryDto;
   /** Preenchido quando o cliente aprovou (§8.8). */
   acceptedAt?: string;
   /** Preenchido quando o cliente recusou o preço (§8.8). */
@@ -71,6 +81,8 @@ export interface BudgetListItemDto {
   service: BudgetServiceSummaryDto;
   requester: BudgetUserDto;
   provider: BudgetUserDto;
+  /** Sala de chat do orçamento (BE-CHAT-1). Opcional (orçamentos antigos não têm). */
+  chat?: BudgetChatSummaryDto;
   createdAt: string;
 }
 

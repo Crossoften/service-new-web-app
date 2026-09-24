@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
@@ -36,6 +36,13 @@ describe('FazerOrcamentoComponent', () => {
   });
 
   afterEach(() => httpMock.verify());
+
+  it('abrirChat navega para a sala do orçamento (BE-CHAT-1)', () => {
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component.orcamento!.chatId = 55;
+    component.abrirChat();
+    expect(nav).toHaveBeenCalledWith(['/chat', 55]);
+  });
 
   it('exige valor válido', () => {
     component.enviar();
