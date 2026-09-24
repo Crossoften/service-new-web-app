@@ -51,6 +51,10 @@
             <span class="solicitacao-card__nome">{{ solicitacao.prestador.nome }}</span>
             <span class="solicitacao-card__profissao">● {{ solicitacao.prestador.profissao }}</span>
 
+            @if (solicitacao.ehGarantia) {
+              <span class="solicitacao-card__badge-garantia">Garantia</span>
+            }
+
             @if (solicitacao.status === 'em_garantia' && solicitacao.servicos) {
               <span class="solicitacao-card__servicos">🗂 {{ solicitacao.servicos }} serviços</span>
             }

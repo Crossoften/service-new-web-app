@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
@@ -133,5 +133,42 @@ describe('DetalhesSolicitacaoComponent', () => {
     expect(component.solicitacao?.garantiaStatus).toBe('Approved');
     expect(component.solicitacao?.garantiaResposta).toBe('Ajuste sem custo agendado.');
     expect(component.works.garantiaStatusLabel('Approved')).toBe('Garantia aprovada');
+  });
+
+  // ── Reparo (BE-W1): sem custo e sem garantia de garantia ────────────────────
+
+  it('reparo: não permite solicitar garantia mesmo dentro da validade', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', isWarranty: true, isUnderWarranty: true }),
+    );
+    expect(component.ehGarantia).toBe(true);
+    expect(component.podeSolicitarGarantia).toBe(false);
+  });
+
+  it('reparo: "serviço concluído" volta à lista sem ir ao pagamento (sem custo)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', isWarranty: true }),
+    );
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component.servicoConcluido();
+    expect(nav).toHaveBeenCalledWith(['/servicos/solicitacoes']);
+  });
+
+  it('reparo: expõe o serviço original e navega até ele', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', isWarranty: true, parentWorkId: 7 }),
+    );
+    expect(component.solicitacao?.trabalhoOriginalId).toBe(7);
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component.abrirSolicitacao(component.solicitacao?.trabalhoOriginalId);
+    expect(nav).toHaveBeenCalledWith(['/servicos/solicitacao', 7]);
+  });
+
+  it('original: lista os reparos abertos (warrantyWorks)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', warrantyWorks: [{ id: 20, status: 'Finished' }] }),
+    );
+    expect(component.solicitacao?.reparos).toEqual([{ id: 20, status: 'Finished' }]);
+    expect(component.reparoStatusLabel('Finished')).toBe('Concluído');
   });
 });

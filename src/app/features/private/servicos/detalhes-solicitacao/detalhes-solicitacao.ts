@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkService, Solicitacao } from '../../../../core/services/work';
+import { WorkStatus } from '../../../../core/models/enums';
 import { ApiError } from '../../../../core/models/common';
 
 export type StepSolicitacao = 'aguardando' | 'cancelavel' | 'em_andamento' | 'concluido' | 'cancelado';
@@ -101,16 +102,51 @@ export class DetalhesSolicitacaoComponent implements OnInit {
   }
 
   servicoConcluido() {
-    if (this.solicitacao?.pago) {
+    // Reparo de garantia é sem custo (BE-W1): não há etapa de pagamento.
+    if (this.solicitacao?.pago || this.ehGarantia) {
       this.router.navigate(['/servicos/solicitacoes']);
       return;
     }
     this.router.navigate(['/servicos/pagamento', this.solicitacaoId]);
   }
 
-  /** Cliente pode acionar garantia: dentro da validade e sem pedido pendente. */
+  /** Esta solicitação é um reparo de garantia (BE-W1): sem custo e sem re-garantia. */
+  get ehGarantia(): boolean {
+    return !!this.solicitacao?.ehGarantia;
+  }
+
+  /**
+   * Cliente pode acionar garantia: dentro da validade, sem pedido pendente e
+   * **desde que o próprio trabalho não seja um reparo** — a API recusa garantia
+   * de garantia com 400 (Q-G).
+   */
   get podeSolicitarGarantia(): boolean {
-    return !!this.solicitacao?.sobGarantia && this.solicitacao?.garantiaStatus !== 'Pending';
+    return (
+      !!this.solicitacao?.sobGarantia &&
+      this.solicitacao?.garantiaStatus !== 'Pending' &&
+      !this.ehGarantia
+    );
+  }
+
+  /** Abre outra solicitação (link reparo ↔ original). */
+  abrirSolicitacao(id?: number) {
+    if (id) this.router.navigate(['/servicos/solicitacao', id]);
+  }
+
+  /** Rótulo curto do status de um reparo listado (warrantyWorks). */
+  reparoStatusLabel(status: WorkStatus): string {
+    switch (status) {
+      case 'Pending':
+        return 'Aguardando início';
+      case 'InProgress':
+        return 'Em andamento';
+      case 'Finished':
+        return 'Concluído';
+      case 'Cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
   }
 
   solicitarGarantia() {
