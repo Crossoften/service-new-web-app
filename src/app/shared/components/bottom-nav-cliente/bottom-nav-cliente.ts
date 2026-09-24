@@ -1,6 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ChatUnreadStore } from '../../../core/services/chat-unread-store';
 
 /**
  * Aba ativa do menu do cliente. `mensagens` está previsto (inbox de chats) mas
@@ -22,8 +23,8 @@ export type TabCliente = 'inicio' | 'atividade' | 'mensagens' | 'perfil';
 })
 export class BottomNavClienteComponent {
   @Input() tabAtiva: TabCliente = 'inicio';
-  /** Total de mensagens não lidas para o badge da aba Mensagens (BE-Q5). */
-  @Input() naoLidas = 0;
+  /** Total de não lidos (badge da aba Mensagens) — lido do store, sem HTTP aqui. */
+  protected readonly unread = inject(ChatUnreadStore);
 
   constructor(public router: Router) {}
 

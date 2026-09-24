@@ -87,4 +87,11 @@ describe('HubFornecedorComponent', () => {
     component.irPerfil();
     expect(nav).toHaveBeenCalledWith(['/fornecedor/perfil']);
   });
+
+  it('irMensagens() leva ao inbox de conversas (BE-Q5)', () => {
+    flush();
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component.irMensagens();
+    expect(nav).toHaveBeenCalledWith(['/mensagens']);
+  });
 });

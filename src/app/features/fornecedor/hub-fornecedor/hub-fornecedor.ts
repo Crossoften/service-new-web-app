@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { WorkService, TrabalhoFornecedor } from '../../../core/services/work';
 import { BudgetService, OrcamentoFornecedor } from '../../../core/services/budget';
+import { ChatUnreadStore } from '../../../core/services/chat-unread-store';
 
 interface VerticalCard {
   icone: string;
@@ -31,6 +32,7 @@ export class HubFornecedorComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly works = inject(WorkService);
   private readonly budgets = inject(BudgetService);
+  protected readonly unread = inject(ChatUnreadStore);
 
   trabalhosAprovados = 0;
   orcamentosPendentes = 0;
@@ -46,6 +48,7 @@ export class HubFornecedorComponent implements OnInit {
   ];
 
   ngOnInit() {
+    this.unread.refresh(); // badge de não-lidos no hub (BE-Q5)
     // Trabalho aprovado pelo cliente = Work Received com status Pending (ainda não iniciado).
     this.works.trabalhos().pipe(catchError(() => of([] as TrabalhoFornecedor[]))).subscribe((lista) => {
       this.trabalhosAprovados = lista.filter((t) => t.statusApi === 'Pending').length;
@@ -75,5 +78,9 @@ export class HubFornecedorComponent implements OnInit {
 
   irAssinaturas() {
     this.router.navigate(['/fornecedor/assinaturas']);
+  }
+
+  irMensagens() {
+    this.router.navigate(['/mensagens']);
   }
 }

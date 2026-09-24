@@ -19,6 +19,7 @@ import { BookingDto } from '../../../core/models/booking';
 import { JobApplicationDto } from '../../../core/models/job-application';
 import { Page } from '../../../core/models/pagination';
 import { BottomNavClienteComponent } from '../../../shared/components/bottom-nav-cliente/bottom-nav-cliente';
+import { ChatUnreadStore } from '../../../core/services/chat-unread-store';
 
 type CategoriaId = 'servicos' | 'delivery' | 'compra-venda' | 'aluguel' | 'transporte' | 'hospedagem' | 'empregos';
 
@@ -61,11 +62,13 @@ export class AtividadeComponent implements OnInit {
   private readonly accommodation = inject(AccommodationService);
   private readonly jobs = inject(JobService);
   private readonly router = inject(Router);
+  private readonly unread = inject(ChatUnreadStore);
 
   carregando = false;
   categorias: CategoriaAtividade[] = [];
 
   ngOnInit() {
+    this.unread.refresh(); // badge de não-lidos do menu (BE-Q5)
     this.carregando = true;
     forkJoin({
       solicitacoes: this.arr(this.works.minhasSolicitacoes()),

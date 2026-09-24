@@ -8,6 +8,7 @@ import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../core/models/food
 import { WorkService, Solicitacao } from '../../../core/services/work';
 import { BudgetService, Orcamento } from '../../../core/services/budget';
 import { BottomNavClienteComponent } from '../../../shared/components/bottom-nav-cliente/bottom-nav-cliente';
+import { ChatUnreadStore } from '../../../core/services/chat-unread-store';
 
 /** Status de pedido ainda "em andamento" (não entregue nem cancelado). */
 const STATUS_ATIVOS: FoodOrderStatus[] = ['Received', 'Accepted', 'Preparing', 'OnTheWay'];
@@ -33,6 +34,7 @@ export class HomeComponent implements OnInit {
   private readonly delivery = inject(DeliveryService);
   private readonly works = inject(WorkService);
   private readonly budgets = inject(BudgetService);
+  private readonly unread = inject(ChatUnreadStore);
   private readonly router = inject(Router);
 
   devMenuAberto = false;
@@ -60,6 +62,7 @@ export class HomeComponent implements OnInit {
   ];
 
   ngOnInit() {
+    this.unread.refresh(); // badge de não-lidos do menu (BE-Q5)
     this.profile.me().subscribe({
       next: (p) => {
         this.nome = p.name ?? '';

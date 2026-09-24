@@ -27,27 +27,24 @@ describe('MensagensComponent', () => {
 
   afterEach(() => httpMock.verify());
 
-  function flush(chats: unknown[] = [], total = 0) {
+  // O total do badge vem do store (refresh guardado por sessão): em teste sem
+  // sessão, não há chamada a /chats/unread-count — só o inbox é buscado.
+  function flush(chats: unknown[] = []) {
     httpMock.expectOne((r) => r.url.endsWith('/chats')).flush({
       chats, currentPage: 1, totalPages: 1, totalRecords: chats.length,
     });
-    httpMock.expectOne((r) => r.url.endsWith('/chats/unread-count')).flush({ total });
   }
 
-  it('carrega o inbox e o total de não-lidos', () => {
-    flush(
-      [{ id: 55, contextType: 'Budget', referenceId: 9, unreadCount: 2, otherUser: { id: 9, name: 'Joelson' }, createdAt: '', updatedAt: '' }],
-      2,
-    );
+  it('carrega o inbox e mapeia a conversa', () => {
+    flush([{ id: 55, contextType: 'Budget', referenceId: 9, unreadCount: 2, otherUser: { id: 9, name: 'Joelson' }, createdAt: '', updatedAt: '' }]);
     expect(component.conversas.length).toBe(1);
     expect(component.conversas[0].titulo).toBe('Joelson');
-    expect(component.totalNaoLidas).toBe(2);
+    expect(component.conversas[0].naoLidas).toBe(2);
   });
 
   it('lista vazia quando não há conversas', () => {
-    flush([], 0);
+    flush([]);
     expect(component.conversas.length).toBe(0);
-    expect(component.totalNaoLidas).toBe(0);
   });
 
   it('abrir navega para a sala do chat', () => {
@@ -59,7 +56,6 @@ describe('MensagensComponent', () => {
 
   it('tolera falha do inbox sem quebrar', () => {
     httpMock.expectOne((r) => r.url.endsWith('/chats')).flush('x', { status: 500, statusText: 'e' });
-    httpMock.expectOne((r) => r.url.endsWith('/chats/unread-count')).flush({ total: 0 });
     expect(component.carregando).toBe(false);
     expect(component.erro.length).toBeGreaterThan(0);
   });

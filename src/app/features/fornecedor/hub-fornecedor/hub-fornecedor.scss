@@ -157,3 +157,17 @@
 
   &__seta { color: #5d6f79; flex-shrink: 0; }
 }
+
+// Badge de não-lidos na linha "Mensagens" do hub (BE-Q5).
+.hub-assinaturas__badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}

@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ChatService, ConversaInbox } from '../../../core/services/chat';
+import { ChatUnreadStore } from '../../../core/services/chat-unread-store';
 import { ApiError } from '../../../core/models/common';
 import { BottomNavClienteComponent } from '../../../shared/components/bottom-nav-cliente/bottom-nav-cliente';
 
@@ -17,10 +18,10 @@ import { BottomNavClienteComponent } from '../../../shared/components/bottom-nav
 })
 export class MensagensComponent implements OnInit {
   private readonly chat = inject(ChatService);
+  private readonly unread = inject(ChatUnreadStore);
   private readonly router = inject(Router);
 
   conversas: ConversaInbox[] = [];
-  totalNaoLidas = 0;
   carregando = false;
   erro = '';
 
@@ -41,11 +42,8 @@ export class MensagensComponent implements OnInit {
         this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar as conversas.';
       },
     });
-    // Total para o badge do menu (contagem oficial do back, não a soma da página).
-    this.chat.naoLidasTotal().subscribe({
-      next: (t) => (this.totalNaoLidas = t),
-      error: () => (this.totalNaoLidas = 0),
-    });
+    // Atualiza o badge do menu com a contagem oficial (BE-Q5).
+    this.unread.refresh();
   }
 
   abrir(conversa: ConversaInbox) {
