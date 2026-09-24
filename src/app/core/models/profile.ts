@@ -1,4 +1,5 @@
 import { BillingType, SocialNetwork, UserProfileType, UserRole, UserStatus } from './enums';
+import { ResponseWarrantyStatsDto } from './warranty-stats';
 
 /** Rede social vinculada ao perfil (ResponseProfileSocialMediaDto). */
 export interface ResponseProfileSocialMediaDto {
@@ -47,6 +48,8 @@ export interface ResponseProfileDto {
   updatedAt: string;
   address?: ResponseAddressDto;
   billingType?: BillingType;
+  /** Contadores de garantia do próprio fornecedor (BE-W7). */
+  warranties?: ResponseWarrantyStatsDto;
 }
 
 /** Corpo de `PATCH /v1/profile/me` (UpdateProfileDto). Todos os campos são opcionais. */

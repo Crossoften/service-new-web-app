@@ -104,6 +104,21 @@ describe('PerfilComponent', () => {
     expect(component.pushMsg.length).toBeGreaterThan(0);
   });
 
+  it('carrega os contadores de garantia do fornecedor no profile/me (BE-W7)', () => {
+    fixture.detectChanges(); // dispara o ngOnInit → GET /profile/me
+    const req = httpMock.expectOne((r) => r.url.endsWith('/profile/me') && r.method === 'GET');
+    req.flush({
+      id: 1, name: 'Joelson', email: 'j@e', role: 'User', profileType: 'Supplier',
+      status: 'Active', socialMedias: [], createdAt: '', updatedAt: '',
+      warranties: {
+        warrantiesTotal: 7, warrantiesApproved: 6, warrantiesRejected: 1,
+        warrantiesPending: 0, warrantiesCompleted: 5, warrantiesInProgress: 1,
+      },
+    });
+    expect(component.perfil?.warranties?.warrantiesCompleted).toBe(5);
+    expect(component.perfil?.warranties?.warrantiesTotal).toBe(7);
+  });
+
   it('sair() cancela a inscrição push antes de deslogar (§8.10)', async () => {
     const push = TestBed.inject(PushService);
     const desativar = vi.spyOn(push, 'desativar').mockResolvedValue();

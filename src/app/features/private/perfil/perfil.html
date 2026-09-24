@@ -155,6 +155,30 @@
         }
       </div>
 
+      <!-- GARANTIAS (fornecedor) — BE-W7 -->
+      @if (isSupplier && perfil?.warranties) {
+        <div class="perfil-secao">
+          <span class="perfil-secao__titulo">Garantias</span>
+          <p class="perfil-garantias__destaque">
+            🛡 {{ perfil?.warranties?.warrantiesCompleted || 0 }} de {{ perfil?.warranties?.warrantiesTotal || 0 }} atendidas
+          </p>
+          <div class="perfil-garantias__grid">
+            <div class="perfil-garantias__item">
+              <span class="perfil-garantias__num">{{ perfil?.warranties?.warrantiesInProgress || 0 }}</span>
+              <span class="perfil-garantias__lbl">Em andamento</span>
+            </div>
+            <div class="perfil-garantias__item">
+              <span class="perfil-garantias__num">{{ perfil?.warranties?.warrantiesPending || 0 }}</span>
+              <span class="perfil-garantias__lbl">Pendentes</span>
+            </div>
+            <div class="perfil-garantias__item">
+              <span class="perfil-garantias__num">{{ perfil?.warranties?.warrantiesRejected || 0 }}</span>
+              <span class="perfil-garantias__lbl">Recusadas</span>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- COBRANÇA (fornecedor) -->
       @if (isSupplier) {
         <div class="perfil-secao">
