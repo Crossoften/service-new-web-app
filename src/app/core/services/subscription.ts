@@ -38,6 +38,19 @@ export class SubscriptionService {
   }
 
   /**
+   * Assinatura "atual" de uma categoria — `GET /v1/subscriptions/current` (Bearer).
+   * Com várias assinaturas, "a atual" ficou ambígua: passe `categoryId` para obter
+   * a da categoria certa. Devolve **também a vencida** (de propósito, para oferecer
+   * a renovação) — quem diz se vale são `expired`/`inGracePeriod`, não a ausência.
+   */
+  current(categoryId?: number): Observable<ResponseSubscriptionDto> {
+    return this.api.get<ResponseSubscriptionDto>(
+      '/subscriptions/current',
+      categoryId != null ? { categoryId } : undefined,
+    );
+  }
+
+  /**
    * Renova manualmente uma assinatura — `POST /v1/subscriptions/:id/renew` (Bearer).
    * Só é aceito quando `needsRenewal` (senão o back responde 400). A resposta traz
    * `checkoutUrl` (Mercado Pago) para concluir o pagamento.

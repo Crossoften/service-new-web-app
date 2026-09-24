@@ -34,13 +34,19 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         session.clear();
         void router.navigate(['/login']);
       } else if (error.status === 403 && requiresSubscription(error)) {
-        // Fornecedor sem assinatura ativa → leva à tela de planos (não redireciona
-        // a partir da própria tela de assinatura nem das rotas de planos/assinatura).
+        // Fornecedor sem assinatura ativa **daquela categoria** → leva à tela de
+        // planos (não redireciona a partir das telas de assinatura nem das rotas
+        // de planos/assinatura). O `403` agora traz `categoryId`: quando vem,
+        // levamos direto à categoria certa (a tela pré-seleciona / manda renovar).
         const url = error.url ?? '';
         const naTelaDeAssinatura = router.url.startsWith('/fornecedor/assinatura');
         const chamadaDeAssinatura = url.includes('/plans') || url.includes('/subscriptions');
         if (!naTelaDeAssinatura && !chamadaDeAssinatura) {
-          void router.navigate(['/fornecedor/assinatura']);
+          const categoryId = extractCategoryId(error.error as unknown);
+          void router.navigate(
+            ['/fornecedor/assinatura'],
+            categoryId != null ? { queryParams: { categoryId } } : {},
+          );
         }
       }
       return throwError(() => normalize(error));
@@ -51,6 +57,17 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 function requiresSubscription(error: HttpErrorResponse): boolean {
   const message = extractMessage(error.error as unknown) ?? '';
   return message.toLowerCase().includes(SUBSCRIPTION_REQUIRED);
+}
+
+/** Lê o `categoryId` do corpo do 403 de assinatura (quando o back o envia). */
+function extractCategoryId(raw: unknown): number | null {
+  if (raw && typeof raw === 'object' && 'categoryId' in raw) {
+    const id = (raw as { categoryId: unknown }).categoryId;
+    if (typeof id === 'number' && Number.isFinite(id)) {
+      return id;
+    }
+  }
+  return null;
 }
 
 function normalize(error: HttpErrorResponse): ApiError {

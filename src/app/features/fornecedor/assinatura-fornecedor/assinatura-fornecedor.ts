@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SubscriptionService } from '../../../core/services/subscription';
@@ -25,6 +26,8 @@ import { ApiError } from '../../../core/models/common';
 })
 export class AssinaturaFornecedorComponent implements OnInit {
   private readonly subscriptions = inject(SubscriptionService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   planos: ResponsePlanDto[] = [];
   categorias: ResponseCatalogCategoryDto[] = [];
@@ -44,10 +47,13 @@ export class AssinaturaFornecedorComponent implements OnInit {
         this.carregando = false;
         this.planos = res.plans ?? [];
         this.categorias = res.categories ?? [];
-        // Pré-seleciona a primeira categoria ainda não assinada.
-        const disponivel = this.categorias.find((c) => !c.isSubscribed);
-        this.categoriaSelecionada = disponivel ? disponivel.id : null;
         this.planoSelecionado = this.planos.length ? this.planos[0].id : null;
+        if (this.aplicarCategoriaDaRota()) return; // redirecionou (categoria vencida)
+        // Sem pré-seleção pela rota: usa a primeira categoria ainda não assinada.
+        if (this.categoriaSelecionada == null) {
+          const disponivel = this.categorias.find((c) => !c.isSubscribed);
+          this.categoriaSelecionada = disponivel ? disponivel.id : null;
+        }
       },
       error: (err: ApiError) => {
         this.carregando = false;
@@ -58,6 +64,26 @@ export class AssinaturaFornecedorComponent implements OnInit {
 
   get temCategoriasDisponiveis(): boolean {
     return this.categorias.some((c) => !c.isSubscribed);
+  }
+
+  /**
+   * Aplica o `?categoryId` da rota (vindo do `403` por categoria).
+   * Categoria disponível → pré-seleciona; já assinada (vencida) → manda renovar
+   * na tela de gestão. Retorna `true` quando redirecionou (aborta o resto).
+   */
+  private aplicarCategoriaDaRota(): boolean {
+    const raw = this.route.snapshot.queryParamMap.get('categoryId');
+    if (raw == null) return false;
+    const alvo = Number(raw);
+    if (!Number.isFinite(alvo)) return false;
+    const cat = this.categorias.find((c) => c.id === alvo);
+    if (!cat) return false;
+    if (cat.isSubscribed) {
+      this.router.navigate(['/fornecedor/assinaturas']);
+      return true;
+    }
+    this.categoriaSelecionada = cat.id;
+    return false;
   }
 
   selecionarCategoria(cat: ResponseCatalogCategoryDto) {

@@ -42,6 +42,21 @@ describe('SubscriptionService', () => {
     req.flush({ message: 'ok', checkoutUrl: 'https://mp/checkout', subscription: {} });
   });
 
+  it('current() sem categoria faz GET /subscriptions/current', () => {
+    service.current().subscribe();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/subscriptions/current'));
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.has('categoryId')).toBe(false);
+    req.flush({});
+  });
+
+  it('current(categoryId) envia o filtro na query', () => {
+    service.current(4).subscribe();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/subscriptions/current'));
+    expect(req.request.params.get('categoryId')).toBe('4');
+    req.flush({});
+  });
+
   it('renew() faz POST /subscriptions/:id/renew', () => {
     service.renew(42).subscribe();
     const req = httpMock.expectOne(`${base}/subscriptions/42/renew`);

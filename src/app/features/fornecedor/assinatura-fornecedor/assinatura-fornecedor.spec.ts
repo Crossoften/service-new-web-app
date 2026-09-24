@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
@@ -23,34 +23,43 @@ describe('AssinaturaFornecedorComponent', () => {
   let component: AssinaturaFornecedorComponent;
   let fixture: ComponentFixture<AssinaturaFornecedorComponent>;
   let httpMock: HttpTestingController;
+  // Mutável: cada teste ajusta os query params antes de arrancar().
+  const routeSnapshot = { queryParamMap: convertToParamMap({}) };
 
   beforeEach(async () => {
+    routeSnapshot.queryParamMap = convertToParamMap({});
     await TestBed.configureTestingModule({
       imports: [AssinaturaFornecedorComponent],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ActivatedRoute, useValue: { snapshot: routeSnapshot } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AssinaturaFornecedorComponent);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
-    fixture.detectChanges();
   });
 
   afterEach(() => httpMock.verify());
 
-  function flushCatalog(categories: unknown[], plans: unknown[] = [plan()]) {
+  /** Dispara o ngOnInit (após setar query params) e responde o catálogo. */
+  function arrancar(categories: unknown[], plans: unknown[] = [plan()]) {
+    fixture.detectChanges();
     httpMock
       .expectOne((r) => r.url.endsWith('/subscriptions/catalog'))
       .flush({ plans, categories, subscribedCount: 0 });
   }
 
   it('should create', () => {
-    flushCatalog([categoria()]);
+    arrancar([categoria()]);
     expect(component).toBeTruthy();
   });
 
   it('pré-seleciona a primeira categoria não assinada e ignora as já assinadas', () => {
-    flushCatalog([
+    arrancar([
       categoria({ id: 1, name: 'Delivery', isSubscribed: true }),
       categoria({ id: 2, name: 'Serviços' }),
     ]);
@@ -59,14 +68,14 @@ describe('AssinaturaFornecedorComponent', () => {
   });
 
   it('não seleciona categoria já assinada', () => {
-    flushCatalog([categoria({ id: 5, name: 'Delivery', isSubscribed: true })]);
+    arrancar([categoria({ id: 5, name: 'Delivery', isSubscribed: true })]);
     component.selecionarCategoria(component.categorias[0]);
     expect(component.categoriaSelecionada).toBeNull();
     expect(component.temCategoriasDisponiveis).toBe(false);
   });
 
   it('monta o DTO com planId + categoryId e redireciona ao checkout', () => {
-    flushCatalog([categoria({ id: 3 })], [plan({ id: 9 })]);
+    arrancar([categoria({ id: 3 })], [plan({ id: 9 })]);
     component.categoriaSelecionada = 3;
     component.planoSelecionado = 9;
 
@@ -84,7 +93,7 @@ describe('AssinaturaFornecedorComponent', () => {
   });
 
   it('inclui payerEmail quando informado', () => {
-    flushCatalog([categoria({ id: 3 })], [plan({ id: 9 })]);
+    arrancar([categoria({ id: 3 })], [plan({ id: 9 })]);
     component.categoriaSelecionada = 3;
     component.planoSelecionado = 9;
     component.payerEmail = ' pagador@email.com ';
@@ -101,10 +110,26 @@ describe('AssinaturaFornecedorComponent', () => {
   });
 
   it('bloqueia assinatura sem categoria selecionada', () => {
-    flushCatalog([categoria()]);
+    arrancar([categoria()]);
     component.categoriaSelecionada = null;
     component.assinar();
     expect(component.erro).toBe('Selecione uma categoria.');
     httpMock.expectNone((r) => r.url.endsWith('/subscriptions'));
+  });
+
+  it('pré-seleciona a categoria vinda do ?categoryId (403 por categoria)', () => {
+    routeSnapshot.queryParamMap = convertToParamMap({ categoryId: '2' });
+    arrancar([
+      categoria({ id: 1, name: 'Delivery' }),
+      categoria({ id: 2, name: 'Serviços' }),
+    ]);
+    expect(component.categoriaSelecionada).toBe(2);
+  });
+
+  it('redireciona para gestão quando o ?categoryId já é assinado (vencido)', () => {
+    routeSnapshot.queryParamMap = convertToParamMap({ categoryId: '7' });
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    arrancar([categoria({ id: 7, name: 'Serviços', isSubscribed: true })]);
+    expect(nav).toHaveBeenCalledWith(['/fornecedor/assinaturas']);
   });
 });
