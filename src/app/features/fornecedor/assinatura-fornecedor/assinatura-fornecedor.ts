@@ -1,17 +1,21 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SubscriptionService } from '../../../core/services/subscription';
 import { ResponsePlanDto } from '../../../core/models/plan';
-import { CreateSubscriptionDto } from '../../../core/models/subscription';
-import { PaymentMethod } from '../../../core/models/enums';
+import {
+  CreateSubscriptionDto,
+  ResponseCatalogCategoryDto,
+} from '../../../core/models/subscription';
 import { ApiError } from '../../../core/models/common';
 
 /**
- * Assinatura do fornecedor (onboarding pós-login).
- * Lista `GET /plans/active` e cria a assinatura via `POST /subscriptions` —
- * pré-condição para o fornecedor cadastrar restaurante/operar (BE-15).
+ * Contratação de assinatura por categoria (fornecedor).
+ *
+ * Carrega `GET /subscriptions/catalog` (planos + categorias assináveis) e cria a
+ * assinatura via `POST /subscriptions` com `planId` + `categoryId`. O pagamento
+ * é concluído no checkout do Mercado Pago: a resposta traz `checkoutUrl` e o
+ * browser é redirecionado (não há mais coleta de cartão no app).
  */
 @Component({
   selector: 'app-assinatura-fornecedor',
@@ -20,16 +24,14 @@ import { ApiError } from '../../../core/models/common';
   styleUrl: './assinatura-fornecedor.scss',
 })
 export class AssinaturaFornecedorComponent implements OnInit {
-  private readonly router = inject(Router);
   private readonly subscriptions = inject(SubscriptionService);
 
   planos: ResponsePlanDto[] = [];
-  planoSelecionado: number | null = null;
-  metodo: PaymentMethod = 'CreditCard';
+  categorias: ResponseCatalogCategoryDto[] = [];
 
-  // Cartão (quando método = CreditCard)
-  nomeCartao = '';
-  numeroCartao = '';
+  categoriaSelecionada: number | null = null;
+  planoSelecionado: number | null = null;
+  payerEmail = '';
 
   carregando = false;
   assinando = false;
@@ -37,65 +39,69 @@ export class AssinaturaFornecedorComponent implements OnInit {
 
   ngOnInit() {
     this.carregando = true;
-    this.subscriptions.activePlans().subscribe({
+    this.subscriptions.catalog().subscribe({
       next: (res) => {
         this.carregando = false;
         this.planos = res.plans ?? [];
+        this.categorias = res.categories ?? [];
+        // Pré-seleciona a primeira categoria ainda não assinada.
+        const disponivel = this.categorias.find((c) => !c.isSubscribed);
+        this.categoriaSelecionada = disponivel ? disponivel.id : null;
         this.planoSelecionado = this.planos.length ? this.planos[0].id : null;
       },
       error: (err: ApiError) => {
         this.carregando = false;
-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar os planos.';
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o catálogo de assinaturas.';
       },
     });
   }
 
-  get planoAtual(): ResponsePlanDto | null {
-    return this.planos.find((p) => p.id === this.planoSelecionado) ?? null;
+  get temCategoriasDisponiveis(): boolean {
+    return this.categorias.some((c) => !c.isSubscribed);
   }
 
-  precoFmt(plan: ResponsePlanDto): string {
-    const valor = Number(plan.price).toLocaleString('pt-BR', {
+  selecionarCategoria(cat: ResponseCatalogCategoryDto) {
+    if (cat.isSubscribed) return;
+    this.categoriaSelecionada = cat.id;
+    this.erro = '';
+  }
+
+  precoFmt(valor?: number | string): string {
+    const n = typeof valor === 'string' ? Number(valor) : (valor ?? 0);
+    const fmt = (Number.isFinite(n) ? n : 0).toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-    return `R$ ${valor}`;
+    return `R$ ${fmt}`;
   }
 
-  intervaloLabel(plan: ResponsePlanDto): string {
-    return plan.interval === 'Month' ? 'Mensal' : 'Anual';
-  }
-
-  selecionarMetodo(m: PaymentMethod) {
-    this.metodo = m;
+  /** Rótulo do ciclo do plano (usa o nome vindo do back — Mensal/Semestral/Anual). */
+  cicloLabel(plan: ResponsePlanDto): string {
+    if (plan.name?.trim()) return plan.name;
+    if (plan.interval === 'Year') return plan.intervalCount > 1 ? `${plan.intervalCount} anos` : 'Anual';
+    return plan.intervalCount > 1 ? `${plan.intervalCount} meses` : 'Mensal';
   }
 
   assinar() {
     this.erro = '';
+    if (this.categoriaSelecionada == null) {
+      this.erro = 'Selecione uma categoria.';
+      return;
+    }
     if (this.planoSelecionado == null) {
       this.erro = 'Selecione um plano.';
       return;
     }
-    if (this.metodo === 'CreditCard') {
-      if (!this.nomeCartao.trim()) {
-        this.erro = 'Informe o nome do titular.';
-        return;
-      }
-      if (this.numeroCartao.replace(/\D/g, '').length < 16) {
-        this.erro = 'Informe um número de cartão válido.';
-        return;
-      }
-    }
     this.assinando = true;
     this.subscriptions.create(this.buildDto()).subscribe({
-      next: () => {
+      next: (res) => {
         this.assinando = false;
-        // Assinatura ativa → volta para o cadastro do restaurante.
-        this.router.navigate(['/fornecedor/restaurante']);
+        // Conclui o pagamento no checkout do Mercado Pago.
+        window.location.href = res.checkoutUrl;
       },
       error: (err: ApiError) => {
         this.assinando = false;
-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível concluir a assinatura.';
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível iniciar a assinatura.';
       },
     });
   }
@@ -103,22 +109,11 @@ export class AssinaturaFornecedorComponent implements OnInit {
   private buildDto(): CreateSubscriptionDto {
     const dto: CreateSubscriptionDto = {
       planId: this.planoSelecionado as number,
-      method: this.metodo,
+      categoryId: this.categoriaSelecionada as number,
     };
-    if (this.metodo === 'CreditCard') {
-      const card = this.numeroCartao.replace(/\D/g, '');
-      dto.holderName = this.nomeCartao.trim();
-      dto.cardNumber = card;
-      dto.cardBrand = this.detectBrand(card);
-    }
+    const email = this.payerEmail.trim();
+    if (email) dto.payerEmail = email;
     return dto;
-  }
-
-  private detectBrand(num: string): string {
-    if (num.startsWith('4')) return 'Visa';
-    if (/^5[1-5]/.test(num)) return 'Mastercard';
-    if (/^3[47]/.test(num)) return 'Amex';
-    return 'Other';
   }
 
   voltar() {

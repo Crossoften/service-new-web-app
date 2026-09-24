@@ -1,0 +1,671 @@
+diff --git a/src/app/core/models/subscription.ts b/src/app/core/models/subscription.ts
+index 2fc01d7..f2fa36a 100644
+--- a/src/app/core/models/subscription.ts
++++ b/src/app/core/models/subscription.ts
+@@ -1,15 +1,19 @@
+-import { PaymentMethod, SubscriptionStatus } from './enums';
++import { SubscriptionStatus } from './enums';
++import { ResponsePlanDto } from './plan';
+ 
+ /**
+  * Corpo de `POST /v1/subscriptions` (CreateSubscriptionDto).
+- * Obrigatórios: `planId` e `method`. Demais campos (cartão/endereço) são opcionais.
++ *
++ * Contrato novo (assinatura por categoria): o pagamento passou a ser via
++ * checkout externo do Mercado Pago — a resposta traz `checkoutUrl` e o Front
++ * redireciona o browser. Por isso **não há mais** campos de cartão/`method`:
++ * o que o back exige agora é `planId` + `categoryId`. `payerEmail`/endereço são
++ * opcionais (o back usa o e-mail da conta quando omitido).
+  */
+ export interface CreateSubscriptionDto {
+   planId: number;
+-  method: PaymentMethod;
+-  holderName?: string;
+-  cardBrand?: string;
+-  cardNumber?: string;
++  categoryId: number;
++  payerEmail?: string;
+   billingStreet?: string;
+   billingNeighborhood?: string;
+   billingCity?: string;
+@@ -17,7 +21,31 @@ export interface CreateSubscriptionDto {
+   billingZipCode?: string;
+ }
+ 
+-/** Assinatura retornada pela API (subset usado no Front — ResponseSubscriptionDto). */
++/** Categoria vinculada à assinatura (ResponseSubscriptionCategoryDto). */
++export interface ResponseSubscriptionCategoryDto {
++  id: number;
++  name: string;
++  slug: string;
++}
++
++/** Pagamento da assinatura (ResponseSubscriptionPaymentDto). */
++export interface ResponseSubscriptionPaymentDto {
++  id: number;
++  method: string;
++  status: string;
++  amount: string;
++  holderName?: string;
++  cardBrand?: string;
++  cardLast4?: string;
++  paidAt?: string;
++}
++
++/**
++ * Assinatura retornada pela API (ResponseSubscriptionDto).
++ * Os campos derivados (`cancelAtPeriodEnd`, `needsRenewal`, `inGracePeriod`,
++ * `expired`, `daysUntilExpiration`) definem o status exibido — ver a tela de
++ * gestão da assinatura.
++ */
+ export interface ResponseSubscriptionDto {
+   id: number;
+   status: SubscriptionStatus;
+@@ -25,12 +53,59 @@ export interface ResponseSubscriptionDto {
+   planName: string;
+   planInterval: string;
+   intervalCount: number;
++  plan: ResponsePlanDto;
++  category?: ResponseSubscriptionCategoryDto;
++  payment?: ResponseSubscriptionPaymentDto;
++  startedAt?: string;
++  currentPeriodStart?: string;
++  currentPeriodEnd?: string;
++  cancelAtPeriodEnd: boolean;
++  daysUntilExpiration?: number;
++  needsRenewal: boolean;
++  inGracePeriod: boolean;
++  expired: boolean;
++  cancelledAt?: string;
+   createdAt: string;
+   updatedAt: string;
+ }
+ 
+-/** Retorno de `POST /v1/subscriptions` (CreateSubscriptionResponseDto). */
++/**
++ * Retorno de `POST /v1/subscriptions` e `POST /v1/subscriptions/:id/renew`
++ * (CreateSubscriptionResponseDto). `checkoutUrl` é o link do Mercado Pago para
++ * onde o Front redireciona o browser concluir o pagamento.
++ */
+ export interface CreateSubscriptionResponseDto {
+   message: string;
++  checkoutUrl: string;
+   subscription: ResponseSubscriptionDto;
+ }
++
++/** Resumo da assinatura de uma categoria no catálogo (ResponseCatalogSubscriptionDto). */
++export interface ResponseCatalogSubscriptionDto {
++  id: number;
++  planName: string;
++  currentPeriodEnd?: string;
++  daysUntilExpiration?: number;
++  needsRenewal: boolean;
++  inGracePeriod: boolean;
++  expired: boolean;
++  cancelAtPeriodEnd: boolean;
++  coversAllCategories: boolean;
++}
++
++/** Categoria assinável no catálogo (ResponseCatalogCategoryDto). */
++export interface ResponseCatalogCategoryDto {
++  id: number;
++  name: string;
++  slug: string;
++  iconUrl?: string;
++  isSubscribed: boolean;
++  subscription?: ResponseCatalogSubscriptionDto;
++}
++
++/** Retorno de `GET /v1/subscriptions/catalog` (ResponseSubscriptionCatalogDto). */
++export interface ResponseSubscriptionCatalogDto {
++  plans: ResponsePlanDto[];
++  categories: ResponseCatalogCategoryDto[];
++  subscribedCount: number;
++}
+diff --git a/src/app/core/services/subscription.spec.ts b/src/app/core/services/subscription.spec.ts
+index 06d3bba..d00c899 100644
+--- a/src/app/core/services/subscription.spec.ts
++++ b/src/app/core/services/subscription.spec.ts
+@@ -1,20 +1,44 @@
+ import { TestBed } from '@angular/core/testing';
+ import { provideHttpClient } from '@angular/common/http';
+-import { provideHttpClientTesting } from '@angular/common/http/testing';
++import {
++  HttpTestingController,
++  provideHttpClientTesting,
++} from '@angular/common/http/testing';
+ 
+ import { SubscriptionService } from './subscription';
++import { environment } from '../../../environments/environment';
+ 
+ describe('SubscriptionService', () => {
+   let service: SubscriptionService;
++  let httpMock: HttpTestingController;
++  const base = environment.apiBaseUrl;
+ 
+   beforeEach(() => {
+     TestBed.configureTestingModule({
+       providers: [provideHttpClient(), provideHttpClientTesting()],
+     });
+     service = TestBed.inject(SubscriptionService);
++    httpMock = TestBed.inject(HttpTestingController);
+   });
+ 
++  afterEach(() => httpMock.verify());
++
+   it('should be created', () => {
+     expect(service).toBeTruthy();
+   });
++
++  it('catalog() faz GET /subscriptions/catalog', () => {
++    service.catalog().subscribe();
++    const req = httpMock.expectOne(`${base}/subscriptions/catalog`);
++    expect(req.request.method).toBe('GET');
++    req.flush({ plans: [], categories: [], subscribedCount: 0 });
++  });
++
++  it('create() envia planId + categoryId no POST /subscriptions', () => {
++    service.create({ planId: 1, categoryId: 7 }).subscribe();
++    const req = httpMock.expectOne(`${base}/subscriptions`);
++    expect(req.request.method).toBe('POST');
++    expect(req.request.body).toEqual({ planId: 1, categoryId: 7 });
++    req.flush({ message: 'ok', checkoutUrl: 'https://mp/checkout', subscription: {} });
++  });
+ });
+diff --git a/src/app/core/services/subscription.ts b/src/app/core/services/subscription.ts
+index ee3c3a7..a7bd8fa 100644
+--- a/src/app/core/services/subscription.ts
++++ b/src/app/core/services/subscription.ts
+@@ -2,9 +2,13 @@ import { Injectable, inject } from '@angular/core';
+ import { Observable } from 'rxjs';
+ import { ApiService } from './api';
+ import { ResponseFindAllPlansDto } from '../models/plan';
+-import { CreateSubscriptionDto, CreateSubscriptionResponseDto } from '../models/subscription';
++import {
++  CreateSubscriptionDto,
++  CreateSubscriptionResponseDto,
++  ResponseSubscriptionCatalogDto,
++} from '../models/subscription';
+ 
+-/** Planos ativos e criação de assinatura (fluxo do fornecedor). */
++/** Assinatura por categoria do fornecedor: catálogo e criação (checkout MP). */
+ @Injectable({ providedIn: 'root' })
+ export class SubscriptionService {
+   private readonly api = inject(ApiService);
+@@ -14,7 +18,20 @@ export class SubscriptionService {
+     return this.api.get<ResponseFindAllPlansDto>('/plans/active');
+   }
+ 
+-  /** Cria a assinatura do usuário autenticado — `POST /v1/subscriptions` (Bearer). */
++  /**
++   * Catálogo de assinatura — `GET /v1/subscriptions/catalog` (Bearer).
++   * Traz os planos e as categorias assináveis com o status de cada assinatura
++   * (`isSubscribed`), base da tela de contratação por categoria.
++   */
++  catalog(): Observable<ResponseSubscriptionCatalogDto> {
++    return this.api.get<ResponseSubscriptionCatalogDto>('/subscriptions/catalog');
++  }
++
++  /**
++   * Cria a assinatura de uma categoria — `POST /v1/subscriptions` (Bearer).
++   * Exige `planId` + `categoryId`; a resposta traz `checkoutUrl` (Mercado Pago)
++   * para onde o browser é redirecionado.
++   */
+   create(dto: CreateSubscriptionDto): Observable<CreateSubscriptionResponseDto> {
+     return this.api.post<CreateSubscriptionResponseDto>('/subscriptions', dto);
+   }
+diff --git a/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.html b/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.html
+index 2c2b186..85d542a 100644
+--- a/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.html
++++ b/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.html
+@@ -12,48 +12,64 @@
+ 
+   <div class="assin-content">
+ 
+-    <p class="assin-hint">Para cadastrar seu restaurante e receber pedidos, escolha um plano de assinatura.</p>
++    <p class="assin-hint">Escolha a categoria que você quer atender e o plano de assinatura. O pagamento é concluído no checkout do Mercado Pago.</p>
+ 
+     @if (carregando) {
+-      <p class="assin-msg">Carregando planos…</p>
+-    } @else if (planos.length === 0) {
+-      <p class="assin-msg">{{ erro || 'Nenhum plano disponível no momento.' }}</p>
++      <p class="assin-msg">Carregando catálogo…</p>
++    } @else if (categorias.length === 0) {
++      <p class="assin-msg">{{ erro || 'Nenhuma categoria disponível no momento.' }}</p>
+     } @else {
+ 
+-      <!-- PLANOS -->
+-      <div class="assin-planos">
+-        @for (plano of planos; track plano.id) {
+-          <div class="assin-plano"
+-            [class.assin-plano--ativo]="planoSelecionado === plano.id"
+-            (click)="planoSelecionado = plano.id">
+-            <div class="assin-plano__info">
+-              <span class="assin-plano__nome">{{ plano.name }}</span>
+-              <span class="assin-plano__preco">{{ precoFmt(plano) }} · {{ intervaloLabel(plano) }}</span>
+-              @if (plano.description) {
+-                <span class="assin-plano__desc">{{ plano.description }}</span>
+-              }
+-            </div>
+-            <div class="assin-plano__radio" [class.assin-plano__radio--ativo]="planoSelecionado === plano.id"></div>
+-          </div>
++      <!-- CATEGORIAS -->
++      <span class="assin-secao">Categoria</span>
++      <div class="assin-cats">
++        @for (cat of categorias; track cat.id) {
++          <button type="button" class="assin-cat"
++            [class.assin-cat--ativo]="categoriaSelecionada === cat.id"
++            [class.assin-cat--assinada]="cat.isSubscribed"
++            [disabled]="cat.isSubscribed"
++            (click)="selecionarCategoria(cat)">
++            <span class="assin-cat__nome">{{ cat.name }}</span>
++            @if (cat.isSubscribed) {
++              <span class="assin-cat__tag">Assinada</span>
++            }
++          </button>
+         }
+       </div>
+ 
+-      <!-- MÉTODO -->
+-      <span class="assin-secao">Forma de pagamento</span>
+-      <div class="assin-metodos">
+-        <button class="assin-metodo" [class.assin-metodo--ativo]="metodo === 'CreditCard'" (click)="selecionarMetodo('CreditCard')">Cartão de Crédito</button>
+-        <button class="assin-metodo" [class.assin-metodo--ativo]="metodo === 'Pix'" (click)="selecionarMetodo('Pix')">PIX</button>
+-      </div>
++      @if (!temCategoriasDisponiveis) {
++        <p class="assin-msg">Você já assina todas as categorias disponíveis.</p>
++      } @else {
++
++        <!-- PLANOS -->
++        <span class="assin-secao">Plano</span>
++        @if (planos.length === 0) {
++          <p class="assin-msg">Nenhum plano disponível no momento.</p>
++        } @else {
++          <div class="assin-planos">
++            @for (plano of planos; track plano.id) {
++              <div class="assin-plano"
++                [class.assin-plano--ativo]="planoSelecionado === plano.id"
++                (click)="planoSelecionado = plano.id">
++                <div class="assin-plano__info">
++                  <span class="assin-plano__nome">{{ cicloLabel(plano) }}</span>
++                  <span class="assin-plano__preco">{{ precoFmt(plano.price) }} · {{ precoFmt(plano.monthlyPrice) }}/mês</span>
++                  @if (plano.description) {
++                    <span class="assin-plano__desc">{{ plano.description }}</span>
++                  }
++                </div>
++                <div class="assin-plano__radio" [class.assin-plano__radio--ativo]="planoSelecionado === plano.id"></div>
++              </div>
++            }
++          </div>
++
++          <!-- E-MAIL DO PAGADOR (opcional) -->
++          <div class="assin-field">
++            <label>E-mail para o pagamento (opcional)</label>
++            <input type="email" placeholder="voce@email.com" [(ngModel)]="payerEmail" />
++          </div>
++        }
+ 
+-      @if (metodo === 'CreditCard') {
+-        <div class="assin-field">
+-          <label>Nome do titular</label>
+-          <input type="text" placeholder="Nome como no cartão" [(ngModel)]="nomeCartao" />
+-        </div>
+-        <div class="assin-field">
+-          <label>Número do cartão</label>
+-          <input type="tel" placeholder="0000 0000 0000 0000" [(ngModel)]="numeroCartao" maxlength="19" />
+-        </div>
+       }
+ 
+       @if (erro) { <span class="assin-erro">{{ erro }}</span> }
+@@ -63,8 +79,9 @@
+   </div>
+ 
+   <div class="assin-actions">
+-    <button class="assin-btn" (click)="assinar()" [disabled]="assinando || carregando || planos.length === 0">
+-      {{ assinando ? 'PROCESSANDO…' : 'ASSINAR' }}
++    <button class="assin-btn" (click)="assinar()"
++      [disabled]="assinando || carregando || !temCategoriasDisponiveis || planos.length === 0">
++      {{ assinando ? 'PROCESSANDO…' : 'IR PARA O PAGAMENTO' }}
+     </button>
+   </div>
+ 
+diff --git a/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.scss b/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.scss
+index c4135ea..75631ba 100644
+--- a/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.scss
++++ b/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.scss
+@@ -120,14 +120,17 @@
+   margin-top: 6px;
+ }
+ 
+-.assin-metodos {
++.assin-cats {
+   display: flex;
++  flex-wrap: wrap;
+   gap: 10px;
+ }
+ 
+-.assin-metodo {
+-  flex: 1;
+-  padding: 12px;
++.assin-cat {
++  display: inline-flex;
++  align-items: center;
++  gap: 8px;
++  padding: 10px 14px;
+   border-radius: 12px;
+   border: 2px solid var(--color-gray-100);
+   background: var(--color-gray-100);
+@@ -141,6 +144,20 @@
+     color: var(--color-primary);
+     background: transparent;
+   }
++
++  &--assinada {
++    cursor: default;
++    opacity: 0.6;
++  }
++
++  &__tag {
++    font-size: 11px;
++    font-weight: 700;
++    color: var(--color-primary);
++    background: var(--color-gray-100);
++    border-radius: 6px;
++    padding: 2px 6px;
++  }
+ }
+ 
+ .assin-field {
+diff --git a/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.spec.ts b/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.spec.ts
+index c430d22..5dad868 100644
+--- a/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.spec.ts
++++ b/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.spec.ts
+@@ -1,13 +1,28 @@
+ import { ComponentFixture, TestBed } from '@angular/core/testing';
+ import { provideRouter } from '@angular/router';
+ import { provideHttpClient } from '@angular/common/http';
+-import { provideHttpClientTesting } from '@angular/common/http/testing';
++import {
++  HttpTestingController,
++  provideHttpClientTesting,
++} from '@angular/common/http/testing';
+ 
+ import { AssinaturaFornecedorComponent } from './assinatura-fornecedor';
+ 
++function plan(over: Record<string, unknown> = {}) {
++  return {
++    id: 1, name: 'Mensal', slug: 'mensal', price: '19.90', monthlyPrice: '19.90',
++    interval: 'Month', intervalCount: 1, bonusMonths: 0, isActive: true, sortOrder: 1,
++    createdAt: '', updatedAt: '', ...over,
++  };
++}
++function categoria(over: Record<string, unknown> = {}) {
++  return { id: 3, name: 'Serviços', slug: 'servicos', isSubscribed: false, ...over };
++}
++
+ describe('AssinaturaFornecedorComponent', () => {
+   let component: AssinaturaFornecedorComponent;
+   let fixture: ComponentFixture<AssinaturaFornecedorComponent>;
++  let httpMock: HttpTestingController;
+ 
+   beforeEach(async () => {
+     await TestBed.configureTestingModule({
+@@ -17,10 +32,79 @@ describe('AssinaturaFornecedorComponent', () => {
+ 
+     fixture = TestBed.createComponent(AssinaturaFornecedorComponent);
+     component = fixture.componentInstance;
+-    await fixture.whenStable();
++    httpMock = TestBed.inject(HttpTestingController);
++    fixture.detectChanges();
+   });
+ 
++  afterEach(() => httpMock.verify());
++
++  function flushCatalog(categories: unknown[], plans: unknown[] = [plan()]) {
++    httpMock
++      .expectOne((r) => r.url.endsWith('/subscriptions/catalog'))
++      .flush({ plans, categories, subscribedCount: 0 });
++  }
++
+   it('should create', () => {
++    flushCatalog([categoria()]);
+     expect(component).toBeTruthy();
+   });
++
++  it('pré-seleciona a primeira categoria não assinada e ignora as já assinadas', () => {
++    flushCatalog([
++      categoria({ id: 1, name: 'Delivery', isSubscribed: true }),
++      categoria({ id: 2, name: 'Serviços' }),
++    ]);
++    expect(component.categoriaSelecionada).toBe(2);
++    expect(component.temCategoriasDisponiveis).toBe(true);
++  });
++
++  it('não seleciona categoria já assinada', () => {
++    flushCatalog([categoria({ id: 5, name: 'Delivery', isSubscribed: true })]);
++    component.selecionarCategoria(component.categorias[0]);
++    expect(component.categoriaSelecionada).toBeNull();
++    expect(component.temCategoriasDisponiveis).toBe(false);
++  });
++
++  it('monta o DTO com planId + categoryId e redireciona ao checkout', () => {
++    flushCatalog([categoria({ id: 3 })], [plan({ id: 9 })]);
++    component.categoriaSelecionada = 3;
++    component.planoSelecionado = 9;
++
++    const orig = window.location;
++    Object.defineProperty(window, 'location', { configurable: true, value: { href: '' } });
++
++    component.assinar();
++    const req = httpMock.expectOne((r) => r.url.endsWith('/subscriptions'));
++    expect(req.request.method).toBe('POST');
++    expect(req.request.body).toEqual({ planId: 9, categoryId: 3 });
++    req.flush({ message: 'ok', checkoutUrl: 'https://mp/checkout', subscription: {} });
++
++    expect((window.location as unknown as { href: string }).href).toBe('https://mp/checkout');
++    Object.defineProperty(window, 'location', { configurable: true, value: orig });
++  });
++
++  it('inclui payerEmail quando informado', () => {
++    flushCatalog([categoria({ id: 3 })], [plan({ id: 9 })]);
++    component.categoriaSelecionada = 3;
++    component.planoSelecionado = 9;
++    component.payerEmail = ' pagador@email.com ';
++
++    const orig = window.location;
++    Object.defineProperty(window, 'location', { configurable: true, value: { href: '' } });
++
++    component.assinar();
++    const req = httpMock.expectOne((r) => r.url.endsWith('/subscriptions'));
++    expect(req.request.body).toEqual({ planId: 9, categoryId: 3, payerEmail: 'pagador@email.com' });
++    req.flush({ message: 'ok', checkoutUrl: 'https://mp/c', subscription: {} });
++
++    Object.defineProperty(window, 'location', { configurable: true, value: orig });
++  });
++
++  it('bloqueia assinatura sem categoria selecionada', () => {
++    flushCatalog([categoria()]);
++    component.categoriaSelecionada = null;
++    component.assinar();
++    expect(component.erro).toBe('Selecione uma categoria.');
++    httpMock.expectNone((r) => r.url.endsWith('/subscriptions'));
++  });
+ });
+diff --git a/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.ts b/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.ts
+index add3016..4791ed7 100644
+--- a/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.ts
++++ b/src/app/features/fornecedor/assinatura-fornecedor/assinatura-fornecedor.ts
+@@ -1,17 +1,21 @@
+ import { Component, OnInit, inject } from '@angular/core';
+-import { Router } from '@angular/router';
+ import { CommonModule } from '@angular/common';
+ import { FormsModule } from '@angular/forms';
+ import { SubscriptionService } from '../../../core/services/subscription';
+ import { ResponsePlanDto } from '../../../core/models/plan';
+-import { CreateSubscriptionDto } from '../../../core/models/subscription';
+-import { PaymentMethod } from '../../../core/models/enums';
++import {
++  CreateSubscriptionDto,
++  ResponseCatalogCategoryDto,
++} from '../../../core/models/subscription';
+ import { ApiError } from '../../../core/models/common';
+ 
+ /**
+- * Assinatura do fornecedor (onboarding pós-login).
+- * Lista `GET /plans/active` e cria a assinatura via `POST /subscriptions` —
+- * pré-condição para o fornecedor cadastrar restaurante/operar (BE-15).
++ * Contratação de assinatura por categoria (fornecedor).
++ *
++ * Carrega `GET /subscriptions/catalog` (planos + categorias assináveis) e cria a
++ * assinatura via `POST /subscriptions` com `planId` + `categoryId`. O pagamento
++ * é concluído no checkout do Mercado Pago: a resposta traz `checkoutUrl` e o
++ * browser é redirecionado (não há mais coleta de cartão no app).
+  */
+ @Component({
+   selector: 'app-assinatura-fornecedor',
+@@ -20,16 +24,14 @@ import { ApiError } from '../../../core/models/common';
+   styleUrl: './assinatura-fornecedor.scss',
+ })
+ export class AssinaturaFornecedorComponent implements OnInit {
+-  private readonly router = inject(Router);
+   private readonly subscriptions = inject(SubscriptionService);
+ 
+   planos: ResponsePlanDto[] = [];
+-  planoSelecionado: number | null = null;
+-  metodo: PaymentMethod = 'CreditCard';
++  categorias: ResponseCatalogCategoryDto[] = [];
+ 
+-  // Cartão (quando método = CreditCard)
+-  nomeCartao = '';
+-  numeroCartao = '';
++  categoriaSelecionada: number | null = null;
++  planoSelecionado: number | null = null;
++  payerEmail = '';
+ 
+   carregando = false;
+   assinando = false;
+@@ -37,65 +39,69 @@ export class AssinaturaFornecedorComponent implements OnInit {
+ 
+   ngOnInit() {
+     this.carregando = true;
+-    this.subscriptions.activePlans().subscribe({
++    this.subscriptions.catalog().subscribe({
+       next: (res) => {
+         this.carregando = false;
+         this.planos = res.plans ?? [];
++        this.categorias = res.categories ?? [];
++        // Pré-seleciona a primeira categoria ainda não assinada.
++        const disponivel = this.categorias.find((c) => !c.isSubscribed);
++        this.categoriaSelecionada = disponivel ? disponivel.id : null;
+         this.planoSelecionado = this.planos.length ? this.planos[0].id : null;
+       },
+       error: (err: ApiError) => {
+         this.carregando = false;
+-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar os planos.';
++        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o catálogo de assinaturas.';
+       },
+     });
+   }
+ 
+-  get planoAtual(): ResponsePlanDto | null {
+-    return this.planos.find((p) => p.id === this.planoSelecionado) ?? null;
++  get temCategoriasDisponiveis(): boolean {
++    return this.categorias.some((c) => !c.isSubscribed);
+   }
+ 
+-  precoFmt(plan: ResponsePlanDto): string {
+-    const valor = Number(plan.price).toLocaleString('pt-BR', {
++  selecionarCategoria(cat: ResponseCatalogCategoryDto) {
++    if (cat.isSubscribed) return;
++    this.categoriaSelecionada = cat.id;
++    this.erro = '';
++  }
++
++  precoFmt(valor?: number | string): string {
++    const n = typeof valor === 'string' ? Number(valor) : (valor ?? 0);
++    const fmt = (Number.isFinite(n) ? n : 0).toLocaleString('pt-BR', {
+       minimumFractionDigits: 2,
+       maximumFractionDigits: 2,
+     });
+-    return `R$ ${valor}`;
+-  }
+-
+-  intervaloLabel(plan: ResponsePlanDto): string {
+-    return plan.interval === 'Month' ? 'Mensal' : 'Anual';
++    return `R$ ${fmt}`;
+   }
+ 
+-  selecionarMetodo(m: PaymentMethod) {
+-    this.metodo = m;
++  /** Rótulo do ciclo do plano (usa o nome vindo do back — Mensal/Semestral/Anual). */
++  cicloLabel(plan: ResponsePlanDto): string {
++    if (plan.name?.trim()) return plan.name;
++    if (plan.interval === 'Year') return plan.intervalCount > 1 ? `${plan.intervalCount} anos` : 'Anual';
++    return plan.intervalCount > 1 ? `${plan.intervalCount} meses` : 'Mensal';
+   }
+ 
+   assinar() {
+     this.erro = '';
++    if (this.categoriaSelecionada == null) {
++      this.erro = 'Selecione uma categoria.';
++      return;
++    }
+     if (this.planoSelecionado == null) {
+       this.erro = 'Selecione um plano.';
+       return;
+     }
+-    if (this.metodo === 'CreditCard') {
+-      if (!this.nomeCartao.trim()) {
+-        this.erro = 'Informe o nome do titular.';
+-        return;
+-      }
+-      if (this.numeroCartao.replace(/\D/g, '').length < 16) {
+-        this.erro = 'Informe um número de cartão válido.';
+-        return;
+-      }
+-    }
+     this.assinando = true;
+     this.subscriptions.create(this.buildDto()).subscribe({
+-      next: () => {
++      next: (res) => {
+         this.assinando = false;
+-        // Assinatura ativa → volta para o cadastro do restaurante.
+-        this.router.navigate(['/fornecedor/restaurante']);
++        // Conclui o pagamento no checkout do Mercado Pago.
++        window.location.href = res.checkoutUrl;
+       },
+       error: (err: ApiError) => {
+         this.assinando = false;
+-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível concluir a assinatura.';
++        this.erro = err?.message?.trim() ? err.message : 'Não foi possível iniciar a assinatura.';
+       },
+     });
+   }
+@@ -103,24 +109,13 @@ export class AssinaturaFornecedorComponent implements OnInit {
+   private buildDto(): CreateSubscriptionDto {
+     const dto: CreateSubscriptionDto = {
+       planId: this.planoSelecionado as number,
+-      method: this.metodo,
++      categoryId: this.categoriaSelecionada as number,
+     };
+-    if (this.metodo === 'CreditCard') {
+-      const card = this.numeroCartao.replace(/\D/g, '');
+-      dto.holderName = this.nomeCartao.trim();
+-      dto.cardNumber = card;
+-      dto.cardBrand = this.detectBrand(card);
+-    }
++    const email = this.payerEmail.trim();
++    if (email) dto.payerEmail = email;
+     return dto;
+   }
+ 
+-  private detectBrand(num: string): string {
+-    if (num.startsWith('4')) return 'Visa';
+-    if (/^5[1-5]/.test(num)) return 'Mastercard';
+-    if (/^3[47]/.test(num)) return 'Amex';
+-    return 'Other';
+-  }
+-
+   voltar() {
+     history.back();
+   }
