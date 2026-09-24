@@ -50,6 +50,9 @@
           <div class="tf-card__info">
             <span class="tf-card__nome">{{ trabalho.cliente }}</span>
             <span class="tf-card__descricao">{{ trabalho.descricao }}</span>
+            @if (trabalho.ehGarantia) {
+              <span class="tf-badge-garantia">Garantia</span>
+            }
           </div>
 
           @if (trabalho.status === 'em_garantia' || trabalho.garantiaStatus) {

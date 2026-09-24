@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { of, switchMap } from 'rxjs';
 import { WorkService, TrabalhoFornecedor } from '../../../../core/services/work';
+import { WorkStatus } from '../../../../core/models/enums';
 import { ApiError } from '../../../../core/models/common';
 
 export type StepTrabalho = 'inicial' | 'em_andamento' | 'concluido';
@@ -69,9 +70,56 @@ export class DetalhesTrabalhoComponent implements OnInit {
     }
   }
 
+  /** Este trabalho é um reparo de garantia (BE-W1) — sem custo, sem adicional. */
+  get ehGarantia(): boolean {
+    return !!this.trabalho?.ehGarantia;
+  }
+
   iniciarServico() {
-    // Abre o modal que pergunta sobre acréscimo antes de iniciar.
+    // Reparo de garantia não aceita acréscimo (a API recusa com 400): inicia direto.
+    if (this.ehGarantia) {
+      this.iniciarDireto();
+      return;
+    }
+    // Trabalho comum: abre o modal que pergunta sobre acréscimo antes de iniciar.
     this.mostrarModalAcrescimo = true;
+  }
+
+  private iniciarDireto() {
+    if (this.processando) return;
+    this.processando = true;
+    this.erro = '';
+    this.works.iniciar(this.trabalhoId).subscribe({
+      next: () => {
+        this.processando = false;
+        this.carregar();
+      },
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível iniciar o serviço.';
+        this.processando = false;
+      },
+    });
+  }
+
+  /** Abre outro trabalho (link reparo ↔ original). */
+  abrirTrabalho(id?: number) {
+    if (id) this.router.navigate(['/fornecedor/servicos/trabalho', id]);
+  }
+
+  /** Rótulo curto do status de um reparo listado (warrantyWorks). */
+  reparoStatusLabel(status: WorkStatus): string {
+    switch (status) {
+      case 'Pending':
+        return 'Aguardando início';
+      case 'InProgress':
+        return 'Em andamento';
+      case 'Finished':
+        return 'Concluído';
+      case 'Cancelled':
+        return 'Cancelado';
+      default:
+        return status;
+    }
   }
 
   confirmarAcrescimo() {

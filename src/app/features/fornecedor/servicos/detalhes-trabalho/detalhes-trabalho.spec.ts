@@ -182,4 +182,48 @@ describe('DetalhesTrabalhoComponent', () => {
     component.aprovarGarantia();
     httpMock.expectNone((r) => r.url.endsWith('/works/1/respond-warranty'));
   });
+
+  // ── Garantia como trabalho próprio (BE-W1) ──────────────────────────────────
+
+  it('reparo: iniciar vai direto ao start, sem modal nem request-extra', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ isWarranty: true, parentWorkId: 7 }),
+    );
+    expect(component.ehGarantia).toBe(true);
+    component.iniciarServico();
+    expect(component.mostrarModalAcrescimo).toBe(false);
+    httpMock.expectOne((r) => r.url.endsWith('/works/1/start') && r.method === 'PATCH').flush(
+      workResponse({ isWarranty: true, status: 'InProgress' }),
+    );
+    httpMock.expectNone((r) => r.url.endsWith('/works/1/request-extra'));
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ isWarranty: true, status: 'InProgress' }),
+    );
+    expect(component.stepAtual).toBe('em_andamento');
+  });
+
+  it('trabalho comum: iniciar abre o modal de acréscimo', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(workResponse());
+    component.iniciarServico();
+    expect(component.mostrarModalAcrescimo).toBe(true);
+    httpMock.expectNone((r) => r.url.endsWith('/works/1/start'));
+  });
+
+  it('reparo: expõe o trabalho original e navega até ele', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ isWarranty: true, parentWorkId: 7 }),
+    );
+    expect(component.trabalho?.trabalhoOriginalId).toBe(7);
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component.abrirTrabalho(component.trabalho?.trabalhoOriginalId);
+    expect(nav).toHaveBeenCalledWith(['/fornecedor/servicos/trabalho', 7]);
+  });
+
+  it('original: lista os reparos abertos (warrantyWorks)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', warrantyWorks: [{ id: 20, status: 'InProgress' }] }),
+    );
+    expect(component.trabalho?.reparos).toEqual([{ id: 20, status: 'InProgress' }]);
+    expect(component.reparoStatusLabel('InProgress')).toBe('Em andamento');
+  });
 });

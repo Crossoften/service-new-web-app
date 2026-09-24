@@ -45,5 +45,22 @@ describe('TrabalhosFornecedorComponent', () => {
     expect(component.trabalhos.length).toBe(1);
     expect(component.trabalhos[0].cliente).toBe('Ana');
     expect(component.trabalhos[0].status).toBe('em_andamento');
+    expect(component.trabalhos[0].ehGarantia).toBe(false);
+  });
+
+  it('marca o reparo de garantia (isWarranty) na lista', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works') && r.method === 'GET').flush({
+      works: [
+        {
+          id: 20, status: 'Pending', isUnderWarranty: false, isWarranty: true, parentWorkId: 7,
+          service: { id: 3, name: 'Reforma' },
+          requester: { id: 2, name: 'Ana' }, provider: { id: 9, name: 'Joelson' },
+          createdAt: '2026-03-16T10:00:00.000Z',
+        },
+      ],
+      currentPage: 1, totalPages: 1, totalRecords: 1,
+    });
+    expect(component.trabalhos[0].ehGarantia).toBe(true);
+    expect(component.trabalhos[0].trabalhoOriginalId).toBe(7);
   });
 });
