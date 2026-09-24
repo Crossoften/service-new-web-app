@@ -14,7 +14,17 @@
 
 ### BE-NUM-1 — Campos numéricos do corpo recusados: contrato diz `number`, validação exige **string numérica** 🔴
 
-**Impacto:** trava **duas jornadas centrais** — cliente pedir orçamento e fornecedor cadastrar serviço.
+**Impacto: SISTÊMICO.** Trava **todos os endpoints de criação**, nos **dois perfis** (cliente e fornecedor),
+inclusive telas que o Front **não alterou**. Confirmado em `POST /services`, `POST /budgets` e `POST /jobs`
+(e por consequência afeta `POST /subscriptions`, `/food-orders`, `/bookings`, `/rentals`,
+`/transport-requests`, `/commercial-transactions` — qualquer DTO com campo numérico no corpo).
+
+**Sintoma C — `POST /v1/jobs` (publicar vaga)** — tela que o Front não mexeu:
+```json
+// enviado: { "title": "Titulo 4", "type": "CLT", "value": 1000, "requirements": "…", "description": "…" }
+{ "message": "Requisição inválida.", "error": "Bad Request", "statusCode": 400 }
+```
+`value: 1000` é `number` (como o Swagger declara) → recusado. É a mesma falha da numérica-string.
 
 **Sintoma A — `POST /v1/services` (cadastrar serviço):**
 
@@ -61,6 +71,25 @@ correto é **`409`** com mensagem pronta, não `400`.
 > numéricos como string (`String(categoryId)`, `String(serviceId)`, `String(price)`). É um *workaround*
 > que **contradiz o Swagger** e deve ser **revertido** assim que a validação aceitar `number`. Só aplico
 > se o cliente pedir.
+
+### BE-ROUTE-1 — `GET /v1/subscriptions/catalog` cai no handler de `:id` (route ordering) 🔴
+
+**Sintoma — abrir "Minhas assinaturas" (fornecedor):**
+```json
+// GET /v1/subscriptions/catalog  (sem params)
+{ "message": "Validation failed (numeric string is expected)", "error": "Bad Request", "statusCode": 400 }
+```
+
+**Diagnóstico.** O Front chama `GET /subscriptions/catalog` (rota literal, **sem** parâmetro numérico) — é
+exatamente o endpoint publicado no Swagger. A mensagem *"numeric string is expected"* é do `ParseIntPipe`
+de `GET /subscriptions/:id`: ou seja, `catalog` está sendo **capturado pelo handler `:id`**. É o clássico
+*route ordering* do NestJS — as rotas **literais** (`catalog`, `current`, `my-subscriptions`) precisam ser
+declaradas **antes** de `@Get(':id')` no controller, senão `:id` engole `"catalog"` (que não é numérico).
+
+**O que o Back precisa fazer:** no `SubscriptionsController`, mover `@Get('catalog')`, `@Get('current')` e
+`@Get('my-subscriptions')` para **antes** de `@Get(':id')`. Vale conferir o mesmo padrão em outros
+controllers com rota literal + `:id` (ex.: works, budgets, services). É distinto do BE-NUM-1 (aqui é
+roteamento, não validação de tipo) — não some só corrigindo os DTOs.
 
 ---
 

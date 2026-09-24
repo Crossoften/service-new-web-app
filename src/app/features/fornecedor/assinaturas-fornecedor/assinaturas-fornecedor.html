@@ -14,8 +14,15 @@
 
     @if (carregando) {
       <p class="assins-msg">Carregando…</p>
+    } @else if (erro && assinaturas.length === 0) {
+      <!-- Falha ao carregar (sem dados): mensagem clara + tentar de novo. -->
+      <div class="assins-erro-box">
+        <p class="assins-erro-box__msg">{{ erro }}</p>
+        <button class="assins-btn assins-btn--secundaria" (click)="carregar()">Tentar de novo</button>
+      </div>
     } @else {
 
+      <!-- Erro de ação (renovar/cancelar) com a lista já carregada: inline, mantém a lista. -->
       @if (erro) { <span class="assins-erro">{{ erro }}</span> }
 
       @if (assinaturas.length === 0) {

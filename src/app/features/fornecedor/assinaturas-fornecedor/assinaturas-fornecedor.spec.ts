@@ -155,4 +155,23 @@ describe('AssinaturasFornecedorComponent', () => {
     component.assinarNova();
     expect(nav).toHaveBeenCalledWith(['/fornecedor/assinatura']);
   });
+
+  it('falha ao carregar → mostra erro (sem "não assina") e "Tentar de novo" recarrega', () => {
+    httpMock
+      .expectOne((r) => r.url.endsWith('/subscriptions/catalog'))
+      .flush({ message: 'Falhou.' }, { status: 400, statusText: 'Bad Request' });
+    expect(component.erro).toBe('Falhou.');
+    expect(component.assinaturas.length).toBe(0);
+
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.assins-erro-box')).not.toBeNull();
+    expect(el.textContent).not.toContain('Você ainda não assina');
+
+    // "Tentar de novo" chama carregar() de novo → nova requisição ao catálogo.
+    component.carregar();
+    flushCatalog([cat()]);
+    expect(component.erro).toBe('');
+    expect(component.assinaturas.length).toBe(1);
+  });
 });

@@ -143,3 +143,22 @@
 
   &:active { opacity: 0.85; }
 }
+
+// Estado de falha ao carregar (sem dados): mensagem clara + tentar de novo.
+.assins-erro-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 32px;
+  padding: 20px;
+  text-align: center;
+
+  &__msg {
+    margin: 0;
+    font-size: 14px;
+    color: var(--color-gray-600);
+  }
+
+  .assins-btn { max-width: 220px; }
+}
