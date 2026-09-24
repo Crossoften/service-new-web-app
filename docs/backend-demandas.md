@@ -10,6 +10,60 @@
 
 ---
 
+## 🐞 Bugs ativos (encontrados na integração)
+
+### BE-NUM-1 — Campos numéricos do corpo recusados: contrato diz `number`, validação exige **string numérica** 🔴
+
+**Impacto:** trava **duas jornadas centrais** — cliente pedir orçamento e fornecedor cadastrar serviço.
+
+**Sintoma A — `POST /v1/services` (cadastrar serviço):**
+
+```json
+{ "message": "Validation failed (numeric string is expected)", "error": "Bad Request", "statusCode": 400 }
+```
+Corpo enviado (bate com `CreateServiceDto` do Swagger — `name`/`type`/`categoryId` obrigatórios):
+```json
+{ "name": "…", "type": "Online", "categoryId": 2, "price": 150 }
+```
+
+**Sintoma B — `POST /v1/budgets` (pedir orçamento), contas distintas:**
+
+```json
+{ "message": "Requisição inválida.", "error": "Bad Request", "statusCode": 400 }
+```
+Corpo enviado (bate com `CreateBudgetDto` — só `serviceId` obrigatório):
+```json
+{ "serviceId": 2, "description": "[Normal] teste" }
+```
+
+**Diagnóstico.** Nos dois casos o Front envia os campos numéricos como **`number`**, exatamente como o
+Swagger declara (`categoryId: number`, `price: number`, `serviceId: number`, com `example: 1`/`150`/`3`).
+A mensagem *"numeric string is expected"* é a do `ParseIntPipe`/`@IsNumberString` do NestJS — ou seja, a
+validação real espera uma **string numérica** (`"2"`), não o número `2`. O contrato publicado e a
+validação **divergem**. (No `/budgets` a mesma falha provavelmente aparece mascarada como
+`"Requisição inválida."` por um filtro de exceção genérico.)
+
+**O que o Back precisa fazer (uma das duas):**
+
+1. **(Recomendado) Alinhar a validação ao Swagger** — aceitar `number` nos campos numéricos do corpo
+   (`@IsNumber()`/`@Type(() => Number)` em vez de `@IsNumberString()`/`ParseIntPipe` em body). Assim o
+   Front não muda nada.
+2. **Ou** assumir string numérica de fato e **regenerar o Swagger** (`npm run swagger:generate`) para os
+   campos virarem `type: string`. Aí o Front passa a enviar string — mas isso contradiz os `example`
+   atuais e é menos idiomático para JSON.
+
+**Além disso, no `/budgets`:** o `400` devolve texto genérico (`"Requisição inválida."`). Trocar por
+`message` específico (o array do `class-validator`) — sem isso o Front não consegue dizer ao usuário o
+que falhou. E, se a recusa for regra de negócio (fornecedor sem assinatura da categoria — §8.3), o
+correto é **`409`** com mensagem pronta, não `400`.
+
+> **Enquanto o Back não alinha:** dá pra destravar o Front **temporariamente** enviando os IDs/valores
+> numéricos como string (`String(categoryId)`, `String(serviceId)`, `String(price)`). É um *workaround*
+> que **contradiz o Swagger** e deve ser **revertido** assim que a validação aceitar `number`. Só aplico
+> se o cliente pedir.
+
+---
+
 ## 🎯 Ordem de serviço — Backend (comece por aqui)
 
 > **Estado do front (2026-09-23):** todas as fatias de UX/jornada que **não dependem de back** foram entregues e
