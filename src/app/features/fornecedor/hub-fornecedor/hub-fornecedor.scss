@@ -128,3 +128,32 @@
   color: #5d6f79;
   line-height: 1.35;
 }
+
+.hub-assinaturas {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid #e6eaee;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(22, 35, 42, 0.04), 0 8px 20px rgba(22, 35, 42, 0.04);
+  transition: transform 0.12s ease;
+
+  &:active { transform: translateY(1px); }
+
+  &__icone { font-size: 20px; line-height: 1; }
+
+  &__texto {
+    flex: 1;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 700;
+    color: #16232a;
+  }
+
+  &__seta { color: #5d6f79; flex-shrink: 0; }
+}

@@ -6,6 +6,7 @@ import {
   CreateSubscriptionDto,
   CreateSubscriptionResponseDto,
   ResponseSubscriptionCatalogDto,
+  ResponseSubscriptionDto,
 } from '../models/subscription';
 
 /** Assinatura por categoria do fornecedor: catálogo e criação (checkout MP). */
@@ -34,5 +35,32 @@ export class SubscriptionService {
    */
   create(dto: CreateSubscriptionDto): Observable<CreateSubscriptionResponseDto> {
     return this.api.post<CreateSubscriptionResponseDto>('/subscriptions', dto);
+  }
+
+  /**
+   * Renova manualmente uma assinatura — `POST /v1/subscriptions/:id/renew` (Bearer).
+   * Só é aceito quando `needsRenewal` (senão o back responde 400). A resposta traz
+   * `checkoutUrl` (Mercado Pago) para concluir o pagamento.
+   */
+  renew(id: number): Observable<CreateSubscriptionResponseDto> {
+    return this.api.post<CreateSubscriptionResponseDto>(`/subscriptions/${id}/renew`, {});
+  }
+
+  /**
+   * Reativa uma assinatura marcada para cancelar no fim do período (desfaz o
+   * cancelamento) — `PATCH /v1/subscriptions/:id/reactivate` (Bearer). Sem nova
+   * cobrança; só é aceito quando `cancelAtPeriodEnd` (senão 400).
+   */
+  reactivate(id: number): Observable<ResponseSubscriptionDto> {
+    return this.api.patch<ResponseSubscriptionDto>(`/subscriptions/${id}/reactivate`, {});
+  }
+
+  /**
+   * Cancela uma assinatura — `PATCH /v1/subscriptions/:id/cancel` (Bearer).
+   * Agenda o cancelamento para o fim do período: o acesso segue até
+   * `currentPeriodEnd` e `cancelAtPeriodEnd` passa a `true` (não renova mais).
+   */
+  cancel(id: number): Observable<ResponseSubscriptionDto> {
+    return this.api.patch<ResponseSubscriptionDto>(`/subscriptions/${id}/cancel`, {});
   }
 }

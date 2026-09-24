@@ -46,6 +46,7 @@ import { HomeFornecedorComponent } from './features/fornecedor/home-fornecedor/h
 import { HubFornecedorComponent } from './features/fornecedor/hub-fornecedor/hub-fornecedor';
 import { RestauranteFornecedorComponent } from './features/fornecedor/restaurante-fornecedor/restaurante-fornecedor';
 import { AssinaturaFornecedorComponent } from './features/fornecedor/assinatura-fornecedor/assinatura-fornecedor';
+import { AssinaturasFornecedorComponent } from './features/fornecedor/assinaturas-fornecedor/assinaturas-fornecedor';
 import { GerenciarCardapioComponent } from './features/fornecedor/gerenciar-cardapio/gerenciar-cardapio';
 import { AddCardapioComponent } from './features/fornecedor/add-cardapio/add-cardapio';
 import { DetalhesPedidoFornecedorComponent } from './features/fornecedor/detalhes-pedido-fornecedor/detalhes-pedido-fornecedor';
@@ -148,6 +149,7 @@ export const routes: Routes = [
   { path: 'fornecedor/restaurante', component: RestauranteFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/perfil', component: PerfilComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/assinatura', component: AssinaturaFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
+  { path: 'fornecedor/assinaturas', component: AssinaturasFornecedorComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/cardapio', component: GerenciarCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/cardapio/novo', component: AddCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },
   { path: 'fornecedor/cardapio/editar/:id', component: AddCardapioComponent, canActivate: [authGuard, profileGuard('Supplier')] },

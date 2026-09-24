@@ -41,4 +41,25 @@ describe('SubscriptionService', () => {
     expect(req.request.body).toEqual({ planId: 1, categoryId: 7 });
     req.flush({ message: 'ok', checkoutUrl: 'https://mp/checkout', subscription: {} });
   });
+
+  it('renew() faz POST /subscriptions/:id/renew', () => {
+    service.renew(42).subscribe();
+    const req = httpMock.expectOne(`${base}/subscriptions/42/renew`);
+    expect(req.request.method).toBe('POST');
+    req.flush({ message: 'ok', checkoutUrl: 'https://mp/renew', subscription: {} });
+  });
+
+  it('reactivate() faz PATCH /subscriptions/:id/reactivate', () => {
+    service.reactivate(42).subscribe();
+    const req = httpMock.expectOne(`${base}/subscriptions/42/reactivate`);
+    expect(req.request.method).toBe('PATCH');
+    req.flush({ id: 42 });
+  });
+
+  it('cancel() faz PATCH /subscriptions/:id/cancel', () => {
+    service.cancel(42).subscribe();
+    const req = httpMock.expectOne(`${base}/subscriptions/42/cancel`);
+    expect(req.request.method).toBe('PATCH');
+    req.flush({ id: 42 });
+  });
 });

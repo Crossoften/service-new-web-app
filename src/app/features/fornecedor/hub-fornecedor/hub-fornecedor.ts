@@ -72,4 +72,8 @@ export class HubFornecedorComponent implements OnInit {
   irOrcamentos() {
     this.router.navigate(['/fornecedor/servicos/orcamentos']);
   }
+
+  irAssinaturas() {
+    this.router.navigate(['/fornecedor/assinaturas']);
+  }
 }

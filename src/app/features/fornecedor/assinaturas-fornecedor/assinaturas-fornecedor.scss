@@ -1,0 +1,145 @@
+.assins-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  background: var(--color-white);
+}
+
+.assins-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+
+  &__voltar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    padding: 0;
+  }
+
+  &__titulo {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: 0.3px;
+  }
+}
+
+.assins-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 24px 24px;
+  overflow-y: auto;
+}
+
+.assins-msg {
+  text-align: center;
+  color: var(--color-gray-600);
+  font-size: 14px;
+  margin-top: 24px;
+}
+
+.assins-erro {
+  font-size: 12px;
+  color: #dc2626;
+}
+
+.assins-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.assins-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 2px solid var(--color-gray-100);
+
+  &--destaque {
+    border-color: #f59e0b;
+  }
+
+  &__topo {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__categoria {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__plano {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-gray-600);
+  }
+
+  &__status {
+    font-size: 13px;
+    color: var(--color-gray-600);
+
+    &--destaque {
+      color: #b45309;
+      font-weight: 600;
+    }
+  }
+
+  &__acoes {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+}
+
+.assins-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: 10px;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:active { opacity: 0.85; }
+  &:disabled { opacity: 0.6; cursor: default; }
+
+  &--primaria {
+    background: var(--color-primary);
+    color: var(--color-white);
+  }
+
+  &--secundaria {
+    background: var(--color-gray-100);
+    color: var(--color-text);
+  }
+}
+
+.assins-nova {
+  margin-top: 6px;
+  padding: 14px;
+  border-radius: 50px;
+  border: 2px dashed var(--color-gray-300, #cbd5e1);
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:active { opacity: 0.85; }
+}

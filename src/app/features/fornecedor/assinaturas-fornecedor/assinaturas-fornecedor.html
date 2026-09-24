@@ -1,0 +1,71 @@
+<div class="assins-container">
+
+  <div class="assins-header">
+    <button class="assins-header__voltar" (click)="voltar()" aria-label="Voltar">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <span class="assins-header__titulo">MINHAS ASSINATURAS</span>
+    <div style="width: 30px"></div>
+  </div>
+
+  <div class="assins-content">
+
+    @if (carregando) {
+      <p class="assins-msg">Carregando…</p>
+    } @else {
+
+      @if (erro) { <span class="assins-erro">{{ erro }}</span> }
+
+      @if (assinaturas.length === 0) {
+        <p class="assins-msg">Você ainda não assina nenhuma categoria.</p>
+      } @else {
+        <div class="assins-lista">
+          @for (vm of assinaturas; track vm.sub.id) {
+            <div class="assins-card" [class.assins-card--destaque]="vm.destaque">
+              <div class="assins-card__topo">
+                <span class="assins-card__categoria">{{ vm.categoriaNome }}</span>
+                <span class="assins-card__plano">{{ vm.sub.planName }}</span>
+              </div>
+              <span class="assins-card__status" [class.assins-card__status--destaque]="vm.destaque">
+                {{ vm.statusTexto }}
+              </span>
+
+              <div class="assins-card__acoes">
+                @if (vm.acao === 'renovar') {
+                  <button class="assins-btn assins-btn--primaria"
+                    [disabled]="processandoId !== null"
+                    (click)="renovar(vm)">
+                    {{ processandoId === vm.sub.id ? 'Processando…' : 'Renovar' }}
+                  </button>
+                }
+                @if (vm.acao === 'reativar') {
+                  <button class="assins-btn assins-btn--primaria"
+                    [disabled]="processandoId !== null"
+                    (click)="reativar(vm)">
+                    {{ processandoId === vm.sub.id ? 'Processando…' : 'Reativar' }}
+                  </button>
+                }
+                @if (vm.podeCancelar) {
+                  <button class="assins-btn assins-btn--secundaria"
+                    [disabled]="processandoId !== null"
+                    (click)="cancelar(vm)">
+                    Cancelar
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      @if (temCategoriaDisponivel) {
+        <button class="assins-nova" (click)="assinarNova()">+ Assinar nova categoria</button>
+      }
+
+    }
+
+  </div>
+
+</div>
