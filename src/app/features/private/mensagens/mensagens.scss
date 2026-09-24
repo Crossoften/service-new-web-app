@@ -1,5 +1,18 @@
 .msg-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 16px 20px 8px;
+
+  &__voltar {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+  }
 
   &__titulo {
     font-size: 22px;

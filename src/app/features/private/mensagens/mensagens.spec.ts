@@ -7,16 +7,24 @@ import {
 } from '@angular/common/http/testing';
 
 import { MensagensComponent } from './mensagens';
+import { SessionService } from '../../../core/services/session';
 
 describe('MensagensComponent', () => {
   let component: MensagensComponent;
   let fixture: ComponentFixture<MensagensComponent>;
   let httpMock: HttpTestingController;
+  let perfil: string | null;
 
   beforeEach(async () => {
+    perfil = null;
     await TestBed.configureTestingModule({
       imports: [MensagensComponent],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: SessionService, useValue: { profileType: () => perfil, isAuthenticated: () => false } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(MensagensComponent);
@@ -58,5 +66,23 @@ describe('MensagensComponent', () => {
     httpMock.expectOne((r) => r.url.endsWith('/chats')).flush('x', { status: 500, statusText: 'e' });
     expect(component.carregando).toBe(false);
     expect(component.erro.length).toBeGreaterThan(0);
+  });
+
+  it('fornecedor: esconde o menu de cliente e mostra Voltar', () => {
+    perfil = 'Supplier';
+    fixture.detectChanges();
+    flush([]);
+    expect(component.isCliente).toBe(false);
+    expect(fixture.nativeElement.querySelector('app-bottom-nav-cliente')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.msg-header__voltar')).not.toBeNull();
+  });
+
+  it('cliente: mostra o menu de cliente e esconde Voltar', () => {
+    perfil = 'Client';
+    fixture.detectChanges();
+    flush([]);
+    expect(component.isCliente).toBe(true);
+    expect(fixture.nativeElement.querySelector('app-bottom-nav-cliente')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.msg-header__voltar')).toBeNull();
   });
 });

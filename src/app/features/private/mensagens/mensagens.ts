@@ -3,12 +3,18 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ChatService, ConversaInbox } from '../../../core/services/chat';
 import { ChatUnreadStore } from '../../../core/services/chat-unread-store';
+import { SessionService } from '../../../core/services/session';
 import { ApiError } from '../../../core/models/common';
 import { BottomNavClienteComponent } from '../../../shared/components/bottom-nav-cliente/bottom-nav-cliente';
 
 /**
  * Inbox de conversas (BE-Q5). Lista `GET /chats` com o não-lido por conversa e
- * usa `GET /chats/unread-count` para o badge do menu. Abre a sala em `/chat/:id`.
+ * abre a sala em `/chat/:id`.
+ *
+ * O inbox é compartilhado (as conversas são do usuário, cliente ou fornecedor),
+ * mas o **menu inferior é do cliente**. Por isso ele só aparece para o cliente;
+ * o fornecedor (que chega pelo hub) usa o botão Voltar e não vê o menu do
+ * cliente — senão as abas o levariam para as telas de cliente.
  */
 @Component({
   selector: 'app-mensagens',
@@ -19,11 +25,17 @@ import { BottomNavClienteComponent } from '../../../shared/components/bottom-nav
 export class MensagensComponent implements OnInit {
   private readonly chat = inject(ChatService);
   private readonly unread = inject(ChatUnreadStore);
+  private readonly session = inject(SessionService);
   private readonly router = inject(Router);
 
   conversas: ConversaInbox[] = [];
   carregando = false;
   erro = '';
+
+  /** Só o cliente vê o menu inferior de cliente (evita jogar o fornecedor nas telas de cliente). */
+  get isCliente(): boolean {
+    return this.session.profileType() === 'Client';
+  }
 
   ngOnInit() {
     this.carregar();
@@ -48,5 +60,9 @@ export class MensagensComponent implements OnInit {
 
   abrir(conversa: ConversaInbox) {
     this.router.navigate(['/chat', conversa.id]);
+  }
+
+  voltar() {
+    history.back();
   }
 }
