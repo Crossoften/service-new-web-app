@@ -60,6 +60,10 @@
 
         <div class="detalhes-stats__divider"></div>
 
+        <p class="detalhes-stats__garantias-destaque">
+          🛡 {{ prestador.atendidas || 0 }} de {{ prestador.garantiasTotais || 0 }} garantias atendidas
+        </p>
+
         <div class="detalhes-stats__grid">
           <div class="detalhes-stats__item">
             <span class="detalhes-stats__valor detalhes-stats__valor--like">👍 {{ prestador.atendidas }}</span>

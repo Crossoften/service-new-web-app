@@ -153,3 +153,11 @@
     line-height: 1.6;
   }
 }
+// Destaque das garantias atendidas (BE-W7): concluídas / total.
+.detalhes-stats__garantias-destaque {
+  margin: 8px 0 2px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}

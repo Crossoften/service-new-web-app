@@ -1,4 +1,5 @@
 import { ServiceType } from './enums';
+import { ResponseWarrantyStatsDto } from './warranty-stats';
 
 export interface ServiceCategoryDto {
   id: number;
@@ -53,6 +54,8 @@ export interface ServiceDto extends ServiceListItemDto {
   category: ServiceCategoryDto;
   userId: number;
   user: ServiceOwnerDto;
+  /** Contadores de garantia do prestador (BE-W7) — só no detalhe, não na listagem. */
+  providerWarranties?: ResponseWarrantyStatsDto;
   createdAt: string;
   updatedAt: string;
 }

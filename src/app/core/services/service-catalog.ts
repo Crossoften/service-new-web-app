@@ -177,12 +177,16 @@ export class ServiceCatalogService {
   }
 
   private mapDetail(s: ServiceDto): Prestador {
+    // Garantias do prestador (BE-W7): destaque = concluídas / total ("atendidas").
+    const w = s.providerWarranties;
+    const total = w?.warrantiesTotal ?? 0;
+    const atendidas = w?.warrantiesCompleted ?? 0;
     return {
       ...this.mapListItem(s),
       imagem: s.imageUrl,
-      atendidas: s.completedWorks,
-      naoAtendidas: 0,
-      garantiasTotais: 0,
+      atendidas,
+      naoAtendidas: Math.max(0, total - atendidas),
+      garantiasTotais: total,
     };
   }
 }
