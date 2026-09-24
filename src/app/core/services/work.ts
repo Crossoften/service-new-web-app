@@ -5,6 +5,7 @@ import { Page } from '../models/pagination';
 import {
   WorkDto,
   WorkListItemDto,
+  WorkWarrantyItemDto,
   WorkQuery,
   CreateWorkDto,
   FinishWorkDto,
@@ -60,6 +61,10 @@ export interface Solicitacao {
   extraPendente: boolean;
   extraValor: number;
   extraDescricao: string;
+  // Garantia (BE-W1): este trabalho é um reparo? De qual original veio? Reparos gerados?
+  ehGarantia: boolean;
+  trabalhoOriginalId?: number;
+  reparos: WorkWarrantyItemDto[];
   // Garantia (fatia 1): status da solicitação + descrições, para exibir e responder.
   garantiaStatus?: WarrantyRequestStatus;
   garantiaDescricao?: string; // problema descrito pelo cliente (só no detalhe)
@@ -83,6 +88,10 @@ export interface TrabalhoFornecedor {
   arquivosCliente: { nome: string; tipo: string }[];
   chatId?: number;
   extraPendente: boolean;
+  // Garantia (BE-W1): reparo? original de origem? reparos gerados a partir dele?
+  ehGarantia: boolean;
+  trabalhoOriginalId?: number;
+  reparos: WorkWarrantyItemDto[];
   // Garantia (fatia 1): status + descrições para responder (aprovar/recusar).
   garantiaStatus?: WarrantyRequestStatus;
   garantiaDescricao?: string; // problema descrito pelo cliente (só no detalhe)
@@ -290,6 +299,9 @@ export class WorkService {
       extraPendente: w.extraRequestStatus === 'Pending',
       extraValor: 0,
       extraDescricao: '',
+      ehGarantia: !!w.isWarranty,
+      trabalhoOriginalId: w.parentWorkId,
+      reparos: w.warrantyWorks ?? [],
       garantiaStatus: w.warrantyRequestStatus,
       garantiaSolicitadaEm: this.data(w.warrantyRequestedAt),
     };
@@ -327,6 +339,9 @@ export class WorkService {
       extraPendente: w.extraRequestStatus === 'Pending',
       extraValor: Number(w.extraRequestValue ?? 0),
       extraDescricao: w.extraRequestDescription ?? '',
+      ehGarantia: !!w.isWarranty,
+      trabalhoOriginalId: w.parentWorkId,
+      reparos: w.warrantyWorks ?? [],
       garantiaStatus: w.warrantyRequestStatus,
       garantiaDescricao: w.warrantyRequestDescription ?? '',
       garantiaResposta: w.warrantyResponseDescription ?? '',
@@ -350,6 +365,9 @@ export class WorkService {
       arquivosCliente: [],
       chatId: w.chat?.id,
       extraPendente: w.extraRequestStatus === 'Pending',
+      ehGarantia: !!w.isWarranty,
+      trabalhoOriginalId: w.parentWorkId,
+      reparos: w.warrantyWorks ?? [],
       garantiaStatus: w.warrantyRequestStatus,
       garantiaSolicitadaEm: this.data(w.warrantyRequestedAt),
     };
@@ -372,6 +390,9 @@ export class WorkService {
         .map((f) => ({ nome: f.fileName, tipo: f.type })),
       chatId: w.chat?.id,
       extraPendente: w.extraRequestStatus === 'Pending',
+      ehGarantia: !!w.isWarranty,
+      trabalhoOriginalId: w.parentWorkId,
+      reparos: w.warrantyWorks ?? [],
       garantiaStatus: w.warrantyRequestStatus,
       garantiaDescricao: w.warrantyRequestDescription ?? '',
       garantiaResposta: w.warrantyResponseDescription ?? '',

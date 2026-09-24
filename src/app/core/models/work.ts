@@ -29,6 +29,12 @@ export interface WorkBudgetSummaryDto {
   id: number;
 }
 
+/** Reparo aberto a partir de um trabalho (ResponseWorkWarrantyItemDto). */
+export interface WorkWarrantyItemDto {
+  id: number;
+  status: WorkStatus;
+}
+
 export interface WorkFileDto {
   id: number;
   fileName: string;
@@ -79,11 +85,18 @@ export interface WorkDto {
   extraRequestedAt?: string;
   extraRespondedAt?: string;
   isUnderWarranty: boolean;
+  /** `true` quando este trabalho é um **reparo de garantia** (BE-W1). Badge "Garantia". */
+  isWarranty: boolean;
+  /** Id do trabalho original que gerou este reparo. Ausente no trabalho comum. */
+  parentWorkId?: number;
+  /** Reparos abertos a partir deste trabalho — só no detalhe do original. */
+  warrantyWorks?: WorkWarrantyItemDto[];
   chat?: WorkChatSummaryDto;
   serviceValue?: string;
   totalValue?: string;
-  budgetId: number;
-  budget: WorkBudgetSummaryDto;
+  /** Pode vir **ausente**: o reparo de garantia não nasce de orçamento (BE-W1). */
+  budgetId?: number;
+  budget?: WorkBudgetSummaryDto;
   serviceId: number;
   service: WorkServiceSummaryDto;
   requesterId: number;
@@ -107,13 +120,18 @@ export interface WorkListItemDto {
   cancelledAt?: string;
   warrantyExpiresAt?: string;
   isUnderWarranty: boolean;
+  /** `true` quando o item da lista é um reparo de garantia (BE-W1). Badge "Garantia". */
+  isWarranty: boolean;
+  /** Id do trabalho original que gerou este reparo. Ausente no trabalho comum. */
+  parentWorkId?: number;
+  warrantyWorks?: WorkWarrantyItemDto[];
   warrantyRequestStatus?: WarrantyRequestStatus;
   warrantyRequestedAt?: string;
   extraRequestStatus?: ExtraRequestStatus;
   chat?: WorkChatSummaryDto;
   serviceValue?: string;
   totalValue?: string;
-  budget: WorkBudgetSummaryDto;
+  budget?: WorkBudgetSummaryDto;
   service: WorkServiceSummaryDto;
   requester: Pick<WorkUserDto, 'id' | 'name' | 'fileUrl'>;
   provider: Pick<WorkUserDto, 'id' | 'name' | 'fileUrl'>;
