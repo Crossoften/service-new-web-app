@@ -91,6 +91,32 @@ declaradas **antes** de `@Get(':id')` no controller, senão `:id` engole `"catal
 controllers com rota literal + `:id` (ex.: works, budgets, services). É distinto do BE-NUM-1 (aqui é
 roteamento, não validação de tipo) — não some só corrigindo os DTOs.
 
+### BE-ADS-VIDEO-1 — Anúncios não têm onde guardar vídeo 🟠
+
+**Contexto.** A §8.14 liberou upload de vídeo (3 passos → `fileUrl`/`fileKey`). No Front o serviço de
+upload de vídeo já existe (`UploadService.enviarVideo`) e as telas de **conclusão de trabalho**, **garantia**
+e **chat** já anexam vídeo. Falta cobrir os **anúncios** — mas eles **não têm campo de vídeo no contrato**:
+
+| DTO | Campos de mídia hoje |
+|---|---|
+| `CreateProductDto` (produto e **aluguel** — reusa produto) | `imageUrl`, `imageKey` |
+| `CreateAccommodationDto` (hospedagem) | `imageUrl`, `imageKey` |
+| `CreateTransportationDto` (transporte) | `imageUrl`, `imageKey` |
+
+Só imagem única; **não há** `videoUrl`/`videoKey` nem array de mídia. Sem campo, o Front não tem onde
+gravar o vídeo — a tela de anúncio com vídeo **depende do back**.
+
+**Pedido ao back (uma das duas abordagens):**
+1. **Simples (espelha a imagem):** adicionar `videoUrl?` + `videoKey?` nos DTOs de criação/edição
+   **e nas respostas** (list + detalhe) de produto, hospedagem e transporte (aluguel sai de graça por
+   reusar produto). Um vídeo por anúncio.
+2. **Genérico (se quiser múltiplas mídias):** um array `mediaFiles: [{ fileUrl, fileKey, type }]` por
+   anúncio, cobrindo imagem(ns) + vídeo(s).
+
+Recomendo a **(1)** por ser consistente com o `imageUrl`/`imageKey` atual e resolver o caso de uso
+(1 vídeo de apresentação). Assim que o campo existir (DTOs + entidade + GET devolvendo), a tela do Front
+é um acréscimo pequeno (o upload já está pronto) — me avisem que entrego a fatia.
+
 ---
 
 ## 🎯 Ordem de serviço — Backend (comece por aqui)
