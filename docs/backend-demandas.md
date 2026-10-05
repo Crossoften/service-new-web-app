@@ -556,6 +556,34 @@ Aceitar `?isWarranty=true|false` em `GET /works` para o front separar "trabalhos
 
 ---
 
+## 🔒 Segurança / Infra
+
+### SEC-1 — Chave do Google Maps embutida no front e sem restrição aparente 🟠
+
+**Onde:** `src/environments/environment.ts` **e** `src/environments/environment.development.ts` trazem a mesma
+chave **hardcoded**:
+
+```ts
+googleMapsApiKey: 'AIzaSyAngtAtWYaK0dnC29uK9WfchOPj37Xtb4o',
+```
+
+**Contexto.** A chave do *Google Maps JavaScript API* é **pública por natureza** (o navegador precisa dela), então
+estar no bundle não é, por si só, uma falha. O risco real é **abuso de cota/custo**: sem restrição, qualquer um pode
+copiar a chave e gerar faturamento na conta do projeto.
+
+**Ação recomendada (Ops/GCP, não é mudança de API):**
+1. No **Google Cloud Console → APIs & Services → Credentials**, restringir a chave por **HTTP referrer**
+   (domínios do PWA: produção + homolog) e por **API** (apenas *Maps JavaScript API* + *Places*, que é o que o
+   `google-maps-loader` carrega).
+2. Idealmente **chaves distintas** por ambiente (dev/homolog/prod) — hoje `environment.ts` e
+   `environment.development.ts` compartilham a mesma.
+3. Se a chave atual já circulou sem restrição, considerar **rotacioná-la** após aplicar as restrições.
+
+**Front:** nada a fazer no código — o `GoogleMapsLoaderService` já degrada graciosamente quando a chave está vazia
+(`disponivel=false`, `load()` rejeita, UI cai no fallback textual; coberto por teste desde o `build-fix-2`).
+
+---
+
 ## Observações (sem ação obrigatória de back-end)
 
 - **Serviços gerais = assinatura** (ata) → coberto por `/plans` + `/subscriptions`.
