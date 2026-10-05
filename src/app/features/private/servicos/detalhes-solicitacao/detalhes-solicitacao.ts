@@ -3,6 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkService, Solicitacao } from '../../../../core/services/work';
+import { UploadService } from '../../../../core/services/upload';
+import { VIDEO_ACCEPT } from '../../../../core/models/upload';
 import { WorkStatus } from '../../../../core/models/enums';
 import { ApiError } from '../../../../core/models/common';
 
@@ -18,6 +20,9 @@ export class DetalhesSolicitacaoComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly works = inject(WorkService);
+  private readonly uploads = inject(UploadService);
+
+  readonly videoAccept = VIDEO_ACCEPT;
 
   solicitacaoId = 0;
   solicitacao?: Solicitacao;
@@ -29,6 +34,11 @@ export class DetalhesSolicitacaoComponent implements OnInit {
   // Garantia (fatia 1): modal de solicitação com descrição.
   mostrarModalGarantia = false;
   descricaoGarantia = '';
+
+  // Vídeo da garantia (§8.14 — opcional): mostra o problema que voltou.
+  videoGarantia?: { fileName: string; fileUrl: string; fileKey: string };
+  enviandoVideoGarantia = false;
+  erroVideoGarantia = '';
 
   ngOnInit() {
     this.solicitacaoId = Number(this.route.snapshot.paramMap.get('id'));
@@ -152,12 +162,44 @@ export class DetalhesSolicitacaoComponent implements OnInit {
   solicitarGarantia() {
     if (!this.podeSolicitarGarantia) return;
     this.descricaoGarantia = '';
+    this.videoGarantia = undefined;
+    this.erroVideoGarantia = '';
     this.erro = '';
     this.mostrarModalGarantia = true;
   }
 
+  /** Seleciona e envia o vídeo da garantia (3 passos — §8.14; opcional). */
+  selecionarVideoGarantia(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.erroVideoGarantia = '';
+    const invalido = this.uploads.validarVideo(file);
+    if (invalido) {
+      this.erroVideoGarantia = invalido;
+      return;
+    }
+    this.enviandoVideoGarantia = true;
+    this.uploads.enviarVideo(file).subscribe({
+      next: (res) => {
+        this.enviandoVideoGarantia = false;
+        this.videoGarantia = { fileName: file.name, fileUrl: res.fileUrl, fileKey: res.fileKey };
+      },
+      error: (err: ApiError) => {
+        this.enviandoVideoGarantia = false;
+        this.erroVideoGarantia = err?.message?.trim() ? err.message : 'Não foi possível enviar o vídeo.';
+      },
+    });
+  }
+
+  removerVideoGarantia() {
+    this.videoGarantia = undefined;
+    this.erroVideoGarantia = '';
+  }
+
   enviarGarantia() {
-    if (this.processando) return;
+    if (this.processando || this.enviandoVideoGarantia) return;
     const description = this.descricaoGarantia.trim();
     if (!description) {
       this.erro = 'Descreva o problema para solicitar a garantia.';
@@ -165,7 +207,8 @@ export class DetalhesSolicitacaoComponent implements OnInit {
     }
     this.processando = true;
     this.erro = '';
-    this.works.solicitarGarantia(this.solicitacaoId, { description }).subscribe({
+    const files = this.videoGarantia ? [this.videoGarantia] : undefined;
+    this.works.solicitarGarantia(this.solicitacaoId, { description, files }).subscribe({
       next: () => {
         this.processando = false;
         this.mostrarModalGarantia = false;
@@ -180,6 +223,8 @@ export class DetalhesSolicitacaoComponent implements OnInit {
 
   cancelarGarantia() {
     this.mostrarModalGarantia = false;
+    this.videoGarantia = undefined;
+    this.erroVideoGarantia = '';
   }
 
   confirmarModal() {

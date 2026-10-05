@@ -7,6 +7,8 @@ import {
 } from '@angular/common/http/testing';
 
 import { DetalhesSolicitacaoComponent } from './detalhes-solicitacao';
+import { UploadService } from '../../../../core/services/upload';
+import { of } from 'rxjs';
 
 function workResponse(overrides: Record<string, unknown> = {}) {
   return {
@@ -170,5 +172,49 @@ describe('DetalhesSolicitacaoComponent', () => {
     );
     expect(component.solicitacao?.reparos).toEqual([{ id: 20, status: 'Finished' }]);
     expect(component.reparoStatusLabel('Finished')).toBe('Concluído');
+  });
+
+  // ── Vídeo da garantia (§8.14) ───────────────────────────────────────────────
+
+  function evento(file: File): Event {
+    return { target: { files: [file], value: '' } } as unknown as Event;
+  }
+
+  it('anexa vídeo e envia em files na solicitação de garantia', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', isUnderWarranty: true }),
+    );
+    const up = TestBed.inject(UploadService);
+    vi.spyOn(up, 'validarVideo').mockReturnValue(null);
+    vi.spyOn(up, 'enviarVideo').mockReturnValue(of({ id: 3, fileUrl: 'https://api/v1/files/k', fileKey: 'k' }));
+
+    component.solicitarGarantia();
+    component.selecionarVideoGarantia(evento(new File(['x'], 'problema.mp4', { type: 'video/mp4' })));
+    expect(component.videoGarantia?.fileKey).toBe('k');
+
+    component.descricaoGarantia = 'Voltou a vazar.';
+    component.enviarGarantia();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/works/1/request-warranty') && r.method === 'POST');
+    expect(req.request.body.description).toBe('Voltou a vazar.');
+    expect(req.request.body.files).toEqual([
+      { fileName: 'problema.mp4', fileUrl: 'https://api/v1/files/k', fileKey: 'k' },
+    ]);
+    req.flush(workResponse({ status: 'Finished', warrantyRequestStatus: 'Pending' }));
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', warrantyRequestStatus: 'Pending' }),
+    );
+  });
+
+  it('recusa vídeo inválido na garantia sem enviar', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', isUnderWarranty: true }),
+    );
+    const up = TestBed.inject(UploadService);
+    const enviar = vi.spyOn(up, 'enviarVideo');
+    component.solicitarGarantia();
+    component.selecionarVideoGarantia(evento(new File(['x'], 'f.png', { type: 'image/png' })));
+    expect(component.erroVideoGarantia).toContain('não suportado');
+    expect(enviar).not.toHaveBeenCalled();
+    expect(component.videoGarantia).toBeUndefined();
   });
 });

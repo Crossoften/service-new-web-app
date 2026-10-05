@@ -207,8 +207,29 @@
           <p class="modal__hint">Garantia válida até {{ solicitacao?.validadeGarantia }}.</p>
         }
 
+        <!-- VÍDEO (opcional) — mostra o problema (upload em 3 passos, §8.14) -->
+        <div class="modal-video">
+          @if (videoGarantia) {
+            <video class="modal-video__preview" [src]="videoGarantia.fileUrl" controls playsinline></video>
+            <div class="modal-video__linha">
+              <span class="modal-video__nome">{{ videoGarantia.fileName }}</span>
+              <button type="button" class="modal-video__remover" (click)="removerVideoGarantia()" [disabled]="processando">Remover</button>
+            </div>
+          } @else if (enviandoVideoGarantia) {
+            <p class="modal-video__status">Enviando vídeo…</p>
+          } @else {
+            <label class="modal-video__botao">
+              + Anexar vídeo (opcional)
+              <input type="file" [accept]="videoAccept" (change)="selecionarVideoGarantia($event)" hidden />
+            </label>
+          }
+          @if (erroVideoGarantia) { <span class="modal-video__erro">{{ erroVideoGarantia }}</span> }
+        </div>
+
         <div class="modal__acoes">
-          <button class="solicitacao-btn solicitacao-btn--primary" (click)="enviarGarantia()" [disabled]="processando">ENVIAR</button>
+          <button class="solicitacao-btn solicitacao-btn--primary" (click)="enviarGarantia()" [disabled]="processando || enviandoVideoGarantia">
+            {{ enviandoVideoGarantia ? 'ENVIANDO VÍDEO…' : 'ENVIAR' }}
+          </button>
           <button class="solicitacao-btn solicitacao-btn--outline" (click)="cancelarGarantia()" [disabled]="processando">CANCELAR</button>
         </div>
       </div>
