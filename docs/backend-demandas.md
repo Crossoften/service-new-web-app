@@ -117,28 +117,44 @@ Recomendo a **(1)** por ser consistente com o `imageUrl`/`imageKey` atual e reso
 (1 vídeo de apresentação). Assim que o campo existir (DTOs + entidade + GET devolvendo), a tela do Front
 é um acréscimo pequeno (o upload já está pronto) — me avisem que entrego a fatia.
 
-### BE-TRANSP-IMG-1 — Imagem do transporte não volta na listagem do fornecedor 🟠
+### BE-FILE-URL-1 — `fileUrl` do upload vem com **host placeholder** (`your-ngrok-url…`) → nenhuma mídia renderiza 🔴
 
-**Sintoma (relato do cliente):** ao cadastrar um transporte como fornecedor e anexar uma imagem, a foto
-**não renderiza** na listagem (`/fornecedor/transporte`), que mostra o placeholder.
+**Impacto: SISTÊMICO.** Afeta **toda imagem/vídeo enviado** (todas as verticais: transporte, produto,
+hospedagem, cardápio, chat, conclusão de trabalho…), não só transporte. Foi *descoberto* no cadastro de
+transporte, mas a causa é o serviço de upload.
 
-**Auditoria do Front (sem mudança necessária):** o fluxo está correto ponta a ponta no cliente Angular:
-- `criar-transporte` faz upload (`POST /files/one-file`) e **envia `imageUrl` + `imageKey`** no `POST /v1/transportations`
-  (o botão **Salvar fica desabilitado enquanto o upload não termina**, então não há corrida que mande URL vazia);
-- o preview da imagem aparece no próprio cadastro (mesma `imageUrl`), logo a URL é renderizável por `<img>`;
-- a listagem lê `t.imageUrl` (campo que o Swagger declara em **`ResponseTransportationListItemDto`**) e o
-  `TransportService.meusTransportes` repassa os itens **sem alterar** nenhum campo.
+**Sintoma:** ao anexar uma imagem no cadastro (ex.: transporte), o upload **conclui sem erro**, mas a foto
+aparece **quebrada** no preview e na listagem.
 
-**Hipótese (back):** o `GET /v1/transportations/my-transportations` (ou a persistência do `POST`) **não está
-devolvendo `imageUrl`** nos itens, apesar de o schema declarar o campo. Vale conferir:
-1. o `POST /transportations` **persiste** `imageUrl`/`imageKey` que o Front envia;
-2. o serializer de **`my-transportations`** (e de `/transportations`) inclui `imageUrl` em cada item
-   (o detalhe `GET /transportations/{id}` provavelmente já inclui — comparar os dois).
+**Causa confirmada (diagnóstico em tela, 2026-10-05).** O `POST /v1/upload/one-file` responde `200` com
+`{ id, fileUrl, fileKey }`, mas o **`fileUrl` aponta para um host que não existe** — é o **texto-modelo do
+`.env`**, nunca substituído pela URL pública real:
 
-**Como confirmar rápido:** criar um transporte com imagem e inspecionar a resposta do
-`GET /v1/transportations/my-transportations` — se vier sem `imageUrl`, é aqui. As demais verticais
-(produto/hospedagem) usam o mesmo padrão `imageUrl`; se elas renderizam e transporte não, o gap é
-específico do endpoint de transporte.
+```
+fileUrl: https://your-ngrok-url.ngrok-free.app/v1/files/1791230853240-Captura-de-Tela-….png
+fileKey: 1791230853240-Captura-de-Tela-….png
+```
+
+`your-ngrok-url.ngrok-free.app` é literal (placeholder), então `<img src>`/`<video src>` falham em qualquer
+tela. (Confirmado: o `<img>` dispara `error`, sem mensagem de erro de upload.)
+
+**Auditoria do Front (sem mudança necessária):** o cliente Angular está correto ponta a ponta — faz
+`POST /v1/upload/one-file` (campo `file`, como o Swagger pede), recebe `{fileUrl, fileKey}` e usa `fileUrl`
+direto no `<img>`/`<video>` (como manda o §8.14). O front **não monta** essa URL; ele apenas reflete a que o
+back devolve.
+
+**Correção (back / infra):**
+1. Configurar a **variável de base pública** usada para montar `fileUrl` (algo como `APP_URL` / `PUBLIC_URL` /
+   `FILES_BASE_URL`) com a **URL real e acessível** (a URL atual do ngrok, ou o domínio de homolog/produção) —
+   hoje está com o placeholder `https://your-ngrok-url.ngrok-free.app`.
+2. Garantir que a rota de **servir o arquivo** exista e seja **pública** (sem exigir `Authorization`, pois a
+   tag `<img>` não envia token). O Swagger documenta `GET /v1/one-file/download/{id}` e `GET /v1/one-file/{id}`,
+   mas o `fileUrl` aponta para **`/v1/files/{fileKey}`** — confirmar que essa rota realmente serve o binário
+   (ou ajustar o `fileUrl` para a rota correta).
+
+> Enquanto o back não corrigir, dá para destravar **temporariamente no front** reescrevendo o host da `fileUrl`
+> (trocar o placeholder pela base real do `environment.apiBaseUrl`), mas é gambiarra — assim que o back devolver
+> a URL certa, o ideal é o front **não** mexer. Me avisem se querem esse workaround temporário.
 
 ---
 
