@@ -97,3 +97,30 @@
     &:disabled { opacity: 0.6; }
   }
 }
+
+// Vídeo na bolha do chat (§8.14).
+.chat-bolha__video {
+  width: 100%;
+  max-width: 240px;
+  max-height: 200px;
+  border-radius: 10px;
+  background: #000;
+  margin-top: 4px;
+}
+
+// Botão de anexar vídeo no input do chat.
+.chat-input__anexo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--color-primary);
+  cursor: pointer;
+
+  &--enviando { opacity: 0.6; cursor: default; }
+}
+
+.chat-input__spinner { font-size: 20px; font-weight: 700; color: var(--color-primary); }

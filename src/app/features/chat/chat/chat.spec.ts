@@ -8,6 +8,8 @@ import {
 
 import { ChatComponent } from './chat';
 import { SessionService } from '../../../core/services/session';
+import { UploadService } from '../../../core/services/upload';
+import { of } from 'rxjs';
 
 describe('ChatComponent', () => {
   let component: ChatComponent;
@@ -73,5 +75,41 @@ describe('ChatComponent', () => {
       messages: [], currentPage: 1, totalPages: 1, totalRecords: 0,
     });
     expect(component.novaMensagem).toBe('');
+  });
+
+  it('ehVideo detecta pela extensão do arquivo/URL', () => {
+    flushCarga();
+    expect(component.ehVideo({ fileName: 'obra.mp4' } as never)).toBe(true);
+    expect(component.ehVideo({ fileUrl: 'https://api/v1/files/123-x.mov' } as never)).toBe(true);
+    expect(component.ehVideo({ fileName: 'doc.pdf' } as never)).toBe(false);
+    expect(component.ehVideo({} as never)).toBe(false);
+  });
+
+  it('envia vídeo como mensagem (upload → POST com fileUrl/fileKey) e recarrega', () => {
+    flushCarga();
+    const up = TestBed.inject(UploadService);
+    vi.spyOn(up, 'validarVideo').mockReturnValue(null);
+    vi.spyOn(up, 'enviarVideo').mockReturnValue(of({ id: 9, fileUrl: 'https://api/v1/files/k', fileKey: 'k' }));
+
+    const file = new File(['x'], 'v.mp4', { type: 'video/mp4' });
+    component.selecionarVideo({ target: { files: [file], value: '' } } as unknown as Event);
+
+    const post = httpMock.expectOne((r) => r.url.endsWith('/chats/1/messages') && r.method === 'POST');
+    expect(post.request.body).toEqual({ message: undefined, fileName: 'v.mp4', fileUrl: 'https://api/v1/files/k', fileKey: 'k' });
+    post.flush({});
+    httpMock.expectOne((r) => r.url.endsWith('/chats/1/messages') && r.method === 'GET').flush({
+      chat: { id: 1, contextType: 'Rental', referenceId: 5, createdAt: '', updatedAt: '' },
+      messages: [], currentPage: 1, totalPages: 1, totalRecords: 0,
+    });
+    expect(component.enviandoVideo).toBe(false);
+  });
+
+  it('recusa vídeo inválido no chat sem enviar', () => {
+    flushCarga();
+    const up = TestBed.inject(UploadService);
+    const enviar = vi.spyOn(up, 'enviarVideo');
+    component.selecionarVideo({ target: { files: [new File(['x'], 'f.png', { type: 'image/png' })], value: '' } } as unknown as Event);
+    expect(component.erro).toContain('não suportado');
+    expect(enviar).not.toHaveBeenCalled();
   });
 });

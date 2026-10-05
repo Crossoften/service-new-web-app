@@ -23,9 +23,13 @@
           @if (!souRemetente(m)) { <span class="chat-bolha__autor">{{ m.sender.name }}</span> }
           @if (m.message) { <span class="chat-bolha__texto">{{ m.message }}</span> }
           @if (m.fileUrl) {
-            <a class="chat-bolha__arquivo" [href]="m.fileUrl" target="_blank" rel="noopener">
-              📎 {{ m.fileName || 'anexo' }}
-            </a>
+            @if (ehVideo(m)) {
+              <video class="chat-bolha__video" [src]="m.fileUrl" controls playsinline></video>
+            } @else {
+              <a class="chat-bolha__arquivo" [href]="m.fileUrl" target="_blank" rel="noopener">
+                📎 {{ m.fileName || 'anexo' }}
+              </a>
+            }
           }
           <span class="chat-bolha__hora">{{ m.createdAt | date: 'dd/MM HH:mm' }}</span>
         </div>
@@ -34,12 +38,22 @@
   </div>
 
   <div class="chat-input">
+    <label class="chat-input__anexo" [class.chat-input__anexo--enviando]="enviandoVideo" aria-label="Anexar vídeo">
+      @if (enviandoVideo) {
+        <span class="chat-input__spinner">…</span>
+      } @else {
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>
+      }
+      <input type="file" [accept]="videoAccept" (change)="selecionarVideo($event)" [disabled]="enviandoVideo" hidden />
+    </label>
     <input
       type="text"
       placeholder="Mensagem…"
       [(ngModel)]="novaMensagem"
       (keyup.enter)="enviar()" />
-    <button class="chat-input__enviar" (click)="enviar()" [disabled]="enviando" aria-label="Enviar">
+    <button class="chat-input__enviar" (click)="enviar()" [disabled]="enviando || enviandoVideo" aria-label="Enviar">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
       </svg>
