@@ -38,4 +38,22 @@ describe('MinhasReservasComponent', () => {
     });
     expect(component.reservas.length).toBe(1);
   });
+
+  it('separa por aba: Ativos (em jogo) x Histórico (terminais)', () => {
+    const b = (id: number, status: string) => ({
+      id, status, checkIn: '', checkOut: '', guests: 2, totalValue: '10', chatRoomId: 9,
+      accommodation: { id: 1, name: 'X' }, requester: { id: 2, name: 'A' }, provider: { id: 3, name: 'B' },
+      createdAt: '', updatedAt: '',
+    });
+    httpMock.expectOne((r) => r.url.endsWith('/bookings')).flush({
+      bookings: [b(1, 'Requested'), b(2, 'CheckedIn'), b(3, 'Completed'), b(4, 'Cancelled')],
+      currentPage: 1, totalPages: 1, totalRecords: 4,
+    });
+
+    component.selecionarAba('ativos');
+    expect(component.reservasFiltradas.map((r) => r.id)).toEqual([1, 2]);
+
+    component.selecionarAba('historico');
+    expect(component.reservasFiltradas.map((r) => r.id)).toEqual([3, 4]);
+  });
 });

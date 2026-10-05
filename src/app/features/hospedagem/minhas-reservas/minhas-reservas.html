@@ -10,16 +10,28 @@
     <div style="width: 22px"></div>
   </div>
 
+  <!-- ABAS -->
+  <div class="mr-tabs">
+    <button class="mr-tabs__item" [class.mr-tabs__item--ativo]="aba === 'ativos'" (click)="selecionarAba('ativos')">
+      Ativos
+    </button>
+    <button class="mr-tabs__item" [class.mr-tabs__item--ativo]="aba === 'historico'" (click)="selecionarAba('historico')">
+      Histórico
+    </button>
+  </div>
+
   <div class="page-content">
     @if (carregando) {
       <p class="mr-msg">Carregando…</p>
     } @else if (erro) {
       <p class="mr-msg">{{ erro }}</p>
-    } @else if (reservas.length === 0) {
-      <p class="mr-msg">Você ainda não tem reservas.</p>
+    } @else if (reservasFiltradas.length === 0) {
+      <p class="mr-msg">
+        {{ aba === 'ativos' ? 'Nenhuma reserva em andamento.' : 'Nenhuma reserva no histórico.' }}
+      </p>
     } @else {
       <div class="mr-lista">
-        @for (r of reservas; track r.id) {
+        @for (r of reservasFiltradas; track r.id) {
           <div class="mr-card" (click)="abrir(r.id)">
             <div class="mr-card__top">
               <span class="mr-card__nome">{{ r.accommodation.name }}</span>
