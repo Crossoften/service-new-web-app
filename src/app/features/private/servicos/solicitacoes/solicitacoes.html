@@ -76,8 +76,8 @@
                 {{ garantiaLabel(solicitacao) }}
               </span>
             }
-            @if (solicitacao.status === 'em_garantia' && solicitacao.validadeGarantia) {
-              <span class="solicitacao-card__garantia">Val: {{ solicitacao.validadeGarantia }}</span>
+            @if (solicitacao.sobGarantia && solicitacao.validadeGarantia) {
+              <span class="solicitacao-card__garantia">Em garantia até {{ solicitacao.validadeGarantia }}</span>
             }
           </div>
 

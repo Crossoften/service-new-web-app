@@ -110,11 +110,15 @@ export class ServicosAtividadeComponent implements OnInit {
   }
 
   private deSolicitacao(s: Solicitacao): ItemServico {
-    const ativo = s.status === 'em_andamento' || s.status === 'em_garantia';
+    const ativo =
+      s.status === 'em_andamento' || s.status === 'garantia_solicitada' || s.status === 'em_garantia';
     let subtitulo: string;
     let destaque = false;
     if (s.extraPendente) {
       subtitulo = 'Acréscimo aguardando sua resposta';
+      destaque = true;
+    } else if (s.status === 'garantia_solicitada') {
+      subtitulo = 'Garantia em análise';
       destaque = true;
     } else if (s.status === 'em_garantia') {
       subtitulo = 'Em garantia';

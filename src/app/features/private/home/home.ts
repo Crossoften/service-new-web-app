@@ -132,7 +132,7 @@ export class HomeComponent implements OnInit {
   }
 
   private solicitacaoAtiva(s: Solicitacao): boolean {
-    return s.status === 'em_andamento' || s.status === 'em_garantia';
+    return s.status === 'em_andamento' || s.status === 'garantia_solicitada' || s.status === 'em_garantia';
   }
 
   private orcamentoAtivo(o: Orcamento): boolean {

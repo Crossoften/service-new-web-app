@@ -38,7 +38,7 @@ export class PainelServicosComponent implements OnInit {
       next: ({ orcamentos, trabalhos }) => {
         this.orcamentosPendentes = orcamentos;
         this.trabalhosAtivos = trabalhos.filter(
-          (t) => t.status === 'em_andamento' || t.status === 'em_garantia',
+          (t) => t.status === 'em_andamento' || t.status === 'garantia_solicitada' || t.status === 'em_garantia',
         );
         this.carregando = false;
       },

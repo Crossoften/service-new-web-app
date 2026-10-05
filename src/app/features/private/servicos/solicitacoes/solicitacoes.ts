@@ -47,7 +47,7 @@ export class SolicitacoesComponent implements OnInit {
   get solicitacoesFiltradas(): Solicitacao[] {
     if (this.tabAtiva === 'em_andamento') {
       return this.solicitacoes.filter(s =>
-        s.status === 'em_andamento' || s.status === 'em_garantia'
+        s.status === 'em_andamento' || s.status === 'garantia_solicitada' || s.status === 'em_garantia'
       );
     }
     if (this.tabAtiva === 'finalizadas') {
@@ -61,20 +61,22 @@ export class SolicitacoesComponent implements OnInit {
 
   statusLabel(status: StatusSolicitacao): string {
     const labels: Record<StatusSolicitacao, string> = {
-      em_andamento: 'Em andamento',
-      em_garantia:  'Em garantia',
-      finalizada:   'Finalizada',
-      cancelada:    'Cancelada',
+      em_andamento:        'Em andamento',
+      garantia_solicitada: 'Garantia em análise',
+      em_garantia:         'Em garantia',
+      finalizada:          'Finalizada',
+      cancelada:           'Cancelada',
     };
     return labels[status];
   }
 
   statusClass(status: StatusSolicitacao): string {
     const classes: Record<StatusSolicitacao, string> = {
-      em_andamento: 'status--laranja',
-      em_garantia:  'status--verde',
-      finalizada:   'status--cinza',
-      cancelada:    'status--vermelho',
+      em_andamento:        'status--laranja',
+      garantia_solicitada: 'status--laranja',
+      em_garantia:         'status--verde',
+      finalizada:          'status--cinza',
+      cancelada:           'status--vermelho',
     };
     return classes[status];
   }

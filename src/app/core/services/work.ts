@@ -19,9 +19,19 @@ import {
 import { WorkStatus, WarrantyRequestStatus } from '../models/enums';
 
 /** Status do mock (cliente) — 4 estados usados pelas telas de solicitação. */
-export type StatusSolicitacao = 'em_andamento' | 'em_garantia' | 'finalizada' | 'cancelada';
+export type StatusSolicitacao =
+  | 'em_andamento'
+  | 'garantia_solicitada'
+  | 'em_garantia'
+  | 'finalizada'
+  | 'cancelada';
 /** Status do mock (fornecedor) — 4 estados usados pelas telas de trabalho. */
-export type StatusTrabalho = 'em_andamento' | 'em_garantia' | 'finalizado' | 'cancelado';
+export type StatusTrabalho =
+  | 'em_andamento'
+  | 'garantia_solicitada'
+  | 'em_garantia'
+  | 'finalizado'
+  | 'cancelado';
 
 /** Resumo do prestador exibido nos cards de solicitação. */
 export interface PrestadorResumo {
@@ -88,6 +98,8 @@ export interface TrabalhoFornecedor {
   arquivosCliente: { nome: string; tipo: string }[];
   chatId?: number;
   extraPendente: boolean;
+  /** Dentro da janela de garantia (informativo — `isUnderWarranty`). */
+  sobGarantia: boolean;
   // Garantia (BE-W1): reparo? original de origem? reparos gerados a partir dele?
   ehGarantia: boolean;
   trabalhoOriginalId?: number;
@@ -246,23 +258,43 @@ export class WorkService {
     };
   }
 
-  private statusSolicitacao(status: WorkStatus, sobGarantia: boolean): StatusSolicitacao {
+  /**
+   * Status de exibição de um trabalho concluído do ponto de vista do **cliente**.
+   *
+   * ⚠️ "Em garantia" **não** é consequência de o serviço ter prazo de garantia
+   * (`isUnderWarranty` = estar dentro da janela — isso é só informativo). Só vira
+   * estado de garantia quando o cliente **abre uma solicitação** (`warrantyRequestStatus`):
+   * `Pending` → garantia em análise; `Approved` → reparo em garantia. Sem pedido (ou
+   * recusado) o trabalho concluído é **finalizado**.
+   */
+  private statusSolicitacao(
+    status: WorkStatus,
+    garantia?: WarrantyRequestStatus,
+  ): StatusSolicitacao {
     switch (status) {
       case 'Cancelled':
         return 'cancelada';
       case 'Finished':
-        return sobGarantia ? 'em_garantia' : 'finalizada';
+        if (garantia === 'Pending') return 'garantia_solicitada';
+        if (garantia === 'Approved') return 'em_garantia';
+        return 'finalizada'; // sem pedido ou recusado
       default: // Pending, InProgress
         return 'em_andamento';
     }
   }
 
-  private statusTrabalho(status: WorkStatus, sobGarantia: boolean): StatusTrabalho {
+  /** Mesmo modelo do lado do **fornecedor** (ver `statusSolicitacao`). */
+  private statusTrabalho(
+    status: WorkStatus,
+    garantia?: WarrantyRequestStatus,
+  ): StatusTrabalho {
     switch (status) {
       case 'Cancelled':
         return 'cancelado';
       case 'Finished':
-        return sobGarantia ? 'em_garantia' : 'finalizado';
+        if (garantia === 'Pending') return 'garantia_solicitada';
+        if (garantia === 'Approved') return 'em_garantia';
+        return 'finalizado';
       default:
         return 'em_andamento';
     }
@@ -285,7 +317,7 @@ export class WorkService {
         naoGostei: 0,
         negociacoes: 0,
       },
-      status: this.statusSolicitacao(w.status, w.isUnderWarranty),
+      status: this.statusSolicitacao(w.status, w.warrantyRequestStatus),
       statusApi: w.status,
       validadeGarantia: this.data(w.warrantyExpiresAt),
       realizadoEm: this.data(w.serviceDate ?? w.createdAt),
@@ -320,7 +352,7 @@ export class WorkService {
         naoGostei: 0,
         negociacoes: 0,
       },
-      status: this.statusSolicitacao(w.status, w.isUnderWarranty),
+      status: this.statusSolicitacao(w.status, w.warrantyRequestStatus),
       statusApi: w.status,
       validadeGarantia: this.data(w.warrantyExpiresAt),
       realizadoEm: this.data(w.serviceDate ?? w.createdAt),
@@ -356,7 +388,7 @@ export class WorkService {
       cliente: w.requester?.name ?? '—',
       clienteFoto: w.requester?.fileUrl ?? '',
       descricao: w.service?.name ?? '',
-      status: this.statusTrabalho(w.status, w.isUnderWarranty),
+      status: this.statusTrabalho(w.status, w.warrantyRequestStatus),
       statusApi: w.status,
       validadeGarantia: this.data(w.warrantyExpiresAt),
       realizado: this.data(w.serviceDate ?? w.createdAt),
@@ -365,6 +397,7 @@ export class WorkService {
       arquivosCliente: [],
       chatId: w.chat?.id,
       extraPendente: w.extraRequestStatus === 'Pending',
+      sobGarantia: w.isUnderWarranty,
       ehGarantia: !!w.isWarranty,
       trabalhoOriginalId: w.parentWorkId,
       reparos: w.warrantyWorks ?? [],
@@ -379,7 +412,7 @@ export class WorkService {
       cliente: w.requester?.name ?? '—',
       clienteFoto: w.requester?.fileUrl ?? '',
       descricao: w.details ?? w.service?.name ?? '',
-      status: this.statusTrabalho(w.status, w.isUnderWarranty),
+      status: this.statusTrabalho(w.status, w.warrantyRequestStatus),
       statusApi: w.status,
       validadeGarantia: this.data(w.warrantyExpiresAt),
       realizado: this.data(w.serviceDate ?? w.createdAt),
@@ -390,6 +423,7 @@ export class WorkService {
         .map((f) => ({ nome: f.fileName, tipo: f.type })),
       chatId: w.chat?.id,
       extraPendente: w.extraRequestStatus === 'Pending',
+      sobGarantia: w.isUnderWarranty,
       ehGarantia: !!w.isWarranty,
       trabalhoOriginalId: w.parentWorkId,
       reparos: w.warrantyWorks ?? [],

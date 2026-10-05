@@ -47,7 +47,7 @@ describe('SolicitacoesComponent', () => {
     expect(component.solicitacoes[0].valorServico).toBe(350);
   });
 
-  it('mapeia Finished sob garantia para em_garantia', () => {
+  it('Finished dentro da janela, SEM pedido de garantia → finalizada (não em_garantia)', () => {
     const req = httpMock.expectOne((r) => r.url.endsWith('/works/my-requests'));
     req.flush({
       works: [
@@ -61,9 +61,29 @@ describe('SolicitacoesComponent', () => {
       currentPage: 1, totalPages: 1, totalRecords: 1,
     });
 
+    expect(component.solicitacoes[0].status).toBe('finalizada'); // janela ≠ em garantia
+    expect(component.solicitacoes[0].sobGarantia).toBe(true); // mas ainda pode acionar
+    component.tabAtiva = 'finalizadas';
+    expect(component.solicitacoesFiltradas.length).toBe(1);
+  });
+
+  it('Finished + pedido de garantia Pending → garantia_solicitada (ativo)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/my-requests')).flush({
+      works: [
+        {
+          id: 3, status: 'Finished', isUnderWarranty: true, warrantyRequestStatus: 'Pending',
+          service: { id: 3, name: 'Reforma' }, budget: { id: 5 },
+          requester: { id: 2, name: 'Ana' }, provider: { id: 9, name: 'Joelson' },
+          createdAt: '2026-03-16T10:00:00.000Z',
+        },
+      ],
+      currentPage: 1, totalPages: 1, totalRecords: 1,
+    });
+
+    expect(component.solicitacoes[0].status).toBe('garantia_solicitada');
     component.tabAtiva = 'em_andamento';
     expect(component.solicitacoesFiltradas.length).toBe(1);
-    expect(component.solicitacoes[0].status).toBe('em_garantia');
+    expect(component.statusLabel('garantia_solicitada')).toBe('Garantia em análise');
   });
 
   it('marca o reparo de garantia (isWarranty) na lista', () => {

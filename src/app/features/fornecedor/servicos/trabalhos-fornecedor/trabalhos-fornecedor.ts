@@ -46,7 +46,7 @@ export class TrabalhosFornecedorComponent implements OnInit {
   get trabalhosFiltrados(): TrabalhoFornecedor[] {
     if (this.tabAtiva === 'em_andamento') {
       return this.trabalhos.filter(t =>
-        t.status === 'em_andamento' || t.status === 'em_garantia'
+        t.status === 'em_andamento' || t.status === 'garantia_solicitada' || t.status === 'em_garantia'
       );
     }
     if (this.tabAtiva === 'finalizadas') {
@@ -60,10 +60,11 @@ export class TrabalhosFornecedorComponent implements OnInit {
 
   statusClass(status: StatusTrabalho): string {
     const classes: Record<StatusTrabalho, string> = {
-      em_andamento: '',
-      em_garantia:  'status--verde',
-      finalizado:   'status--cinza',
-      cancelado:    'status--vermelho',
+      em_andamento:        '',
+      garantia_solicitada: 'status--laranja',
+      em_garantia:         'status--verde',
+      finalizado:          'status--cinza',
+      cancelado:           'status--vermelho',
     };
     return classes[status];
   }

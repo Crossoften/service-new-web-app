@@ -74,9 +74,23 @@ describe('ServicosAtividadeComponent', () => {
     expect(nav).toHaveBeenCalledWith(['/servicos/orcamento', 10]);
   });
 
-  it('trabalho em garantia aparece nos Ativos', () => {
-    flush({ works: [work({ id: 3, status: 'Finished', isUnderWarranty: true })] });
+  it('garantia ABERTA pelo cliente (Approved) aparece nos Ativos', () => {
+    flush({ works: [work({ id: 3, status: 'Finished', warrantyRequestStatus: 'Approved' })] });
     expect(component.itensFiltrados.length).toBe(1);
     expect(component.itensFiltrados[0].subtitulo).toContain('garantia');
+  });
+
+  it('garantia SOLICITADA (Pending) aparece nos Ativos', () => {
+    flush({ works: [work({ id: 4, status: 'Finished', warrantyRequestStatus: 'Pending' })] });
+    expect(component.itensFiltrados.length).toBe(1);
+    expect(component.itensFiltrados[0].subtitulo).toContain('análise');
+  });
+
+  it('Finished dentro da janela mas SEM pedido vai para Histórico (não Ativos)', () => {
+    flush({ works: [work({ id: 5, status: 'Finished', isUnderWarranty: true })] });
+    expect(component.itensFiltrados.length).toBe(0); // aba Ativos vazia
+    component.selecionarAba('historico');
+    expect(component.itensFiltrados.length).toBe(1);
+    expect(component.itensFiltrados[0].subtitulo).toBe('Serviço finalizado');
   });
 });

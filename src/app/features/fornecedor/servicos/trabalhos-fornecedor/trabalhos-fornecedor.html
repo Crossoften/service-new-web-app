@@ -55,7 +55,7 @@
             }
           </div>
 
-          @if (trabalho.status === 'em_garantia' || trabalho.garantiaStatus) {
+          @if (trabalho.status === 'em_garantia' || trabalho.garantiaStatus || trabalho.sobGarantia) {
             <div class="tf-card__status-col">
               @if (trabalho.status === 'em_garantia') {
                 <span class="tf-status status--verde">Em garantia</span>
@@ -63,8 +63,8 @@
               @if (trabalho.garantiaStatus) {
                 <span class="tf-status" [ngClass]="garantiaClass(trabalho)">{{ garantiaLabel(trabalho) }}</span>
               }
-              @if (trabalho.validadeGarantia) {
-                <span class="tf-card__garantia">Val: {{ trabalho.validadeGarantia }}</span>
+              @if (trabalho.sobGarantia && trabalho.validadeGarantia) {
+                <span class="tf-card__garantia">Em garantia até {{ trabalho.validadeGarantia }}</span>
               }
             </div>
           }
