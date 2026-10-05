@@ -117,4 +117,21 @@ describe('AtividadeComponent (índice por categoria)', () => {
     expect(component.carregando).toBe(false);
     expect(component.categorias.find((c) => c.id === 'servicos')?.ativos).toBe(1);
   });
+
+  it('mostra categoria só com histórico (ex.: delivery só entregue)', () => {
+    flushAll({ pedidos: [pedido({ status: 'Delivered' }), pedido({ id: 21, status: 'Cancelled' })] });
+    const delivery = component.categorias.find((c) => c.id === 'delivery');
+    expect(delivery).toBeTruthy(); // antes sumia (ativos>0); agora aparece pelo histórico
+    expect(delivery?.ativos).toBe(0);
+    expect(delivery?.historico).toBe(2);
+    expect(component.subLabel(delivery!)).toContain('2 no histórico');
+  });
+
+  it('subLabel combina ativos e histórico', () => {
+    flushAll({ pedidos: [pedido({ status: 'Preparing' }), pedido({ id: 21, status: 'Delivered' })] });
+    const delivery = component.categorias.find((c) => c.id === 'delivery')!;
+    expect(delivery.ativos).toBe(1);
+    expect(delivery.historico).toBe(1);
+    expect(component.subLabel(delivery)).toBe('1 em andamento · 1 no histórico');
+  });
 });

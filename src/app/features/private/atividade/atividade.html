@@ -57,7 +57,7 @@
             </div>
             <div class="atividade-cat__info">
               <span class="atividade-cat__nome">{{ cat.label }}</span>
-              <span class="atividade-cat__sub">{{ cat.ativos }} em andamento</span>
+              <span class="atividade-cat__sub">{{ subLabel(cat) }}</span>
             </div>
             <svg class="atividade-cat__seta" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="9 18 15 12 9 6"/>
@@ -68,7 +68,7 @@
 
       @if (categorias.length === 0) {
         <div class="atividade-vazio">
-          <p>Nenhuma atividade em andamento.</p>
+          <p>Você ainda não tem atividade por aqui.</p>
         </div>
       }
 

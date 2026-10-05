@@ -28,6 +28,7 @@ interface CategoriaAtividade {
   id: CategoriaId;
   label: string;
   ativos: number;
+  historico: number;
   rota: string[];
 }
 
@@ -81,34 +82,36 @@ export class AtividadeComponent implements OnInit {
       candidaturas: this.page(this.jobs.minhasCandidaturas()),
     }).subscribe({
       next: (r) => {
+        const servicosTotal = (r.orcamentos as Orcamento[]).length + (r.solicitacoes as Solicitacao[]).length;
         const servicos =
           (r.orcamentos as Orcamento[]).filter((o) => this.orcamentoAtivo(o)).length +
           (r.solicitacoes as Solicitacao[]).filter((s) => this.solicitacaoAtiva(s)).length;
-        const delivery = (r.pedidos as ResponseFoodOrderDto[]).filter((p) =>
-          STATUS_DELIVERY_ATIVOS.includes(p.status),
-        ).length;
-        const compraVenda = (r.negociacoes as CommercialTransactionDto[]).filter((n) =>
-          NEGOCIACAO_ATIVOS.includes(n.status),
-        ).length;
-        const aluguel = (r.alugueis as RentalDto[]).filter((a) => ALUGUEL_ATIVOS.includes(a.status)).length;
-        const transporte = (r.transportes as TransportRequestDto[]).filter((t) =>
-          TRANSPORTE_ATIVOS.includes(t.status),
-        ).length;
-        const hospedagem = (r.reservas as BookingDto[]).filter((b) => RESERVA_ATIVOS.includes(b.status)).length;
-        const empregos = (r.candidaturas as JobApplicationDto[]).filter((c) =>
-          CANDIDATURA_ATIVOS.includes(c.status),
-        ).length;
+        const pedidos = r.pedidos as ResponseFoodOrderDto[];
+        const delivery = pedidos.filter((p) => STATUS_DELIVERY_ATIVOS.includes(p.status)).length;
+        const negociacoes = r.negociacoes as CommercialTransactionDto[];
+        const compraVenda = negociacoes.filter((n) => NEGOCIACAO_ATIVOS.includes(n.status)).length;
+        const alugueis = r.alugueis as RentalDto[];
+        const aluguel = alugueis.filter((a) => ALUGUEL_ATIVOS.includes(a.status)).length;
+        const transportes = r.transportes as TransportRequestDto[];
+        const transporte = transportes.filter((t) => TRANSPORTE_ATIVOS.includes(t.status)).length;
+        const reservas = r.reservas as BookingDto[];
+        const hospedagem = reservas.filter((b) => RESERVA_ATIVOS.includes(b.status)).length;
+        const candidaturas = r.candidaturas as JobApplicationDto[];
+        const empregos = candidaturas.filter((c) => CANDIDATURA_ATIVOS.includes(c.status)).length;
 
+        // `historico` = itens não-ativos (terminais). Uma categoria entra no índice
+        // quando tem ativo **ou** histórico — senão o histórico "sumia" (ex.: delivery
+        // só com pedidos entregues não aparecia).
         const todas: CategoriaAtividade[] = [
-          { id: 'servicos', label: 'Serviços', ativos: servicos, rota: ['/servicos/atividade'] },
-          { id: 'delivery', label: 'Delivery', ativos: delivery, rota: ['/delivery/pedidos'] },
-          { id: 'compra-venda', label: 'Compra e Venda', ativos: compraVenda, rota: ['/compra-vender/negociacoes'] },
-          { id: 'aluguel', label: 'Aluguel', ativos: aluguel, rota: ['/aluguel/meus'] },
-          { id: 'transporte', label: 'Transporte', ativos: transporte, rota: ['/transporte/meus'] },
-          { id: 'hospedagem', label: 'Hospedagem', ativos: hospedagem, rota: ['/hospedagem/reservas'] },
-          { id: 'empregos', label: 'Empregos', ativos: empregos, rota: ['/empregos/candidaturas'] },
+          { id: 'servicos', label: 'Serviços', ativos: servicos, historico: servicosTotal - servicos, rota: ['/servicos/atividade'] },
+          { id: 'delivery', label: 'Delivery', ativos: delivery, historico: pedidos.length - delivery, rota: ['/delivery/pedidos'] },
+          { id: 'compra-venda', label: 'Compra e Venda', ativos: compraVenda, historico: negociacoes.length - compraVenda, rota: ['/compra-vender/negociacoes'] },
+          { id: 'aluguel', label: 'Aluguel', ativos: aluguel, historico: alugueis.length - aluguel, rota: ['/aluguel/meus'] },
+          { id: 'transporte', label: 'Transporte', ativos: transporte, historico: transportes.length - transporte, rota: ['/transporte/meus'] },
+          { id: 'hospedagem', label: 'Hospedagem', ativos: hospedagem, historico: reservas.length - hospedagem, rota: ['/hospedagem/reservas'] },
+          { id: 'empregos', label: 'Empregos', ativos: empregos, historico: candidaturas.length - empregos, rota: ['/empregos/candidaturas'] },
         ];
-        this.categorias = todas.filter((c) => c.ativos > 0); // Q-E2E-1: só com atividade
+        this.categorias = todas.filter((c) => c.ativos + c.historico > 0);
         this.carregando = false;
       },
       error: () => (this.carregando = false),
@@ -117,6 +120,14 @@ export class AtividadeComponent implements OnInit {
 
   abrir(cat: CategoriaAtividade) {
     this.router.navigate(cat.rota);
+  }
+
+  /** Subtítulo do card: combina ativos e histórico conforme o que houver. */
+  subLabel(cat: CategoriaAtividade): string {
+    const partes: string[] = [];
+    if (cat.ativos > 0) partes.push(`${cat.ativos} em andamento`);
+    if (cat.historico > 0) partes.push(`${cat.historico} no histórico`);
+    return partes.join(' · ') || 'Sem atividade';
   }
 
   /** Normaliza um Observable de lista para array, tolerante a erro. */
