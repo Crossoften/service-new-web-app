@@ -9,7 +9,7 @@ import { Restaurante } from '../../../../core/services/delivery';
 function rest(over: Partial<Restaurante>): Restaurante {
   return {
     id: 1, nome: 'R', avaliacao: 4, totalAvaliacoes: 10, tempo: '', tempoMinMinutos: 30,
-    taxaEntrega: 5, aberto: true, descricao: '', imagem: '', logo: '', categorias: [],
+    taxaEntrega: 5, aberto: true, usaMaquininhaPropria: false, descricao: '', imagem: '', logo: '', categorias: [],
     ...over,
   };
 }

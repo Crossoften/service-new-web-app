@@ -1,17 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
-import { ListagemGenerica } from './listagem-generica';
+import { ListagemGenericaComponent } from './listagem-generica';
 
-describe('ListagemGenerica', () => {
-  let component: ListagemGenerica;
-  let fixture: ComponentFixture<ListagemGenerica>;
+describe('ListagemGenericaComponent', () => {
+  let component: ListagemGenericaComponent;
+  let fixture: ComponentFixture<ListagemGenericaComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ListagemGenerica],
+      imports: [ListagemGenericaComponent],
+      providers: [provideRouter([])],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ListagemGenerica);
+    fixture = TestBed.createComponent(ListagemGenericaComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

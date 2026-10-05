@@ -4,7 +4,7 @@ import { Restaurante } from '../services/delivery';
 function rest(over: Partial<Restaurante>): Restaurante {
   return {
     id: 1, nome: 'R', avaliacao: 4, totalAvaliacoes: 0, tempo: '', tempoMinMinutos: 30,
-    taxaEntrega: 5, aberto: true, descricao: '', imagem: '', logo: '', categorias: [],
+    taxaEntrega: 5, aberto: true, usaMaquininhaPropria: false, descricao: '', imagem: '', logo: '', categorias: [],
     ...over,
   };
 }
