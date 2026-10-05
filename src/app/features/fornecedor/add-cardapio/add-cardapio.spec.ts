@@ -60,10 +60,11 @@ describe('AddCardapioComponent', () => {
     httpMock.expectNone((r) => r.url.endsWith('/restaurants/menu-items'));
   });
 
-  it('faz upload da imagem selecionada e guarda a URL', () => {
+  it('faz upload da imagem selecionada e guarda a URL', async () => {
     const file = new File(['x'], 'foto.png', { type: 'image/png' });
     const event = { target: { files: [file] } } as unknown as Event;
     component.selecionarArquivo(event);
+    await new Promise((r) => setTimeout(r)); // uploadOne prepara o arquivo (HEIC→JPEG) via Promise
     const req = httpMock.expectOne((r) => r.url.endsWith('/upload/one-file') && r.method === 'POST');
     req.flush({ fileUrl: 'https://cdn/foto.png', fileKey: 'k1' });
     expect(component.arquivo).toBe('https://cdn/foto.png');

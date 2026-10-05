@@ -1,8 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, from, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiMessage, UploadedFile } from '../models/common';
+import { prepareImageUpload } from '../utils/image-upload';
 
 type ParamValue = string | number | boolean | null | undefined;
 type ParamsInput = Record<string, ParamValue>;
@@ -44,18 +45,26 @@ export class ApiService {
     return this.http.delete<T>(this.url(path), { body });
   }
 
-  /** Upload de um arquivo (multipart) — POST /upload/one-file. */
+  /** Upload de um arquivo (multipart) — POST /upload/one-file. Converte HEIC→JPEG antes (§8.14). */
   uploadOne(file: File): Observable<UploadedFile> {
-    const form = new FormData();
-    form.append('file', file);
-    return this.http.post<UploadedFile>(this.url('/upload/one-file'), form);
+    return from(prepareImageUpload(file)).pipe(
+      switchMap((prepared) => {
+        const form = new FormData();
+        form.append('file', prepared);
+        return this.http.post<UploadedFile>(this.url('/upload/one-file'), form);
+      }),
+    );
   }
 
-  /** Upload de múltiplos arquivos (máx. 5) — POST /upload/many-files. */
+  /** Upload de múltiplos arquivos (máx. 5) — POST /upload/many-files. Converte HEIC→JPEG antes (§8.14). */
   uploadMany(files: File[]): Observable<UploadedFile[]> {
-    const form = new FormData();
-    files.forEach((file) => form.append('files', file));
-    return this.http.post<UploadedFile[]>(this.url('/upload/many-files'), form);
+    return from(Promise.all(files.map((f) => prepareImageUpload(f)))).pipe(
+      switchMap((prepared) => {
+        const form = new FormData();
+        prepared.forEach((file) => form.append('files', file));
+        return this.http.post<UploadedFile[]>(this.url('/upload/many-files'), form);
+      }),
+    );
   }
 
   /** Remove um arquivo pelo id — DELETE /one-file/{id}. */

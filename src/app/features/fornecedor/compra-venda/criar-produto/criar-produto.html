@@ -30,7 +30,7 @@
           </div>
           <label class="cp-foto__btn">
             {{ enviandoFoto ? 'Enviando…' : 'Escolher imagem' }}
-            <input type="file" accept="image/png,image/jpeg" (change)="selecionarFoto($event)" hidden />
+            <input type="file" accept="image/png,image/jpeg,image/webp,.heic,.heif" (change)="selecionarFoto($event)" hidden />
           </label>
         </div>
 

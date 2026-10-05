@@ -75,4 +75,10 @@ describe('errorInterceptor', () => {
     expect(err.status).toBe(400);
     expect(nav).not.toHaveBeenCalled();
   });
+
+  it('413 (upload acima do teto) usa a mensagem de tamanho máximo (§8.14)', () => {
+    const err = falhar('/upload/one-file', 413, {});
+    expect(err.status).toBe(413);
+    expect(err.message).toContain('10 MB');
+  });
 });

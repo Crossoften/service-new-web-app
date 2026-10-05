@@ -86,7 +86,7 @@
           </div>
           <label class="ca-imagem__btn">
             {{ enviandoFoto ? 'Enviando…' : 'Escolher imagem' }}
-            <input type="file" accept="image/png,image/jpeg" (change)="adicionarImagem($event)" hidden />
+            <input type="file" accept="image/png,image/jpeg,image/webp,.heic,.heif" (change)="adicionarImagem($event)" hidden />
           </label>
         </div>
 

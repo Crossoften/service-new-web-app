@@ -13,7 +13,8 @@ const DEFAULT_MESSAGES: Record<number, string> = {
   403: 'Você não tem permissão para essa ação.',
   404: 'Recurso não encontrado.',
   409: 'Já existe um registro com esses dados.',
-  422: 'Tamanho ou tipo de arquivo inválido.',
+  413: 'Arquivo acima do tamanho máximo permitido (10 MB).',
+  422: 'Tipo de arquivo inválido.',
   500: 'Erro interno no servidor. Tente novamente mais tarde.',
 };
 
