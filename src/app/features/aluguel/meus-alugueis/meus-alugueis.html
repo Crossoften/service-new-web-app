@@ -10,16 +10,28 @@
     <div style="width: 22px"></div>
   </div>
 
+  <!-- ABAS -->
+  <div class="ma-tabs">
+    <button class="ma-tabs__item" [class.ma-tabs__item--ativo]="aba === 'ativos'" (click)="selecionarAba('ativos')">
+      Ativos
+    </button>
+    <button class="ma-tabs__item" [class.ma-tabs__item--ativo]="aba === 'historico'" (click)="selecionarAba('historico')">
+      Histórico
+    </button>
+  </div>
+
   <div class="page-content">
     @if (carregando) {
       <p class="ma-msg">Carregando…</p>
     } @else if (erro) {
       <p class="ma-msg">{{ erro }}</p>
-    } @else if (alugueis.length === 0) {
-      <p class="ma-msg">Você ainda não tem aluguéis.</p>
+    } @else if (alugueisFiltrados.length === 0) {
+      <p class="ma-msg">
+        {{ aba === 'ativos' ? 'Nenhum aluguel em andamento.' : 'Nenhum aluguel no histórico.' }}
+      </p>
     } @else {
       <div class="ma-lista">
-        @for (a of alugueis; track a.id) {
+        @for (a of alugueisFiltrados; track a.id) {
           <div class="ma-card" (click)="abrir(a.id)">
             <div class="ma-card__top">
               <span class="ma-card__nome">{{ a.product.name }}</span>

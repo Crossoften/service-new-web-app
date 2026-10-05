@@ -38,4 +38,22 @@ describe('MeusAlugueisComponent', () => {
     });
     expect(component.alugueis.length).toBe(1);
   });
+
+  it('separa por aba: Ativos (em jogo) x Histórico (terminais)', () => {
+    const r = (id: number, status: string) => ({
+      id, status, startDate: '', endDate: '', price: '10', chatRoomId: 9,
+      product: { id: 1, name: 'X' }, requester: { id: 2, name: 'A' }, provider: { id: 3, name: 'B' },
+      createdAt: '', updatedAt: '',
+    });
+    httpMock.expectOne((req) => req.url.endsWith('/rentals')).flush({
+      rentals: [r(1, 'Requested'), r(2, 'Active'), r(3, 'Returned'), r(4, 'Cancelled')],
+      currentPage: 1, totalPages: 1, totalRecords: 4,
+    });
+
+    component.selecionarAba('ativos');
+    expect(component.alugueisFiltrados.map((a) => a.id)).toEqual([1, 2]);
+
+    component.selecionarAba('historico');
+    expect(component.alugueisFiltrados.map((a) => a.id)).toEqual([3, 4]);
+  });
 });
