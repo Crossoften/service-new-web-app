@@ -7,16 +7,14 @@
       </svg>
     </button>
     <span class="le-header__titulo">{{ titulo }}</span>
-    <button class="le-header__novo" (click)="publicar()" aria-label="Publicar vaga">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-      </svg>
-    </button>
+    <div style="width: 22px"></div>
   </div>
 
-  <div class="le-sub">
-    <button class="le-sub__link" (click)="minhasCandidaturas()">Minhas candidaturas →</button>
-  </div>
+  @if (!mine) {
+    <div class="le-sub">
+      <button class="le-sub__link" (click)="minhasCandidaturas()">Minhas candidaturas →</button>
+    </div>
+  }
 
   <!-- BUSCA -->
   <div class="le-busca">
@@ -60,5 +58,14 @@
       </div>
     }
   </div>
+
+  <!-- FAB (padrão das demais categorias): publicar vaga só na gestão do empregador -->
+  @if (mine) {
+    <button class="le-fab" (click)="publicar()" aria-label="Publicar vaga">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+  }
 
 </div>

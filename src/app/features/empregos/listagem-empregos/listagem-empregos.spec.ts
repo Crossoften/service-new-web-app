@@ -58,6 +58,14 @@ describe('ListagemEmpregosComponent', () => {
     expect(component.titulo).toBe('Vagas');
     expect(component.mine).toBe(false);
   });
+
+  it('modo público: SEM FAB de publicar (cliente só se candidata), COM link de candidaturas', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/jobs')).flush({ jobs: [], currentPage: 1, totalPages: 1, totalRecords: 0 });
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.le-fab')).toBeNull();
+    expect(el.querySelector('.le-sub__link')).not.toBeNull();
+  });
 });
 
 describe('ListagemEmpregosComponent (minhas vagas)', () => {
@@ -90,5 +98,13 @@ describe('ListagemEmpregosComponent (minhas vagas)', () => {
     req.flush({ jobs: [], currentPage: 1, totalPages: 1, totalRecords: 0 });
     expect(component.mine).toBe(true);
     expect(component.titulo).toBe('Minhas vagas');
+  });
+
+  it('modo "minhas vagas": COM FAB de publicar, SEM link de candidaturas', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/jobs')).flush({ jobs: [], currentPage: 1, totalPages: 1, totalRecords: 0 });
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.le-fab')).not.toBeNull();
+    expect(el.querySelector('.le-sub__link')).toBeNull();
   });
 });
