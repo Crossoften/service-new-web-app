@@ -149,6 +149,28 @@
             <span class="dt-garantia-prazo__hint">Contado a partir da conclusão do serviço.</span>
           </div>
           }
+
+          <!-- VÍDEO DA CONCLUSÃO (opcional) — upload em 3 passos (§8.14) -->
+          <div class="dt-video">
+            <label class="dt-video__label">Vídeo da conclusão (opcional)</label>
+
+            @if (videoConcluido) {
+              <video class="dt-video__preview" [src]="videoConcluido.fileUrl" controls playsinline></video>
+              <div class="dt-video__linha">
+                <span class="dt-video__nome">{{ videoConcluido.fileName }}</span>
+                <button type="button" class="dt-video__remover" (click)="removerVideo()" [disabled]="processando">Remover</button>
+              </div>
+            } @else if (enviandoVideo) {
+              <p class="dt-video__status">Enviando vídeo…</p>
+            } @else {
+              <label class="dt-video__botao">
+                + Anexar vídeo
+                <input type="file" [accept]="videoAccept" (change)="selecionarVideo($event)" hidden />
+              </label>
+            }
+
+            @if (erroVideo) { <span class="dt-video__erro">{{ erroVideo }}</span> }
+          </div>
         </div>
       }
 
@@ -204,7 +226,9 @@
       <button class="dt-btn dt-btn--outline" (click)="cancelar()">CANCELAR</button>
     }
     @if (stepAtual === 'em_andamento') {
-      <button class="dt-btn dt-btn--primary" (click)="enviarResposta()">ENVIAR</button>
+      <button class="dt-btn dt-btn--primary" (click)="enviarResposta()" [disabled]="enviandoVideo || processando">
+        {{ enviandoVideo ? 'ENVIANDO VÍDEO…' : 'ENVIAR' }}
+      </button>
     }
     @if (stepAtual === 'concluido') {
       @if (garantiaPendente) {

@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { of, switchMap } from 'rxjs';
 import { WorkService, TrabalhoFornecedor } from '../../../../core/services/work';
+import { UploadService } from '../../../../core/services/upload';
+import { VIDEO_ACCEPT } from '../../../../core/models/upload';
 import { WorkStatus } from '../../../../core/models/enums';
 import { ApiError } from '../../../../core/models/common';
 
@@ -19,6 +21,9 @@ export class DetalhesTrabalhoComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly works = inject(WorkService);
+  private readonly uploads = inject(UploadService);
+
+  readonly videoAccept = VIDEO_ACCEPT;
 
   trabalhoId = 0;
   trabalho?: TrabalhoFornecedor;
@@ -34,6 +39,11 @@ export class DetalhesTrabalhoComponent implements OnInit {
   // Garantia (fatia 2): prazo informado na conclusão → vira warrantyExpiresAt.
   garantiaQtd = '';
   garantiaUnidade: 'Day' | 'Month' = 'Month';
+
+  // Vídeo da conclusão (§8.14 — upload em 3 passos; opcional).
+  videoConcluido?: { fileName: string; fileUrl: string; fileKey: string };
+  enviandoVideo = false;
+  erroVideo = '';
 
   // Modal acréscimo
   justificativa = '';
@@ -153,9 +163,39 @@ export class DetalhesTrabalhoComponent implements OnInit {
       });
   }
 
+  /** Seleciona e envia o vídeo da conclusão (3 passos — §8.14). */
+  selecionarVideo(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.erroVideo = '';
+    const invalido = this.uploads.validarVideo(file);
+    if (invalido) {
+      this.erroVideo = invalido;
+      return;
+    }
+    this.enviandoVideo = true;
+    this.uploads.enviarVideo(file).subscribe({
+      next: (res) => {
+        this.enviandoVideo = false;
+        this.videoConcluido = { fileName: file.name, fileUrl: res.fileUrl, fileKey: res.fileKey };
+      },
+      error: (err: ApiError) => {
+        this.enviandoVideo = false;
+        this.erroVideo = err?.message?.trim() ? err.message : 'Não foi possível enviar o vídeo.';
+      },
+    });
+  }
+
+  removerVideo() {
+    this.videoConcluido = undefined;
+    this.erroVideo = '';
+  }
+
   /** Envia a conclusão do serviço (finish). */
   enviarResposta() {
-    if (this.processando) return;
+    if (this.processando || this.enviandoVideo) return;
     const completionDescription = this.respostaDescricao.trim();
     if (!completionDescription) {
       this.erro = 'Descreva o serviço executado para finalizar.';
@@ -168,8 +208,10 @@ export class DetalhesTrabalhoComponent implements OnInit {
       Number(this.garantiaQtd),
       this.garantiaUnidade,
     );
+    // Vídeo da conclusão (opcional) entra como anexo do trabalho.
+    const completionFiles = this.videoConcluido ? [this.videoConcluido] : undefined;
     this.works
-      .finalizar(this.trabalhoId, { completionDescription, warrantyExpiresAt })
+      .finalizar(this.trabalhoId, { completionDescription, warrantyExpiresAt, completionFiles })
       .subscribe({
         next: () => this.router.navigate(['/fornecedor/servicos/trabalhos']),
         error: (err: ApiError) => {

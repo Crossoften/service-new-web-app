@@ -7,6 +7,8 @@ import {
 } from '@angular/common/http/testing';
 
 import { DetalhesTrabalhoComponent } from './detalhes-trabalho';
+import { UploadService } from '../../../../core/services/upload';
+import { of } from 'rxjs';
 
 function workResponse(overrides: Record<string, unknown> = {}) {
   return {
@@ -225,5 +227,55 @@ describe('DetalhesTrabalhoComponent', () => {
     );
     expect(component.trabalho?.reparos).toEqual([{ id: 20, status: 'InProgress' }]);
     expect(component.reparoStatusLabel('InProgress')).toBe('Em andamento');
+  });
+
+  // ── Vídeo da conclusão (§8.14) ──────────────────────────────────────────────
+
+  function evento(file: File): Event {
+    return { target: { files: [file], value: '' } } as unknown as Event;
+  }
+
+  it('anexa vídeo e envia em completionFiles ao finalizar', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'InProgress' }),
+    );
+    const up = TestBed.inject(UploadService);
+    vi.spyOn(up, 'validarVideo').mockReturnValue(null);
+    vi.spyOn(up, 'enviarVideo').mockReturnValue(of({ id: 7, fileUrl: 'https://api/v1/files/k', fileKey: 'k' }));
+
+    component.selecionarVideo(evento(new File(['x'], 'obra.mp4', { type: 'video/mp4' })));
+    expect(component.enviandoVideo).toBe(false);
+    expect(component.videoConcluido).toEqual({ fileName: 'obra.mp4', fileUrl: 'https://api/v1/files/k', fileKey: 'k' });
+
+    component.respostaDescricao = 'Serviço concluído.';
+    component.enviarResposta();
+    const finish = httpMock.expectOne((r) => r.url.endsWith('/works/1/finish') && r.method === 'PATCH');
+    expect(finish.request.body.completionFiles).toEqual([
+      { fileName: 'obra.mp4', fileUrl: 'https://api/v1/files/k', fileKey: 'k' },
+    ]);
+    finish.flush(workResponse({ status: 'Finished' }));
+  });
+
+  it('recusa vídeo de tipo inválido sem enviar', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'InProgress' }),
+    );
+    const up = TestBed.inject(UploadService);
+    const enviar = vi.spyOn(up, 'enviarVideo');
+    component.selecionarVideo(evento(new File(['x'], 'f.png', { type: 'image/png' })));
+    expect(component.erroVideo).toContain('não suportado');
+    expect(enviar).not.toHaveBeenCalled();
+    expect(component.videoConcluido).toBeUndefined();
+  });
+
+  it('finaliza sem vídeo não envia completionFiles', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'InProgress' }),
+    );
+    component.respostaDescricao = 'Concluído.';
+    component.enviarResposta();
+    const finish = httpMock.expectOne((r) => r.url.endsWith('/works/1/finish') && r.method === 'PATCH');
+    expect(finish.request.body.completionFiles).toBeUndefined();
+    finish.flush(workResponse({ status: 'Finished' }));
   });
 });
