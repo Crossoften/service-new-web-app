@@ -1,12 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-br">
   <head>
     <meta charset="utf-8" />
     <title>ServiceApp</title>
     <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover é essencial no iPhone: sem ele, env(safe-area-inset-*) retorna 0 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <!-- Tema / PWA -->
+    <meta name="theme-color" content="#6B21D6" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="manifest" href="manifest.webmanifest" />
+
+    <!-- iOS — "Adicionar à Tela de Início": abre em tela cheia como app -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ServiceApp" />
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192x192.png" />
   </head>
   <body>
     <app-root></app-root>
