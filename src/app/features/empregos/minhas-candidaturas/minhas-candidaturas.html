@@ -10,16 +10,28 @@
     <div style="width: 22px"></div>
   </div>
 
+  <!-- ABAS -->
+  <div class="mc-tabs">
+    <button class="mc-tabs__item" [class.mc-tabs__item--ativo]="aba === 'ativos'" (click)="selecionarAba('ativos')">
+      Ativos
+    </button>
+    <button class="mc-tabs__item" [class.mc-tabs__item--ativo]="aba === 'historico'" (click)="selecionarAba('historico')">
+      Histórico
+    </button>
+  </div>
+
   <div class="page-content">
     @if (carregando) {
       <p class="mc-msg">Carregando…</p>
     } @else if (erro) {
       <p class="mc-msg">{{ erro }}</p>
-    } @else if (candidaturas.length === 0) {
-      <p class="mc-msg">Você ainda não se candidatou a vagas.</p>
+    } @else if (candidaturasFiltradas.length === 0) {
+      <p class="mc-msg">
+        {{ aba === 'ativos' ? 'Nenhuma candidatura em andamento.' : 'Nenhuma candidatura no histórico.' }}
+      </p>
     } @else {
       <div class="mc-lista">
-        @for (c of candidaturas; track c.id) {
+        @for (c of candidaturasFiltradas; track c.id) {
           <div class="mc-card">
             <span class="mc-card__vaga">{{ c.job.title }}</span>
             <span class="mc-status mc-status--{{ c.status.toLowerCase() }}">{{ statusLabel(c) }}</span>

@@ -35,4 +35,21 @@ describe('MinhasCandidaturasComponent', () => {
     });
     expect(component.candidaturas.length).toBe(1);
   });
+
+  it('separa por aba: Ativos (em jogo) x Histórico (terminais)', () => {
+    const c = (id: number, status: string) => ({
+      id, status, chatRoomId: 9, job: { id: 1, title: 'Dev' }, applicant: { id: 2, name: 'Ana' },
+      createdAt: '', updatedAt: '',
+    });
+    httpMock.expectOne((r) => r.url.endsWith('/jobs/applications/me')).flush({
+      applications: [c(1, 'Applied'), c(2, 'Accepted'), c(3, 'Rejected')],
+      currentPage: 1, totalPages: 1, totalRecords: 3,
+    });
+
+    component.selecionarAba('ativos');
+    expect(component.candidaturasFiltradas.map((x) => x.id)).toEqual([1, 2]);
+
+    component.selecionarAba('historico');
+    expect(component.candidaturasFiltradas.map((x) => x.id)).toEqual([3]);
+  });
 });
