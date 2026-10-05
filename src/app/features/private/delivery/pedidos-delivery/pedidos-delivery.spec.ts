@@ -48,4 +48,26 @@ describe('PedidosDeliveryComponent', () => {
     expect(component.erro).toContain('não estão mais disponíveis');
     expect(nav).not.toHaveBeenCalled();
   });
+
+  it('separa pedidos por aba: Ativos (em jogo) x Histórico (terminais)', () => {
+    component.pedidos = [
+      { id: 1, status: 'Preparing', restaurant: { id: 5, name: 'A' } },
+      { id: 2, status: 'OnTheWay', restaurant: { id: 5, name: 'A' } },
+      { id: 3, status: 'Delivered', restaurant: { id: 5, name: 'A' } },
+      { id: 4, status: 'Cancelled', restaurant: { id: 5, name: 'A' } },
+    ] as never;
+
+    component.selecionarAba('ativos');
+    expect(component.pedidosFiltrados.map((p) => p.id)).toEqual([1, 2]);
+
+    component.selecionarAba('historico');
+    expect(component.pedidosFiltrados.map((p) => p.id)).toEqual([3, 4]);
+  });
+
+  it('ehAtivo reconhece os status não-terminais', () => {
+    expect(component.ehAtivo({ status: 'Received' } as never)).toBe(true);
+    expect(component.ehAtivo({ status: 'Accepted' } as never)).toBe(true);
+    expect(component.ehAtivo({ status: 'Delivered' } as never)).toBe(false);
+    expect(component.ehAtivo({ status: 'Cancelled' } as never)).toBe(false);
+  });
 });

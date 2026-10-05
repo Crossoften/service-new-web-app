@@ -14,7 +14,12 @@ const STATUS_LABEL: Record<FoodOrderStatus, string> = {
   Cancelled: 'Cancelado',
 };
 
-/** Lista os pedidos de delivery do usuário — `GET /v1/food-orders`. */
+/** Pedidos "ativos" = ainda em jogo (não terminais). O resto é histórico. */
+const STATUS_ATIVOS: FoodOrderStatus[] = ['Received', 'Accepted', 'Preparing', 'OnTheWay'];
+
+type AbaPedidos = 'ativos' | 'historico';
+
+/** Lista os pedidos de delivery do usuário — `GET /v1/food-orders` — com abas Ativos/Histórico. */
 @Component({
   selector: 'app-pedidos-delivery',
   imports: [CommonModule],
@@ -30,6 +35,7 @@ export class PedidosDeliveryComponent implements OnInit {
   erro = '';
   repetindoId: number | null = null;
   aviso = '';
+  aba: AbaPedidos = 'ativos';
 
   ngOnInit() {
     this.carregando = true;
@@ -47,6 +53,20 @@ export class PedidosDeliveryComponent implements OnInit {
 
   statusLabel(status: FoodOrderStatus): string {
     return STATUS_LABEL[status] ?? status;
+  }
+
+  ehAtivo(pedido: ResponseFoodOrderDto): boolean {
+    return STATUS_ATIVOS.includes(pedido.status);
+  }
+
+  selecionarAba(aba: AbaPedidos) {
+    this.aba = aba;
+  }
+
+  /** Pedidos da aba atual: ativos (em jogo) ou histórico (entregues/cancelados). */
+  get pedidosFiltrados(): ResponseFoodOrderDto[] {
+    const querAtivos = this.aba === 'ativos';
+    return this.pedidos.filter((p) => this.ehAtivo(p) === querAtivos);
   }
 
   abrir(pedido: ResponseFoodOrderDto) {

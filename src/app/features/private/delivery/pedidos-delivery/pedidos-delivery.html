@@ -10,17 +10,29 @@
     <div style="width: 30px"></div>
   </div>
 
+  <!-- ABAS -->
+  <div class="pedidos-tabs">
+    <button class="pedidos-tabs__item" [class.pedidos-tabs__item--ativo]="aba === 'ativos'" (click)="selecionarAba('ativos')">
+      Ativos
+    </button>
+    <button class="pedidos-tabs__item" [class.pedidos-tabs__item--ativo]="aba === 'historico'" (click)="selecionarAba('historico')">
+      Histórico
+    </button>
+  </div>
+
   <div class="pedidos-content">
 
     @if (carregando) {
       <p class="pedidos-vazio">Carregando pedidos…</p>
     } @else if (erro) {
       <p class="pedidos-vazio">{{ erro }}</p>
-    } @else if (pedidos.length === 0) {
-      <p class="pedidos-vazio">Você ainda não fez nenhum pedido.</p>
+    } @else if (pedidosFiltrados.length === 0) {
+      <p class="pedidos-vazio">
+        {{ aba === 'ativos' ? 'Nenhum pedido em andamento.' : 'Nenhum pedido no histórico.' }}
+      </p>
     } @else {
       @if (aviso) { <p class="pedidos-aviso">{{ aviso }}</p> }
-      @for (pedido of pedidos; track pedido.id) {
+      @for (pedido of pedidosFiltrados; track pedido.id) {
         <div class="pedido-card" (click)="abrir(pedido)">
           <div class="pedido-card__topo">
             <span class="pedido-card__restaurante">{{ pedido.restaurant.name }}</span>
