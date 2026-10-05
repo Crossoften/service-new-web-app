@@ -4,7 +4,13 @@ import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { MarketplaceService } from '../../../core/services/marketplace';
 import { CommercialTransactionDto } from '../../../core/models/commercial-transaction';
+import { CommercialTransactionStatus } from '../../../core/models/enums';
 import { ApiError } from '../../../core/models/common';
+
+/** Negociações "ativas" = ainda em jogo (não terminais). O resto é histórico. */
+const STATUS_ATIVOS: CommercialTransactionStatus[] = ['Requested', 'Accepted', 'Paid'];
+
+type AbaNegociacoes = 'ativos' | 'historico';
 
 @Component({
   selector: 'app-negociacoes',
@@ -19,6 +25,7 @@ export class NegociacoesComponent implements OnInit {
   negociacoes: CommercialTransactionDto[] = [];
   carregando = false;
   erro = '';
+  aba: AbaNegociacoes = 'ativos';
 
   ngOnInit() {
     this.carregando = true;
@@ -31,6 +38,20 @@ export class NegociacoesComponent implements OnInit {
           this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar as negociações.';
         },
       });
+  }
+
+  ehAtivo(n: CommercialTransactionDto): boolean {
+    return STATUS_ATIVOS.includes(n.status);
+  }
+
+  selecionarAba(aba: AbaNegociacoes) {
+    this.aba = aba;
+  }
+
+  /** Negociações da aba atual: ativas (em jogo) ou histórico (terminais). */
+  get negociacoesFiltradas(): CommercialTransactionDto[] {
+    const querAtivos = this.aba === 'ativos';
+    return this.negociacoes.filter((n) => this.ehAtivo(n) === querAtivos);
   }
 
   abrir(id: number) {
