@@ -3,11 +3,12 @@
 > **Arquivo mestre de progresso e retomada.** Atualizado a cada passo. Se a sessão renovar/reiniciar,
 > **leia este arquivo primeiro** — ele resume o que foi decidido, feito e o que falta.
 >
-> **Última atualização:** 2026-09-08 · **Fase atual:** 🎉 Integração completa + verticais do fornecedor (FV-1…FV-5)
-> + **Mercado Pago** (MP-1…MP-3) + **Fase Mapa (MAP-1…MAP-3, rastreamento ao vivo)** aplicada + ajustes de layout.
-> **Em andamento:** fluxo delivery — **adicionais no cardápio** (back pronto, front a fazer) + melhorias de usabilidade.
+> **Última atualização:** 2026-10-05 · **Fase atual:** 🎉 Integração completa + verticais do fornecedor (FV-1…FV-5)
+> + **Mercado Pago** (MP-1…MP-3) + **Fase Mapa (MAP-1…MAP-3)** + **Descoberta (VF/EMP)** + **ORIENTACOESFRONT v3 (14–24)**
+> + **Upload & Vídeo (§8.14, U1…U3)** + **Histórico por categoria (H1…H7)** + **saúde do build (build-fix-1/2)**.
+> **Em andamento:** nada pendente só-front; aberturas restantes dependem de **back** (BE-ADS-VIDEO-1, BE-W1/W7, BE-CHAT-1) ou **Ops** (SEC-1).
 >
-> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `24c4486`).
+> **Base de código:** `origin/main` @ `f4931bf`. **Branch de entrega (cliente):** `integracao` (@ `17974b3`, 2026-10-05).
 > **Back-end:** `service-new-ws` @ `ajustes-gerais` (@ `b60afd0`, com Mercado Pago). **Base local:** `http://localhost:8000/v1`.
 
 ---
@@ -352,6 +353,61 @@ fornecedor**; Q-UX1 mesma conversa segue no trabalho).
 
 ---
 
+## 📎 Upload & Vídeo (ORIENTACOESFRONT §8.14) — U1…U3
+
+> O back passou a aceitar **upload direto** (foto na rota antiga; vídeo em 3 passos presign→S3→confirm) e a servir
+> arquivos via `{API}/v1/files/{fileKey}` (o front usa `fileUrl` direto). `webp` aceito; **413** (não 422) para foto
+> acima do limite. Conversão **HEIC→JPEG** é do front (item 31). Nenhuma mudança de back.
+
+| Fatia | Escopo | Status | Patch |
+|---|---|---|---|
+| **U1** | **Foto + HEIC** — `core/utils/image-upload.ts` (`isHeic`, `convertHeicToJpeg` via canvas, `prepareImageUpload`); `ApiService.uploadOne/uploadMany` passam a preparar a imagem antes do POST (assíncrono). Interceptor de erro: **413** "arquivo acima do limite (10 MB)" e **422** "tipo inválido". | ✅ | `upload-u1-imagem-heic` |
+| **U2** | **Serviço de vídeo** — `core/models/upload.ts` (`PresignUploadDto`/`ResponsePresignUploadDto`/`ConfirmUploadDto`/`ResponseOneFileDto`, `VIDEO_MIME_TYPES`, `MAX_VIDEO_BYTES`=200MB, `VIDEO_ACCEPT`) + `core/services/upload.ts` (`presign`→`fetch` no S3→`confirm`; `validarVideo`; `enviarVideo`). ⚠️ O passo S3 usa `fetch` (não `HttpClient`) p/ **não** vazar o `Authorization` do interceptor na assinatura do S3; `file` anexado por último; `Authorization` só na estratégia `api`. | ✅ | `upload-u2-video-service` |
+| **U3a** | **Vídeo na conclusão do trabalho** (fornecedor) — `detalhes-trabalho`: anexar vídeo (`completionFiles`) ao concluir. | ✅ | `upload-u3a-video-conclusao-trabalho` |
+| **U3b** | **Vídeo na solicitação de garantia** (cliente) — modal de garantia em `detalhes-solicitacao` aceita vídeo (`files`). | ✅ | `upload-u3b-video-garantia` |
+| **U3c** | **Vídeo no chat** — `chat`: mensagem com `fileName/fileUrl/fileKey` + `<video>` inline via `ehVideo()` (detecta por extensão). | ✅ | `upload-u3c-video-chat` |
+| **U3d** | **Vídeo em anúncios** (produto/hospedagem/transporte) | ⛔ **bloqueado** | `BE-ADS-VIDEO-1` |
+
+> **U3d** aguarda o back: os DTOs de anúncio (`CreateProductDto`/`CreateAccommodationDto`/`CreateTransportationDto`) só
+> têm `imageUrl/imageKey` — falta `videoUrl/videoKey`. Documentado em `backend-demandas.md` (BE-ADS-VIDEO-1). A tela é
+> entregue assim que o campo existir.
+
+---
+
+## 🗂️ Histórico por categoria — abas Ativos/Histórico (H1…H7)
+
+> **Achado:** o índice de **Atividade** só listava categorias com item **ativo** (`ativos>0`), então o histórico de
+> delivery (e das demais) "sumia" quando só havia itens terminais. **Decisão (cliente):** *Índice + tela por categoria* —
+> manter o índice, mas mostrar categorias com **ativo OU histórico**, e dar a cada vertical uma tela **Ativos/Histórico**
+> no padrão de `servicos-atividade`. Só front; classificação de "ativo" por vertical idêntica à dos contadores do índice.
+
+| Fatia | Escopo | Status | Patch |
+|---|---|---|---|
+| **H1** | **Índice (Atividade)** — passa a listar categorias com `ativos + historico > 0`; cada card ganha contagem de histórico e `subLabel()` ("N em andamento · M no histórico"). | ✅ (8) | `historico-1-indice-ativos-ou-historico` |
+| **H2** | **Delivery** (`pedidos-delivery`) — abas; ativos = `Received/Accepted/Preparing/OnTheWay`, histórico = `Delivered/Cancelled`. | ✅ (5) | `historico-2-delivery-abas-ativos-historico` |
+| **H3** | **Compra e Venda** (`negociacoes`) — ativos = `Requested/Accepted/Paid`, histórico = `Rejected/Cancelled/Completed`. | ✅ (2) | `historico-3-compra-venda-abas-ativos-historico` |
+| **H4** | **Aluguel** (`meus-alugueis`) — ativos = `Requested/Accepted/Active`, histórico = `Rejected/Returned/Cancelled`. | ✅ (2) | `historico-4-aluguel-abas-ativos-historico` |
+| **H5** | **Transporte** (`meus-transportes`) — ativos = `Requested/Quoted/Accepted/InTransit`, histórico = `Rejected/Delivered/Cancelled`. | ✅ (2) | `historico-5-transporte-abas-ativos-historico` |
+| **H6** | **Hospedagem** (`minhas-reservas`) — ativos = `Requested/Confirmed/CheckedIn`, histórico = `Rejected/Completed/Cancelled`. | ✅ (2) | `historico-6-hospedagem-abas-ativos-historico` |
+| **H7** | **Empregos** (`minhas-candidaturas`) — ativos = `Applied/Accepted`, histórico = `Rejected`. | ✅ (2) | `historico-7-empregos-abas-ativos-historico` |
+
+> ✅ As **7 verticais** têm abas Ativos/Histórico; o histórico deixou de sumir. Sem mudança de rota (o índice já apontava
+> para a lista de cada vertical, que agora tem as abas).
+
+---
+
+## 🧹 Saúde do build & segurança (build-fix · SEC-1)
+
+| Fatia | Escopo | Status | Patch |
+|---|---|---|---|
+| **build-fix-1** | **Destrava o `ng test`** — remove **10 arquivos duplicados " 2"** (cópias órfãs versionadas por engano: `error-interceptor 2.ts`, `api 2.ts`, `add-cardapio.spec 2.ts`, 5 `criar-*.html 2`, etc.) e conserta **11 specs-stub** pré-existentes (imports com nome sem sufixo → `…Component/…Service`; fixtures de `Restaurante` ganharam `usaMaquininhaPropria`; `provideRouter` em `listagem-generica`). | ✅ | `build-fix-1-duplicados-e-specs-stub` |
+| **build-fix-2** | **Falhas pré-existentes** (mascaradas porque a suíte não compilava): remove o teste boilerplate `app.spec > should render title` (default do `ng new`); `google-maps-loader.spec` e `mapa-rastreio.spec` passam a **zerar `environment.googleMapsApiKey`** no `beforeEach` (restauram no `afterEach`) p/ validar o caminho "sem chave". **Suíte 481/481 verde.** | ✅ | `build-fix-2-specs-pre-existentes` |
+| **SEC-1 (doc)** | Registra em `backend-demandas.md` a **chave do Google Maps embutida no front** (os dois `environment.*`), sem restrição aparente → risco de abuso de cota/custo. Ação de **Ops/GCP** (restringir por referrer + API; chaves por ambiente; rotacionar). Front já degrada sem chave. | ✅ | `doc-sec1-chave-maps` |
+
+> Após o `build-fix-2`, `ng test` **compila e passa inteiro** (481 testes, 133 arquivos, 0 falhas).
+
+---
+
 ## ▶️ Ordem de aplicação dos patches (resumo)
 
 Fundação → Auth (1..3) → Perfil → Delivery (DC/DF) + fixes → Entregador → Parceiro → Marketplace → Aluguel →
@@ -361,8 +417,11 @@ correções criar-serviço (nome, categoria) → **verticais do fornecedor (FV-1
 **SV-1** (indep.) · **CV-1** (indep.) · **CD-1→PZ-1** (mask nos 5 forms) · **CD-1+PZ-1→CV-2** (aviso sem categoria) ·
 **CV-3** (indep.) → **PF-1 · PF-2** (perfil, aplicados @ `eec245d`) → **MAP-1a→1b→1c** → **MAP-2a→2b→2c** → **MAP-3** (fase mapa).
 **Aplicado @ `290db7c`:** **MAP-1a→…→2c→3** (fase mapa completa; `socket.io-client` instalado via `npm install`).
-Pendente de aplicação: **CV-3** (indep.), **AJ-layout** (2 `.scss`), **AJ-maps-key** (chave do Google), **AJ-buscar-v2** (filtros sempre visíveis + endereço real nas 2 telas — substitui o AJ-buscar não aplicado) e **VF-2/VF-3** + **EMP-1** (Serviços/Empregos + listagem de empregos no hub). *(…/VF-1 aplicados; base @ `24c4486`.)*
-`origin/integracao` @ `24c4486`.
+Depois disso, **tudo o que estava pendente foi aplicado e empurrado** pelo cliente: **CV-3**, **AJ-layout**, **AJ-maps-key**,
+**AJ-buscar-v2**, **VF-1/VF-2/VF-3**, **EMP-1**, **OF-14…24**, **Upload/Vídeo (U1…U3c)**, **Histórico (H1…H7)** e
+**build-fix-1/2 + SEC-1 (doc)**.
+`origin/integracao` @ `17974b3` (2026-10-05). **Nada pendente só-front;** aberturas restantes dependem de back
+(BE-ADS-VIDEO-1 → U3d; BE-W1/W7; BE-CHAT-1) ou Ops (SEC-1).
 
 > **AJ-layout** (`AJ-layout-periodos-scroll-restaurante`): (1) `.home-f-periodos` ganhou `margin: 0 16px` p/ alinhar
 > os chips **Tudo|Dia|Semana|Mês** às laterais dos cards; (2) `.rest-container` passou de `min-height` p/ `height: 100dvh`
