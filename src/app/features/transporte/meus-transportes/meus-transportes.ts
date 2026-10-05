@@ -3,8 +3,13 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { TransportService } from '../../../core/services/transport';
-import { TransportRequestDto } from '../../../core/models/transport-request';
+import { TransportRequestDto, TransportRequestStatus } from '../../../core/models/transport-request';
 import { ApiError } from '../../../core/models/common';
+
+/** Pedidos "ativos" = ainda em jogo (não terminais). O resto é histórico. */
+const STATUS_ATIVOS: TransportRequestStatus[] = ['Requested', 'Quoted', 'Accepted', 'InTransit'];
+
+type AbaTransportes = 'ativos' | 'historico';
 
 @Component({
   selector: 'app-meus-transportes',
@@ -19,6 +24,7 @@ export class MeusTransportesComponent implements OnInit {
   pedidos: TransportRequestDto[] = [];
   carregando = false;
   erro = '';
+  aba: AbaTransportes = 'ativos';
 
   ngOnInit() {
     this.carregando = true;
@@ -31,6 +37,20 @@ export class MeusTransportesComponent implements OnInit {
           this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar os pedidos.';
         },
       });
+  }
+
+  ehAtivo(p: TransportRequestDto): boolean {
+    return STATUS_ATIVOS.includes(p.status);
+  }
+
+  selecionarAba(aba: AbaTransportes) {
+    this.aba = aba;
+  }
+
+  /** Pedidos da aba atual: ativos (em jogo) ou histórico (terminais). */
+  get pedidosFiltrados(): TransportRequestDto[] {
+    const querAtivos = this.aba === 'ativos';
+    return this.pedidos.filter((p) => this.ehAtivo(p) === querAtivos);
   }
 
   abrir(id: number) {

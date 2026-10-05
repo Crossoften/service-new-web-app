@@ -38,4 +38,22 @@ describe('MeusTransportesComponent', () => {
     });
     expect(component.pedidos.length).toBe(1);
   });
+
+  it('separa por aba: Ativos (em jogo) x Histórico (terminais)', () => {
+    const t = (id: number, status: string) => ({
+      id, status, origin: 'A', destination: 'B', chatRoomId: 9,
+      transportation: { id: 1, name: 'X' }, requester: { id: 2, name: 'A' }, provider: { id: 3, name: 'B' },
+      createdAt: '', updatedAt: '',
+    });
+    httpMock.expectOne((r) => r.url.endsWith('/transport-requests')).flush({
+      transportRequests: [t(1, 'Quoted'), t(2, 'InTransit'), t(3, 'Delivered'), t(4, 'Cancelled')],
+      currentPage: 1, totalPages: 1, totalRecords: 4,
+    });
+
+    component.selecionarAba('ativos');
+    expect(component.pedidosFiltrados.map((p) => p.id)).toEqual([1, 2]);
+
+    component.selecionarAba('historico');
+    expect(component.pedidosFiltrados.map((p) => p.id)).toEqual([3, 4]);
+  });
 });
