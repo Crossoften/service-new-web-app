@@ -117,6 +117,29 @@ Recomendo a **(1)** por ser consistente com o `imageUrl`/`imageKey` atual e reso
 (1 vídeo de apresentação). Assim que o campo existir (DTOs + entidade + GET devolvendo), a tela do Front
 é um acréscimo pequeno (o upload já está pronto) — me avisem que entrego a fatia.
 
+### BE-TRANSP-IMG-1 — Imagem do transporte não volta na listagem do fornecedor 🟠
+
+**Sintoma (relato do cliente):** ao cadastrar um transporte como fornecedor e anexar uma imagem, a foto
+**não renderiza** na listagem (`/fornecedor/transporte`), que mostra o placeholder.
+
+**Auditoria do Front (sem mudança necessária):** o fluxo está correto ponta a ponta no cliente Angular:
+- `criar-transporte` faz upload (`POST /files/one-file`) e **envia `imageUrl` + `imageKey`** no `POST /v1/transportations`
+  (o botão **Salvar fica desabilitado enquanto o upload não termina**, então não há corrida que mande URL vazia);
+- o preview da imagem aparece no próprio cadastro (mesma `imageUrl`), logo a URL é renderizável por `<img>`;
+- a listagem lê `t.imageUrl` (campo que o Swagger declara em **`ResponseTransportationListItemDto`**) e o
+  `TransportService.meusTransportes` repassa os itens **sem alterar** nenhum campo.
+
+**Hipótese (back):** o `GET /v1/transportations/my-transportations` (ou a persistência do `POST`) **não está
+devolvendo `imageUrl`** nos itens, apesar de o schema declarar o campo. Vale conferir:
+1. o `POST /transportations` **persiste** `imageUrl`/`imageKey` que o Front envia;
+2. o serializer de **`my-transportations`** (e de `/transportations`) inclui `imageUrl` em cada item
+   (o detalhe `GET /transportations/{id}` provavelmente já inclui — comparar os dois).
+
+**Como confirmar rápido:** criar um transporte com imagem e inspecionar a resposta do
+`GET /v1/transportations/my-transportations` — se vier sem `imageUrl`, é aqui. As demais verticais
+(produto/hospedagem) usam o mesmo padrão `imageUrl`; se elas renderizam e transporte não, o gap é
+específico do endpoint de transporte.
+
 ---
 
 ## 🎯 Ordem de serviço — Backend (comece por aqui)

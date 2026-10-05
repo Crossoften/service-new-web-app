@@ -49,14 +49,19 @@ describe('HubFornecedorComponent', () => {
     expect(rotas).toContain('/fornecedor/servicos');
   });
 
-  it('conta trabalhos aprovados (Work Pending) e orçamentos a responder', () => {
+  it('conta trabalhos ativos (Pending + InProgress) e orçamentos a responder', () => {
     flush({
-      works: [work({ id: 1, status: 'Pending' }), work({ id: 2, status: 'InProgress' })],
+      works: [
+        work({ id: 1, status: 'Pending' }),
+        work({ id: 2, status: 'InProgress' }),
+        work({ id: 3, status: 'Finished' }),
+        work({ id: 4, status: 'Cancelled' }),
+      ],
       budgets: [
         { id: 10, description: 'x', status: 'Pending', service: { id: 3, name: 'S' }, requester: { id: 2, name: 'Ana' }, provider: { id: 9, name: 'J' }, createdAt: '' },
       ],
     });
-    expect(component.trabalhosAprovados).toBe(1); // só o Pending
+    expect(component.trabalhosAtivos).toBe(2); // Pending + InProgress; terminais fora
     expect(component.orcamentosPendentes).toBe(1);
   });
 

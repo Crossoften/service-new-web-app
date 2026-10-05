@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
@@ -106,5 +106,38 @@ describe('ListagemEmpregosComponent (minhas vagas)', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.le-fab')).not.toBeNull();
     expect(el.querySelector('.le-sub__link')).toBeNull();
+  });
+
+  it('editar navega para a rota de edição', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/jobs')).flush({ jobs: [], currentPage: 1, totalPages: 1, totalRecords: 0 });
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const ev = { stopPropagation: () => {} } as Event;
+    component.editar({ id: 5, title: 'X' } as never, ev);
+    expect(nav).toHaveBeenCalledWith(['/empregos/vaga', 5, 'editar']);
+  });
+
+  it('excluir faz soft-delete (PATCH isActive:false) e remove da lista', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/jobs')).flush({
+      jobs: [{ id: 5, title: 'Pintor', type: 'CLT', isActive: true, employer: { id: 1, name: 'A' }, createdAt: '', updatedAt: '' }],
+      currentPage: 1, totalPages: 1, totalRecords: 1,
+    });
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const ev = { stopPropagation: () => {} } as Event;
+    component.excluir(component.vagas[0], ev);
+    const patch = httpMock.expectOne((r) => r.url.endsWith('/jobs/5') && r.method === 'PATCH');
+    expect(patch.request.body.isActive).toBe(false);
+    patch.flush({ id: 5, title: 'Pintor', type: 'CLT', isActive: false, employer: { id: 1, name: 'A' }, createdAt: '', updatedAt: '' });
+    expect(component.vagas.find((v) => v.id === 5)).toBeUndefined();
+  });
+
+  it('excluir cancelado (confirm=false) não chama o back', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/jobs')).flush({
+      jobs: [{ id: 5, title: 'Pintor', type: 'CLT', isActive: true, employer: { id: 1, name: 'A' }, createdAt: '', updatedAt: '' }],
+      currentPage: 1, totalPages: 1, totalRecords: 1,
+    });
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    component.excluir(component.vagas[0], { stopPropagation: () => {} } as Event);
+    httpMock.expectNone((r) => r.url.endsWith('/jobs/5'));
+    expect(component.vagas.length).toBe(1);
   });
 });

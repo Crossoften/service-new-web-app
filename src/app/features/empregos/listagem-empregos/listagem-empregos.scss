@@ -77,6 +77,37 @@
   }
   &__empresa { font-size: 13px; color: var(--color-gray-600); }
   &__valor { font-size: 15px; font-weight: 700; color: var(--color-primary); }
+
+  &__acoes {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-gray-100);
+  }
+
+  &__acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--color-gray-200);
+    border-radius: 20px;
+    background: var(--color-white);
+    color: var(--color-gray-600);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+
+    &:active { opacity: 0.85; }
+    &:disabled { opacity: 0.6; cursor: default; }
+
+    &--perigo {
+      color: #dc2626;
+      border-color: #f3c6c6;
+    }
+  }
 }
 
 // ── Busca + filtros (VF-3) ───────────────────────────────────────────────────

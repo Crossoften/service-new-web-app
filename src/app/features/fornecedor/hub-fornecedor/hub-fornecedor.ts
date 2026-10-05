@@ -34,7 +34,7 @@ export class HubFornecedorComponent implements OnInit {
   private readonly budgets = inject(BudgetService);
   protected readonly unread = inject(ChatUnreadStore);
 
-  trabalhosAprovados = 0;
+  trabalhosAtivos = 0;
   orcamentosPendentes = 0;
 
   verticais: VerticalCard[] = [
@@ -49,9 +49,13 @@ export class HubFornecedorComponent implements OnInit {
 
   ngOnInit() {
     this.unread.refresh(); // badge de não-lidos no hub (BE-Q5)
-    // Trabalho aprovado pelo cliente = Work Received com status Pending (ainda não iniciado).
+    // Trabalho ativo = em jogo até o fim do serviço: recém-aprovado (`Pending`) **ou**
+    // já iniciado (`InProgress`). Antes só contava `Pending`, então o card sumia assim
+    // que o fornecedor iniciava — agora permanece na home até concluir/cancelar.
     this.works.trabalhos().pipe(catchError(() => of([] as TrabalhoFornecedor[]))).subscribe((lista) => {
-      this.trabalhosAprovados = lista.filter((t) => t.statusApi === 'Pending').length;
+      this.trabalhosAtivos = lista.filter(
+        (t) => t.statusApi === 'Pending' || t.statusApi === 'InProgress',
+      ).length;
     });
     // Orçamentos recebidos aguardando resposta.
     this.budgets

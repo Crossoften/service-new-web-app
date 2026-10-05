@@ -73,6 +73,14 @@ export class JobService {
     return this.api.patch<JobDto>(`/jobs/${id}`, dto);
   }
 
+  /**
+   * Remove uma vaga. O back **não tem DELETE** para `/jobs/{id}` — a exclusão é
+   * um **soft-delete** via `PATCH { isActive: false }` (some da listagem de ativos).
+   */
+  desativarVaga(id: number): Observable<JobDto> {
+    return this.atualizarVaga(id, { isActive: false });
+  }
+
   // ── Candidaturas ─────────────────────────────────────────────────────────
 
   candidatar(id: number, dto: ApplyJobDto): Observable<JobApplicationDto> {

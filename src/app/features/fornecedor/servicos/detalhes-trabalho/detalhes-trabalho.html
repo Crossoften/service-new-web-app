@@ -109,27 +109,6 @@
             rows="5">
           </textarea>
 
-          <div class="dt-arquivos">
-            @for (arquivo of respostaArquivos; track arquivo.id) {
-              <div class="dt-arquivo">
-                <span>{{ arquivo.nome }}</span>
-                <button class="dt-arquivo__btn">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="8 12 12 16 16 12"/>
-                    <line x1="12" y1="8" x2="12" y2="16"/>
-                  </svg>
-                </button>
-              </div>
-            }
-          </div>
-
-          <button class="dt-fab" (click)="adicionarArquivo()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          </button>
-
           <!-- TEMPO DE GARANTIA (opcional) — não se aplica a reparo de garantia -->
           @if (!trabalho.ehGarantia) {
           <div class="dt-garantia-prazo">

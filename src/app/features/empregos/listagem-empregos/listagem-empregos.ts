@@ -80,12 +80,39 @@ export class ListagemEmpregosComponent implements OnInit {
     this.maisRecentes = !this.maisRecentes;
   }
 
+  removendoId: number | null = null;
+
   abrir(id: number) {
     this.router.navigate(['/empregos/vaga', id]);
   }
 
   publicar() {
     this.router.navigate(['/empregos/vaga/nova']);
+  }
+
+  /** Edita a vaga (gestão do empregador) → form em modo edição. */
+  editar(v: JobDto, event: Event) {
+    event.stopPropagation(); // não abrir o detalhe
+    this.router.navigate(['/empregos/vaga', v.id, 'editar']);
+  }
+
+  /** Exclui (soft-delete via `isActive:false`) e remove da lista local. */
+  excluir(v: JobDto, event: Event) {
+    event.stopPropagation();
+    if (this.removendoId !== null) return;
+    if (!confirm(`Excluir a vaga "${v.title}"?`)) return;
+    this.removendoId = v.id;
+    this.erro = '';
+    this.jobs.desativarVaga(v.id).subscribe({
+      next: () => {
+        this.removendoId = null;
+        this.vagas = this.vagas.filter((x) => x.id !== v.id);
+      },
+      error: (err: ApiError) => {
+        this.removendoId = null;
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível excluir a vaga.';
+      },
+    });
   }
 
   minhasCandidaturas() {

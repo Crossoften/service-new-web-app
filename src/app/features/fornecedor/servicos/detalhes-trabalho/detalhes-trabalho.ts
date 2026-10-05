@@ -34,7 +34,6 @@ export class DetalhesTrabalhoComponent implements OnInit {
 
   // Resposta do fornecedor (descrição de conclusão)
   respostaDescricao = '';
-  respostaArquivos: { id: number; nome: string; tipo: string }[] = [];
 
   // Garantia (fatia 2): prazo informado na conclusão → vira warrantyExpiresAt.
   garantiaQtd = '';
@@ -278,10 +277,6 @@ export class DetalhesTrabalhoComponent implements OnInit {
         this.processando = false;
       },
     });
-  }
-
-  adicionarArquivo() {
-    // Upload de anexos de conclusão em fatia posterior.
   }
 
   abrirChat() {

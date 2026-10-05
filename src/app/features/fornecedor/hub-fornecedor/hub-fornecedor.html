@@ -16,7 +16,7 @@
   <p class="hub-descricao">Sua conta pode atuar em várias categorias. Escolha uma para começar.</p>
 
   <!-- URGÊNCIA / PENDÊNCIAS (E2E-2a) — cards separados por tipo -->
-  @if (trabalhosAprovados > 0) {
+  @if (trabalhosAtivos > 0) {
     <button class="hub-alerta" (click)="irTrabalhos()">
       <div class="hub-alerta__icone">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -26,9 +26,9 @@
       </div>
       <div class="hub-alerta__info">
         <span class="hub-alerta__titulo">
-          {{ trabalhosAprovados === 1 ? 'Trabalho aprovado — inicie' : trabalhosAprovados + ' trabalhos aprovados — inicie' }}
+          {{ trabalhosAtivos === 1 ? 'Trabalho em andamento' : trabalhosAtivos + ' trabalhos em andamento' }}
         </span>
-        <span class="hub-alerta__sub">Serviços · o cliente aprovou o orçamento</span>
+        <span class="hub-alerta__sub">Serviços · acompanhe até concluir</span>
       </div>
       <svg class="hub-alerta__seta" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="9 18 15 12 9 6"/>
