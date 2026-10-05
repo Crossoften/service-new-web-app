@@ -55,6 +55,8 @@ export interface ArquivoTrabalho {
 /** View-model do trabalho no lado do cliente (adapta `/works/my-requests`). */
 export interface Solicitacao {
   id: number;
+  /** Id do serviço avaliado (`/services/:id/reviews`) — do `work.service.id`. */
+  serviceId?: number;
   prestador: PrestadorResumo;
   status: StatusSolicitacao;
   statusApi: WorkStatus;
@@ -307,6 +309,7 @@ export class WorkService {
   private mapSolicitacaoItem(w: WorkListItemDto): Solicitacao {
     return {
       id: w.id,
+      serviceId: w.service?.id,
       prestador: {
         id: w.provider?.id ?? 0,
         nome: w.provider?.name ?? '—',
@@ -342,6 +345,7 @@ export class WorkService {
   private mapSolicitacaoDetail(w: WorkDto): Solicitacao {
     return {
       id: w.id,
+      serviceId: w.service?.id,
       prestador: {
         id: w.provider?.id ?? 0,
         nome: w.provider?.name ?? '—',

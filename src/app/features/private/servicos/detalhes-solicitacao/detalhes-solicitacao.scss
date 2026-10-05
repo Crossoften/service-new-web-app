@@ -423,3 +423,54 @@
 
   &__erro { font-size: 12px; color: #dc2626; }
 }
+
+// Avaliação do serviço (GAR-3b)
+.solicitacao-avaliar {
+  margin: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-gray-100);
+  border-radius: 14px;
+  background: var(--color-white);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__titulo { font-size: 14px; font-weight: 700; color: var(--color-text); }
+
+  &__opcoes { display: flex; gap: 8px; }
+
+  &__opcao {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--color-gray-200);
+    border-radius: 50px;
+    background: var(--color-white);
+    color: var(--color-gray-600);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+
+    &--sel {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: #F5EEFE;
+    }
+  }
+
+  &__comentario {
+    width: 100%;
+    border: 1px solid var(--color-gray-200);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--color-text);
+    resize: vertical;
+    outline: none;
+  }
+
+  &__erro { color: #d33; font-size: 13px; margin: 0; }
+
+  &__ok { color: #16a34a; font-size: 14px; font-weight: 600; margin: 0; text-align: center; }
+}

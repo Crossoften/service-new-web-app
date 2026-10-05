@@ -3,9 +3,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkService, Solicitacao } from '../../../../core/services/work';
+import { ServiceCatalogService } from '../../../../core/services/service-catalog';
 import { UploadService } from '../../../../core/services/upload';
 import { VIDEO_ACCEPT } from '../../../../core/models/upload';
-import { WorkStatus } from '../../../../core/models/enums';
+import { ReviewType, WorkStatus } from '../../../../core/models/enums';
 import { ApiError } from '../../../../core/models/common';
 
 export type StepSolicitacao = 'aguardando' | 'cancelavel' | 'em_andamento' | 'concluido' | 'cancelado';
@@ -20,9 +21,17 @@ export class DetalhesSolicitacaoComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly works = inject(WorkService);
+  private readonly catalog = inject(ServiceCatalogService);
   private readonly uploads = inject(UploadService);
 
   readonly videoAccept = VIDEO_ACCEPT;
+
+  // Avaliação do serviço (GAR-3b): 👍/👎 + comentário, após concluído.
+  avaliacao: ReviewType | null = null;
+  comentarioAvaliacao = '';
+  enviandoAvaliacao = false;
+  avaliado = false; // true após enviar (ou 409 = já avaliado)
+  avaliacaoMsg = '';
 
   solicitacaoId = 0;
   solicitacao?: Solicitacao;
@@ -141,6 +150,52 @@ export class DetalhesSolicitacaoComponent implements OnInit {
   /** Abre outra solicitação (link reparo ↔ original). */
   abrirSolicitacao(id?: number) {
     if (id) this.router.navigate(['/servicos/solicitacao', id]);
+  }
+
+  // ── Avaliação do serviço (GAR-3b) ──────────────────────────────────────────
+
+  /**
+   * Mostra o card de avaliação: serviço **concluído**, não é reparo de garantia,
+   * tem o id do serviço e ainda não foi avaliado nesta sessão.
+   */
+  get podeAvaliar(): boolean {
+    return (
+      this.stepAtual === 'concluido' &&
+      !this.ehGarantia &&
+      !!this.solicitacao?.serviceId &&
+      !this.avaliado
+    );
+  }
+
+  selecionarAvaliacao(tipo: ReviewType) {
+    this.avaliacao = tipo;
+  }
+
+  enviarAvaliacao() {
+    const serviceId = this.solicitacao?.serviceId;
+    if (!serviceId || !this.avaliacao || this.enviandoAvaliacao) return;
+    this.enviandoAvaliacao = true;
+    this.avaliacaoMsg = '';
+    const comment = this.comentarioAvaliacao.trim();
+    this.catalog
+      .avaliarServico(serviceId, { type: this.avaliacao, comment: comment || undefined })
+      .subscribe({
+        next: () => {
+          this.enviandoAvaliacao = false;
+          this.avaliado = true;
+          this.avaliacaoMsg = 'Obrigado pela sua avaliação!';
+        },
+        error: (err: ApiError) => {
+          this.enviandoAvaliacao = false;
+          if (err?.status === 409) {
+            // Já avaliou este serviço — esconde o form e informa.
+            this.avaliado = true;
+            this.avaliacaoMsg = 'Você já avaliou este serviço.';
+            return;
+          }
+          this.avaliacaoMsg = err?.message?.trim() ? err.message : 'Não foi possível enviar a avaliação.';
+        },
+      });
   }
 
   /** Rótulo curto do status de um reparo listado (warrantyWorks). */

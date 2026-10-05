@@ -1,4 +1,4 @@
-import { ServiceType } from './enums';
+import { ReviewType, ServiceType } from './enums';
 import { ResponseWarrantyStatsDto } from './warranty-stats';
 
 export interface ServiceCategoryDto {
@@ -93,4 +93,10 @@ export interface ServiceQuery {
   isActive?: boolean;
   take?: number;
   skip?: number;
+}
+
+/** Corpo de `POST /v1/services/{id}/reviews` (CreateServiceReviewDto) — cliente. */
+export interface CreateServiceReviewDto {
+  type: ReviewType;
+  comment?: string;
 }

@@ -217,4 +217,45 @@ describe('DetalhesSolicitacaoComponent', () => {
     expect(enviar).not.toHaveBeenCalled();
     expect(component.videoGarantia).toBeUndefined();
   });
+
+  it('serviço concluído: pode avaliar e envia POST /services/:id/reviews', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished' }),
+    );
+    expect(component.stepAtual).toBe('concluido');
+    expect(component.podeAvaliar).toBe(true);
+
+    component.selecionarAvaliacao('Positive');
+    component.comentarioAvaliacao = 'Excelente';
+    component.enviarAvaliacao();
+
+    const post = httpMock.expectOne((r) => r.url.endsWith('/services/3/reviews') && r.method === 'POST');
+    expect(post.request.body).toEqual({ type: 'Positive', comment: 'Excelente' });
+    post.flush({ message: 'ok' });
+
+    expect(component.avaliado).toBe(true);
+    expect(component.avaliacaoMsg).toContain('Obrigado');
+    expect(component.podeAvaliar).toBe(false); // some após avaliar
+  });
+
+  it('409 ao avaliar → marca como já avaliado', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished' }),
+    );
+    component.selecionarAvaliacao('Negative');
+    component.enviarAvaliacao();
+    httpMock.expectOne((r) => r.url.endsWith('/services/3/reviews')).flush(
+      { message: 'Já avaliado' }, { status: 409, statusText: 'Conflict' },
+    );
+    expect(component.avaliado).toBe(true);
+    expect(component.avaliacaoMsg).toContain('já avaliou');
+  });
+
+  it('reparo de garantia (ehGarantia) não pode avaliar', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ status: 'Finished', isWarranty: true }),
+    );
+    expect(component.ehGarantia).toBe(true);
+    expect(component.podeAvaliar).toBe(false);
+  });
 });

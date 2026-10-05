@@ -123,6 +123,39 @@
       </div>
     }
 
+    <!-- AVALIAÇÃO DO SERVIÇO (GAR-3b) — após concluído, não para reparo de garantia -->
+    @if (podeAvaliar || avaliado) {
+      <div class="solicitacao-avaliar">
+        @if (avaliado) {
+          <p class="solicitacao-avaliar__ok">{{ avaliacaoMsg }}</p>
+        } @else {
+          <span class="solicitacao-avaliar__titulo">Como foi o serviço?</span>
+          <div class="solicitacao-avaliar__opcoes">
+            <button
+              class="solicitacao-avaliar__opcao"
+              [class.solicitacao-avaliar__opcao--sel]="avaliacao === 'Positive'"
+              (click)="selecionarAvaliacao('Positive')">👍 Recomendo</button>
+            <button
+              class="solicitacao-avaliar__opcao"
+              [class.solicitacao-avaliar__opcao--sel]="avaliacao === 'Negative'"
+              (click)="selecionarAvaliacao('Negative')">👎 Não recomendo</button>
+          </div>
+          <textarea
+            class="solicitacao-avaliar__comentario"
+            [(ngModel)]="comentarioAvaliacao"
+            placeholder="Comentário (opcional)"
+            rows="2"></textarea>
+          @if (avaliacaoMsg) { <p class="solicitacao-avaliar__erro">{{ avaliacaoMsg }}</p> }
+          <button
+            class="solicitacao-btn solicitacao-btn--primary"
+            [disabled]="!avaliacao || enviandoAvaliacao"
+            (click)="enviarAvaliacao()">
+            {{ enviandoAvaliacao ? 'ENVIANDO…' : 'ENVIAR AVALIAÇÃO' }}
+          </button>
+        }
+      </div>
+    }
+
   </div>
 
   <!-- BOTÕES POR STEP -->

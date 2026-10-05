@@ -3,6 +3,7 @@ import { Observable, map } from 'rxjs';
 import { ApiService } from './api';
 import {
   CreateServiceDto,
+  CreateServiceReviewDto,
   ServiceCategoryDto,
   ServiceDto,
   ServiceListItemDto,
@@ -104,6 +105,15 @@ export class ServiceCatalogService {
   /** Solicita orçamento de um serviço — `POST /v1/budgets`. */
   solicitarOrcamento(dto: CreateBudgetDto): Observable<BudgetDto> {
     return this.api.post<CreateBudgetResponseDto>('/budgets', dto).pipe(map((r) => r.budget));
+  }
+
+  /**
+   * Avalia um serviço (cliente, após concluído) — `POST /v1/services/{id}/reviews`.
+   * Avaliação é **positiva/negativa** (👍/👎) + comentário opcional. O back devolve
+   * **409** quando o cliente já avaliou aquele serviço.
+   */
+  avaliarServico(serviceId: number, dto: CreateServiceReviewDto): Observable<ApiMessage> {
+    return this.api.post<ApiMessage>(`/services/${serviceId}/reviews`, dto);
   }
 
   // ── Fornecedor (meus serviços) ─────────────────────────────────────────────
