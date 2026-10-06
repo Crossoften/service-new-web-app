@@ -64,17 +64,10 @@
             <span class="prestador-card__nome">{{ prestador.nome }}</span>
             <span class="prestador-card__profissao">● {{ prestador.profissao }}</span>
             <span class="prestador-card__descricao">{{ prestador.descricao }}</span>
-            <div class="prestador-card__stats">
-              <span class="prestador-card__stat prestador-card__stat--like">
-                👍 {{ prestador.gostei }}
-              </span>
-              <span class="prestador-card__stat prestador-card__stat--dislike">
-                👎 {{ prestador.naoGostei }}
-              </span>
-              <span class="prestador-card__stat">
-                🗂 {{ prestador.negociacoes }}
-              </span>
-            </div>
+            <app-stat-chips
+              [positivas]="prestador.gostei"
+              [negativas]="prestador.naoGostei"
+              [extra]="prestador.negociacoes"></app-stat-chips>
           </div>
 
           <div class="listagem-checkbox"

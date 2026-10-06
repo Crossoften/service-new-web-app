@@ -5,12 +5,13 @@ import { FormsModule } from '@angular/forms';
 import { WorkService, Solicitacao, StatusSolicitacao } from '../../../../core/services/work';
 import { ApiError } from '../../../../core/models/common';
 import { BottomNavClienteComponent } from '../../../../shared/components/bottom-nav-cliente/bottom-nav-cliente';
+import { StatChipsComponent } from '../../../../shared/components/stat-chips/stat-chips';
 
 type TabSolicitacao = 'em_andamento' | 'finalizadas' | 'canceladas';
 
 @Component({
   selector: 'app-solicitacoes',
-  imports: [CommonModule, FormsModule, BottomNavClienteComponent],
+  imports: [CommonModule, FormsModule, BottomNavClienteComponent, StatChipsComponent],
   templateUrl: './solicitacoes.html',
   styleUrl: './solicitacoes.scss'
 })

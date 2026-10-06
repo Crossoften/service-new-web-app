@@ -60,13 +60,12 @@
               <span class="lsf-card__descricao">{{ servico.descricao }}</span>
             }
             <span class="lsf-card__preco">{{ formatarPreco(servico.valor) }}</span>
-            <div class="lsf-card__stats">
-              <span class="lsf-card__stat lsf-card__stat--like">👍 {{ servico.avaliacoesPositivas }}</span>
-              <span class="lsf-card__stat lsf-card__stat--dislike">👎 {{ servico.avaliacoesNegativas }}</span>
-              @if (servico.trabalhosConcluidos) {
-                <span class="lsf-card__stat">✅ {{ servico.trabalhosConcluidos }}</span>
-              }
-            </div>
+            <app-stat-chips
+              [positivas]="servico.avaliacoesPositivas"
+              [negativas]="servico.avaliacoesNegativas"
+              [extra]="servico.trabalhosConcluidos || null"
+              extraIcone="check"
+              extraTitulo="Trabalhos concluídos"></app-stat-chips>
           </div>
 
         </div>

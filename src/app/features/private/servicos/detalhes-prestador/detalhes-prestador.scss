@@ -115,9 +115,18 @@
     font-size: 14px;
     font-weight: 700;
     color: var(--color-text);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 
     &--like { color: #16A34A; }
     &--dislike { color: #DC2626; }
+  }
+
+  &__ic {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
   }
 
   &__label {
@@ -156,8 +165,11 @@
 // Destaque das garantias atendidas (BE-W7): concluídas / total.
 .detalhes-stats__garantias-destaque {
   margin: 8px 0 2px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   font-size: 14px;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--color-primary);
 }

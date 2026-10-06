@@ -98,9 +98,14 @@
     font-size: 14px;
     font-weight: 700;
     color: var(--color-text);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     &--like { color: #16A34A; }
     &--dislike { color: #DC2626; }
   }
+
+  &__ic { width: 15px; height: 15px; flex-shrink: 0; }
 
   &__label {
     font-size: 11px;

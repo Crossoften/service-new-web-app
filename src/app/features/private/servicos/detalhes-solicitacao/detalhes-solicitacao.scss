@@ -441,6 +441,10 @@
 
   &__opcao {
     flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     padding: 10px 12px;
     border: 1px solid var(--color-gray-200);
     border-radius: 50px;

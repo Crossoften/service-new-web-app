@@ -6,11 +6,12 @@ import { finalize } from 'rxjs';
 import { Prestador, ServiceCatalogService } from '../../../../core/services/service-catalog';
 import { ApiError } from '../../../../core/models/common';
 import { OrdenacaoItensComponent } from '../../../../shared/components/ordenacao-itens/ordenacao-itens';
+import { StatChipsComponent } from '../../../../shared/components/stat-chips/stat-chips';
 import { OrdenacaoItem } from '../../../../core/utils/item-search';
 
 @Component({
   selector: 'app-listagem-servicos',
-  imports: [CommonModule, FormsModule, OrdenacaoItensComponent],
+  imports: [CommonModule, FormsModule, OrdenacaoItensComponent, StatChipsComponent],
   templateUrl: './listagem-servicos.html',
   styleUrl: './listagem-servicos.scss',
 })

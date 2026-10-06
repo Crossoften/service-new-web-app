@@ -7,13 +7,14 @@ import {
   ServicoFornecedor,
 } from '../../../../core/services/service-catalog';
 import { BottomNavFornecedorServicosComponent } from '../../../../shared/components/bottom-nav-fornecedor-servicos/bottom-nav-fornecedor-servicos';
+import { StatChipsComponent } from '../../../../shared/components/stat-chips/stat-chips';
 import { ApiError } from '../../../../core/models/common';
 
 type TabServico = 'ativos' | 'inativos';
 
 @Component({
   selector: 'app-listagem-servicos-fornecedor',
-  imports: [CommonModule, BottomNavFornecedorServicosComponent],
+  imports: [CommonModule, BottomNavFornecedorServicosComponent, StatChipsComponent],
   templateUrl: './listagem-servicos-fornecedor.html',
   styleUrl: './listagem-servicos-fornecedor.scss',
 })

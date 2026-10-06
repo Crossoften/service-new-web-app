@@ -73,11 +73,10 @@
             <span class="orcamento-card__nome">{{ orcamento.prestador.nome }}</span>
             <span class="orcamento-card__profissao">● {{ orcamento.prestador.profissao }}</span>
             <span class="orcamento-card__descricao">{{ orcamento.prestador.descricao }}</span>
-            <div class="orcamento-card__stats">
-              <span class="orcamento-card__stat orcamento-card__stat--like">👍 {{ orcamento.prestador.gostei }}</span>
-              <span class="orcamento-card__stat orcamento-card__stat--dislike">👎 {{ orcamento.prestador.naoGostei }}</span>
-              <span class="orcamento-card__stat">🗂 {{ orcamento.prestador.negociacoes }}</span>
-            </div>
+            <app-stat-chips
+              [positivas]="orcamento.prestador.gostei"
+              [negativas]="orcamento.prestador.naoGostei"
+              [extra]="orcamento.prestador.negociacoes"></app-stat-chips>
           </div>
 
           <span class="orcamento-status" [ngClass]="statusClass(orcamento.status)">

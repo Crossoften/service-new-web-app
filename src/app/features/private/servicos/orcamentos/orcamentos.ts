@@ -6,12 +6,13 @@ import { finalize } from 'rxjs';
 import { BudgetService, Orcamento, StatusOrcamento } from '../../../../core/services/budget';
 import { ApiError } from '../../../../core/models/common';
 import { BottomNavClienteComponent } from '../../../../shared/components/bottom-nav-cliente/bottom-nav-cliente';
+import { StatChipsComponent } from '../../../../shared/components/stat-chips/stat-chips';
 
 type TabOrcamento = 'todos' | 'respondidos' | 'nao_respondidos';
 
 @Component({
   selector: 'app-orcamentos',
-  imports: [CommonModule, FormsModule, BottomNavClienteComponent],
+  imports: [CommonModule, FormsModule, BottomNavClienteComponent, StatChipsComponent],
   templateUrl: './orcamentos.html',
   styleUrl: './orcamentos.scss',
 })

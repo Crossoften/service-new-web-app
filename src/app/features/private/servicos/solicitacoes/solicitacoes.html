@@ -56,15 +56,14 @@
             }
 
             @if (solicitacao.status === 'em_garantia' && solicitacao.servicos) {
-              <span class="solicitacao-card__servicos">🗂 {{ solicitacao.servicos }} serviços</span>
+              <span class="solicitacao-card__servicos">{{ solicitacao.servicos }} serviços</span>
             }
 
             <span class="solicitacao-card__descricao">{{ solicitacao.prestador.descricao }}</span>
-            <div class="solicitacao-card__stats">
-              <span class="solicitacao-card__stat solicitacao-card__stat--like">👍 {{ solicitacao.prestador.gostei }}</span>
-              <span class="solicitacao-card__stat solicitacao-card__stat--dislike">👎 {{ solicitacao.prestador.naoGostei }}</span>
-              <span class="solicitacao-card__stat">🗂 {{ solicitacao.prestador.negociacoes }}</span>
-            </div>
+            <app-stat-chips
+              [positivas]="solicitacao.prestador.gostei"
+              [negativas]="solicitacao.prestador.naoGostei"
+              [extra]="solicitacao.prestador.negociacoes"></app-stat-chips>
           </div>
 
           <div class="solicitacao-card__status-col">
