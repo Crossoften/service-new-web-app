@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { TransportService } from '../../../../core/services/transport';
+import { StatChipsComponent } from '../../../../shared/components/stat-chips/stat-chips';
 import { TransportationListItemDto } from '../../../../core/models/transportation';
 import { ApiError } from '../../../../core/models/common';
 
@@ -10,7 +11,7 @@ type TabTransporte = 'ativos' | 'inativos';
 
 @Component({
   selector: 'app-listagem-transporte-fornecedor',
-  imports: [CommonModule],
+  imports: [CommonModule, StatChipsComponent],
   templateUrl: './listagem-transporte-fornecedor.html',
   styleUrl: './listagem-transporte-fornecedor.scss',
 })

@@ -53,10 +53,7 @@
                 <span class="ltf-card__detalhe">{{ detalhe(t) }}</span>
               }
               <span class="ltf-card__preco">{{ formatarPreco(t.price) }}</span>
-              <div class="ltf-card__stats">
-                <span class="ltf-card__stat ltf-card__stat--like">👍 {{ t.positiveReviews }}</span>
-                <span class="ltf-card__stat ltf-card__stat--dislike">👎 {{ t.negativeReviews }}</span>
-              </div>
+              <app-stat-chips [positivas]="t.positiveReviews" [negativas]="t.negativeReviews"></app-stat-chips>
             </div>
 
           </div>

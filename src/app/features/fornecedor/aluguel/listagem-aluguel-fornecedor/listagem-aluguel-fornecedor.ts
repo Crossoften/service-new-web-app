@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { MarketplaceService } from '../../../../core/services/marketplace';
+import { StatChipsComponent } from '../../../../shared/components/stat-chips/stat-chips';
 import { ProductListItemDto } from '../../../../core/models/product';
 import { ProductTransactionType } from '../../../../core/models/enums';
 import { ApiError } from '../../../../core/models/common';
@@ -14,7 +15,7 @@ const TIPOS_ALUGUEL: ProductTransactionType[] = ['Rent', 'RentAndSale'];
 
 @Component({
   selector: 'app-listagem-aluguel-fornecedor',
-  imports: [CommonModule],
+  imports: [CommonModule, StatChipsComponent],
   templateUrl: './listagem-aluguel-fornecedor.html',
   styleUrl: './listagem-aluguel-fornecedor.scss',
 })

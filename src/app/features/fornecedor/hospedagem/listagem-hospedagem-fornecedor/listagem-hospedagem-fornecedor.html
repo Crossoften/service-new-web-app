@@ -52,10 +52,7 @@
                 <span class="lhf-card__local">{{ local(a) }}</span>
               }
               <span class="lhf-card__preco">{{ formatarPreco(a.price) }}</span>
-              <div class="lhf-card__stats">
-                <span class="lhf-card__stat lhf-card__stat--like">👍 {{ a.positiveReviews }}</span>
-                <span class="lhf-card__stat lhf-card__stat--dislike">👎 {{ a.negativeReviews }}</span>
-              </div>
+              <app-stat-chips [positivas]="a.positiveReviews" [negativas]="a.negativeReviews"></app-stat-chips>
             </div>
 
           </div>

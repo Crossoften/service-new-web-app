@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { AccommodationService } from '../../../../core/services/accommodation';
+import { StatChipsComponent } from '../../../../shared/components/stat-chips/stat-chips';
 import { AccommodationListItemDto } from '../../../../core/models/accommodation';
 import { ApiError } from '../../../../core/models/common';
 
@@ -10,7 +11,7 @@ type TabHospedagem = 'ativas' | 'inativas';
 
 @Component({
   selector: 'app-listagem-hospedagem-fornecedor',
-  imports: [CommonModule],
+  imports: [CommonModule, StatChipsComponent],
   templateUrl: './listagem-hospedagem-fornecedor.html',
   styleUrl: './listagem-hospedagem-fornecedor.scss',
 })
