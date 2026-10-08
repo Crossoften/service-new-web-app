@@ -8,6 +8,7 @@ import { ProductListItemDto } from '../../../../core/models/product';
 import { ProductTransactionType } from '../../../../core/models/enums';
 import { ApiError } from '../../../../core/models/common';
 import { OrdenacaoItensComponent } from '../../../../shared/components/ordenacao-itens/ordenacao-itens';
+import { StatChipsComponent } from '../../../../shared/components/stat-chips/stat-chips';
 import { OrdenacaoItem, ordenarItens } from '../../../../core/utils/item-search';
 
 /** Tipos de negociação exibidos na vertical de compra e venda do fornecedor. */
@@ -15,7 +16,7 @@ const TIPOS_VENDA: ProductTransactionType[] = ['Sale', 'RentAndSale'];
 
 @Component({
   selector: 'app-listagem-produtos',
-  imports: [CommonModule, FormsModule, OrdenacaoItensComponent],
+  imports: [CommonModule, FormsModule, OrdenacaoItensComponent, StatChipsComponent],
   templateUrl: './listagem-produtos.html',
   styleUrl: './listagem-produtos.scss',
 })
