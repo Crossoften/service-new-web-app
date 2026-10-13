@@ -10,6 +10,31 @@
 
 ---
 
+## 📌 Pendências abertas — o que falta no Back (topo vivo, atualizado 2026-10-13)
+
+> Resumo priorizado do que **ainda trava o front hoje**. O detalhamento de cada item está nas seções
+> abaixo. As seções **BE-01…BE-13** (mais ao fim) são **históricas** — a maioria já foi entregue
+> (delivery, aluguel, transporte, hospedagem, empregos e chat já estão integrados e funcionando);
+> ficam como registro, não como "a fazer".
+
+| # | Item | Prioridade | O que o back precisa fazer | Impacto no front |
+|---|---|---|---|---|
+| 1 | **BE-FILE-URL-1** | 🔴 crítico | `fileUrl` do upload vem com host **placeholder** (`your-ngrok-url.ngrok-free.app`). Setar a base pública real (`APP_URL`/`PUBLIC_URL`/`FILES_BASE_URL`) **e** garantir que a rota que serve o arquivo (`/v1/files/{fileKey}`) seja **pública** (sem `Authorization`). | **Nenhuma imagem/vídeo renderiza** em nenhuma tela (sistêmico). |
+| 2 | **BE-ADS-VIDEO-1** | 🟠 | Adicionar `videoUrl?`/`videoKey?` nos DTOs de anúncio (produto, hospedagem, transporte) — create/update **e nas respostas** (list + detalhe). | Destrava a tela **U3d (vídeo em anúncios)**, já pronta no front (upload pronto). |
+| 3 | **BE-W1 / BE-W7** | 🔴 | Execução da garantia (Opção B: *Work de garantia* vinculado ao original) + contador de garantias atendidas no perfil do fornecedor. | Reparo de garantia rastreável + número no perfil (hoje só o pedido de garantia funciona). |
+| 4 | **BE-CHAT-1** | 🟠 | Ampliar o contexto de chat para **Budget** (orçamento), permitindo conversa **antes do aceite**. | Chat pré-aceite entre cliente e prestador. |
+| 5 | **SEC-1** (ops) | 🟠 | Restringir a chave do Google Maps no GCP (referrer HTTP + por API; chave por ambiente). | Segurança/custo — não bloqueia funcionalidade. |
+
+**Confirmar status (podem já estar resolvidos — se sim, marcar como feito):**
+
+- **BE-NUM-1** 🔴 — criação de recursos rejeitava corpo numérico (`numeric string is expected`). *Acreditamos resolvido pelo back; confirmar em `POST /services`, `/budgets`, `/jobs`.*
+- **BE-ROUTE-1** 🔴 — `GET /v1/subscriptions/catalog` caía no handler de `:id` (ParseIntPipe). *Confirmar se foi corrigido o route ordering.*
+- **BE-Q5** 🔴 — inbox de chats + contador de não-lidos. *O front já consome o badge; confirmar o que o back já expõe.*
+
+> ✅ **Já entregue pelo back e consumido pelo front** (não refazer): domínios de delivery/aluguel/transporte/hospedagem/empregos, Mercado Pago (vínculo + pagamento), fase Mapa (coordenadas + rastreamento), seeds de categorias (BE-Q9), estorno/`Refunded`, maquininha própria, Pix no cadastro bancário, push/VAPID.
+
+---
+
 ## 🐞 Bugs ativos (encontrados na integração)
 
 ### BE-NUM-1 — Campos numéricos do corpo recusados: contrato diz `number`, validação exige **string numérica** 🔴
@@ -241,6 +266,11 @@ mas falta a **camada 2 (transação/pedido/reserva com ciclo de vida)** e a **ca
 | BE-13 | Qualidade de contrato (reset senha, `birthDate`, logout) | ⚪ Baixa |
 
 ---
+
+> ⚠️ **Seção histórica (BE-01…BE-13).** Estas demandas são da auditoria inicial e a **maioria já foi
+> entregue** e está integrada no front (delivery, aluguel, transporte, hospedagem, empregos, chat…).
+> Mantidas como registro. As pendências vivas estão no **topo** (📌 Pendências abertas). Os emojis de
+> prioridade aqui refletem o estado **na época da auditoria**, não o atual.
 
 ## BE-01 — Domínio de Delivery inexistente 🔴
 
