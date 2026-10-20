@@ -10,28 +10,38 @@
 
 ---
 
-## 📌 Pendências abertas — o que falta no Back (topo vivo, atualizado 2026-10-13)
+## 📌 Pendências abertas — topo vivo (atualizado 2026-10-20)
 
-> Resumo priorizado do que **ainda trava o front hoje**. O detalhamento de cada item está nas seções
-> abaixo. As seções **BE-01…BE-13** (mais ao fim) são **históricas** — a maioria já foi entregue
-> (delivery, aluguel, transporte, hospedagem, empregos e chat já estão integrados e funcionando);
-> ficam como registro, não como "a fazer".
+> **Update do back em 19/10** (branch `ajustes-gerais`, commit `05ad788`; `swagger.json` + `ORIENTACOESFRONT.md`
+> atualizados): **todos os bloqueios de backend foram resolvidos ou já estão no contrato.** O que resta agora é
+> **implementação no front** (contrato pronto) + **1 item de ops**. As seções **BE-01…BE-13** mais abaixo são
+> **históricas** (já entregues); ficam como registro.
 
-| # | Item | Prioridade | O que o back precisa fazer | Impacto no front |
-|---|---|---|---|---|
-| 1 | **BE-FILE-URL-1** | 🔴 crítico | `fileUrl` do upload vem com host **placeholder** (`your-ngrok-url.ngrok-free.app`). Setar a base pública real (`APP_URL`/`PUBLIC_URL`/`FILES_BASE_URL`) **e** garantir que a rota que serve o arquivo (`/v1/files/{fileKey}`) seja **pública** (sem `Authorization`). | **Nenhuma imagem/vídeo renderiza** em nenhuma tela (sistêmico). |
-| 2 | **BE-ADS-VIDEO-1** | 🟠 | Adicionar `videoUrl?`/`videoKey?` nos DTOs de anúncio (produto, hospedagem, transporte) — create/update **e nas respostas** (list + detalhe). | Destrava a tela **U3d (vídeo em anúncios)**, já pronta no front (upload pronto). |
-| 3 | **BE-W1 / BE-W7** | 🔴 | Execução da garantia (Opção B: *Work de garantia* vinculado ao original) + contador de garantias atendidas no perfil do fornecedor. | Reparo de garantia rastreável + número no perfil (hoje só o pedido de garantia funciona). |
-| 4 | **BE-CHAT-1** | 🟠 | Ampliar o contexto de chat para **Budget** (orçamento), permitindo conversa **antes do aceite**. | Chat pré-aceite entre cliente e prestador. |
-| 5 | **SEC-1** (ops) | 🟠 | Restringir a chave do Google Maps no GCP (referrer HTTP + por API; chave por ambiente). | Segurança/custo — não bloqueia funcionalidade. |
+### ✅ Resolvido no back (não bloqueia mais)
 
-**Confirmar status (podem já estar resolvidos — se sim, marcar como feito):**
+| Item | Desfecho (19/10) |
+|---|---|
+| **BE-FILE-URL-1** | **Config, não código.** Era `URL_INTEGRATION` no `.env` com o texto-modelo `your-ngrok-url…` — a API monta a `fileUrl` a partir dessa var **no momento do upload**. Corrigido e validado ponta a ponta. ⚠️ A URL fica gravada na linha no upload: **corrigir a var conserta uploads novos, não os antigos** (há `scripts/corrigir-urls-placeholder.sql` p/ reparar linhas velhas). Se mídia quebrar em outro ambiente → olhar `URL_INTEGRATION` primeiro (no servidor do cliente, quem define é o DevOps). |
+| **BE-ADS-VIDEO-1** | **Disponível.** `videoUrl`/`videoKey` existem em produto, hospedagem e transporte (12 DTOs: create/update/response/list), espelhando `imageUrl`/`imageKey`. Ver §8.14. |
+| **Upload S3** | Validado contra o bucket real: imagem por `POST /v1/upload/one-file` e `/many-files` (10 MB; png/jpg/jpeg/webp/pdf); vídeo por `presign → S3 → confirm` (200 MB). **Bucket privado — leitura sempre por `GET /v1/files/{fileKey}`**, nunca pela URL do S3. Erros: 413 (acima do teto), 400 (imagem no presign), 403 (token de confirmação forjado). |
+| **BE-NUM-1** | **Não era bug de back.** `POST /services`, `/budgets`, `/jobs`, `/restaurants` respondem 201 com `number` enviado como número. A causa dos 400 era um **processo velho ocupando a porta 8000** (`node dist/src/main` de um `start:prod` esquecido) servindo código antigo. Se voltar: `lsof -i :8000`. |
+| **BE-ROUTE-1** | **Não era bug de back.** O artefato `swagger.json` exportado não aplicava o `setGlobalPrefix` → dizia `/subscriptions/catalog` em vez de `/v1/subscriptions/catalog`. O swagger novo já traz o prefixo `/v1` nas 195 rotas. |
+| **BE-W1 / BE-W7 / BE-CHAT-1 / BE-Q5** | **Já estavam no contrato** (garantia-execução + contador; chat no Budget; inbox/não-lidos). Prontos para o front consumir. |
 
-- **BE-NUM-1** 🔴 — criação de recursos rejeitava corpo numérico (`numeric string is expected`). *Acreditamos resolvido pelo back; confirmar em `POST /services`, `/budgets`, `/jobs`.*
-- **BE-ROUTE-1** 🔴 — `GET /v1/subscriptions/catalog` caía no handler de `:id` (ParseIntPipe). *Confirmar se foi corrigido o route ordering.*
-- **BE-Q5** 🔴 — inbox de chats + contador de não-lidos. *O front já consome o badge; confirmar o que o back já expõe.*
+### 🟢 Agora é implementação no **front** (contrato pronto)
 
-> ✅ **Já entregue pelo back e consumido pelo front** (não refazer): domínios de delivery/aluguel/transporte/hospedagem/empregos, Mercado Pago (vínculo + pagamento), fase Mapa (coordenadas + rastreamento), seeds de categorias (BE-Q9), estorno/`Refunded`, maquininha própria, Pix no cadastro bancário, push/VAPID.
+| Fatia | O quê | Observação |
+|---|---|---|
+| **U3d — vídeo em anúncios** | Upload + exibição de vídeo no cadastro de produto, hospedagem e transporte (campos `videoUrl/videoKey`). | Upload de vídeo já existe (`UploadService.enviarVideo`); é plugar nas 3 telas de cadastro + exibir. |
+| **Garantia — execução + contador** | Fluxo do *reparo de garantia* (Work vinculado) + contador de garantias no perfil do fornecedor. | Contrato BE-W1/W7 disponível; auditar o shape real no swagger novo antes. |
+| **Chat pré-aceite** | Chat no nível do orçamento (Budget), antes do aceite. | Contrato BE-CHAT-1 disponível; auditar `ChatContextType`/rotas. |
+| **BE-Q5 (inbox)** | Conferir se há tela de inbox além do badge de não-lidos já consumido. | Auditar o que o back expõe hoje. |
+
+### ⏳ Pendente (ops — fora do código)
+
+- **SEC-1** — restringir a chave do Google Maps no GCP (referrer HTTP + por API; chave por ambiente). *Segue pendente do lado do cliente/DevOps.*
+
+> ✅ **Já entregue e em produção** (não refazer): domínios de delivery/aluguel/transporte/hospedagem/empregos, Mercado Pago (vínculo + pagamento), fase Mapa (coordenadas + rastreamento), seeds de categorias (BE-Q9), estorno/`Refunded`, maquininha própria, Pix no cadastro bancário, push/VAPID.
 
 ---
 
