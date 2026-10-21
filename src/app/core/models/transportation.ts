@@ -36,6 +36,7 @@ export interface TransportationListItemDto {
   price: string;
   description?: string;
   imageUrl?: string;
+  videoUrl?: string;
   isActive: boolean;
   category: TransportationListCategoryDto;
   user: TransportationOwnerDto;
@@ -46,6 +47,7 @@ export interface TransportationListItemDto {
 /** Transporte completo — `GET /v1/transportations/{id}` (ResponseTransportationDto). */
 export interface TransportationDto extends TransportationListItemDto {
   imageKey?: string;
+  videoKey?: string;
   categoryId: number;
   userId: number;
   createdAt: string;
@@ -75,6 +77,8 @@ export interface CreateTransportationDto {
   description?: string;
   imageUrl?: string;
   imageKey?: string;
+  videoUrl?: string;
+  videoKey?: string;
   isActive?: boolean;
 }
 

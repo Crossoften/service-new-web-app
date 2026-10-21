@@ -11,10 +11,11 @@ import {
 } from '../../../../core/models/accommodation';
 import { ApiError } from '../../../../core/models/common';
 import { formatBRL, maskBRL, parseBRL } from '../../../../core/utils/currency';
+import { VideoUploadComponent } from '../../../../shared/components/video-upload/video-upload';
 
 @Component({
   selector: 'app-criar-hospedagem',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, VideoUploadComponent],
   templateUrl: './criar-hospedagem.html',
   styleUrl: './criar-hospedagem.scss',
 })
@@ -39,6 +40,8 @@ export class CriarHospedagemComponent implements OnInit {
   descricao = '';
   imageUrl = '';
   imageKey = '';
+  videoUrl = '';
+  videoKey = '';
   ativa = true;
 
   carregando = false;
@@ -75,6 +78,8 @@ export class CriarHospedagemComponent implements OnInit {
             this.descricao = a.description ?? '';
             this.imageUrl = a.imageUrl ?? '';
             this.imageKey = a.imageKey ?? '';
+            this.videoUrl = a.videoUrl ?? '';
+            this.videoKey = a.videoKey ?? '';
             this.ativa = a.isActive;
           },
           error: (err: ApiError) => {
@@ -112,6 +117,12 @@ export class CriarHospedagemComponent implements OnInit {
       });
   }
 
+  /** Recebe o vídeo enviado (ou vazio ao remover) do `<app-video-upload>`. */
+  onVideo(v: { url: string; key: string }) {
+    this.videoUrl = v.url;
+    this.videoKey = v.key;
+  }
+
   onPrecoInput(valor: string) {
     this.preco = maskBRL(valor);
   }
@@ -145,6 +156,8 @@ export class CriarHospedagemComponent implements OnInit {
       description: this.descricao.trim() || undefined,
       imageUrl: this.imageUrl || undefined,
       imageKey: this.imageKey || undefined,
+      videoUrl: this.videoUrl || undefined,
+      videoKey: this.videoKey || undefined,
       isActive: this.ativa,
     };
 

@@ -11,10 +11,11 @@ import {
 } from '../../../../core/models/transportation';
 import { ApiError } from '../../../../core/models/common';
 import { formatBRL, maskBRL, parseBRL } from '../../../../core/utils/currency';
+import { VideoUploadComponent } from '../../../../shared/components/video-upload/video-upload';
 
 @Component({
   selector: 'app-criar-transporte',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, VideoUploadComponent],
   templateUrl: './criar-transporte.html',
   styleUrl: './criar-transporte.scss',
 })
@@ -38,6 +39,8 @@ export class CriarTransporteComponent implements OnInit {
   descricao = '';
   imageUrl = '';
   imageKey = '';
+  videoUrl = '';
+  videoKey = '';
   ativo = true;
 
   carregando = false;
@@ -73,6 +76,8 @@ export class CriarTransporteComponent implements OnInit {
             this.descricao = t.description ?? '';
             this.imageUrl = t.imageUrl ?? '';
             this.imageKey = t.imageKey ?? '';
+            this.videoUrl = t.videoUrl ?? '';
+            this.videoKey = t.videoKey ?? '';
             this.ativo = t.isActive;
           },
           error: (err: ApiError) => {
@@ -110,6 +115,12 @@ export class CriarTransporteComponent implements OnInit {
       });
   }
 
+  /** Recebe o vídeo enviado (ou vazio ao remover) do `<app-video-upload>`. */
+  onVideo(v: { url: string; key: string }) {
+    this.videoUrl = v.url;
+    this.videoKey = v.key;
+  }
+
   onPrecoInput(valor: string) {
     this.preco = maskBRL(valor);
   }
@@ -142,6 +153,8 @@ export class CriarTransporteComponent implements OnInit {
       description: this.descricao.trim() || undefined,
       imageUrl: this.imageUrl || undefined,
       imageKey: this.imageKey || undefined,
+      videoUrl: this.videoUrl || undefined,
+      videoKey: this.videoKey || undefined,
       isActive: this.ativo,
     };
 

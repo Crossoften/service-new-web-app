@@ -34,6 +34,7 @@ export interface AccommodationListItemDto {
   price: string;
   description?: string;
   imageUrl?: string;
+  videoUrl?: string;
   isActive: boolean;
   category: AccommodationListCategoryDto;
   user: AccommodationOwnerDto;
@@ -46,6 +47,7 @@ export interface AccommodationDto extends AccommodationListItemDto {
   street?: string;
   neighborhood?: string;
   imageKey?: string;
+  videoKey?: string;
   categoryId: number;
   category: AccommodationCategoryDto;
   userId: number;
@@ -78,6 +80,8 @@ export interface CreateAccommodationDto {
   description?: string;
   imageUrl?: string;
   imageKey?: string;
+  videoUrl?: string;
+  videoKey?: string;
   isActive?: boolean;
 }
 

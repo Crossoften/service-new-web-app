@@ -9,10 +9,11 @@ import { ProductCategoryDto } from '../../../../core/models/product';
 import { ProductTransactionType } from '../../../../core/models/enums';
 import { ApiError } from '../../../../core/models/common';
 import { formatBRL, maskBRL, parseBRL } from '../../../../core/utils/currency';
+import { VideoUploadComponent } from '../../../../shared/components/video-upload/video-upload';
 
 @Component({
   selector: 'app-criar-produto',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, VideoUploadComponent],
   templateUrl: './criar-produto.html',
   styleUrl: './criar-produto.scss',
 })
@@ -36,6 +37,8 @@ export class CriarProdutoComponent implements OnInit {
   descricao = '';
   imageUrl = '';
   imageKey = '';
+  videoUrl = '';
+  videoKey = '';
 
   carregando = false;
   salvando = false;
@@ -70,6 +73,8 @@ export class CriarProdutoComponent implements OnInit {
             this.descricao = p.description ?? '';
             this.imageUrl = p.imageUrl ?? '';
             this.imageKey = p.imageKey ?? '';
+            this.videoUrl = p.videoUrl ?? '';
+            this.videoKey = p.videoKey ?? '';
           },
           error: (err: ApiError) => {
             this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o produto.';
@@ -110,6 +115,12 @@ export class CriarProdutoComponent implements OnInit {
       });
   }
 
+  /** Recebe o vídeo enviado (ou vazio ao remover) do `<app-video-upload>`. */
+  onVideo(v: { url: string; key: string }) {
+    this.videoUrl = v.url;
+    this.videoKey = v.key;
+  }
+
   onPrecoInput(valor: string) {
     this.preco = maskBRL(valor);
   }
@@ -141,6 +152,8 @@ export class CriarProdutoComponent implements OnInit {
       description: this.descricao.trim() || undefined,
       imageUrl: this.imageUrl || undefined,
       imageKey: this.imageKey || undefined,
+      videoUrl: this.videoUrl || undefined,
+      videoKey: this.videoKey || undefined,
     };
 
     this.salvando = true;

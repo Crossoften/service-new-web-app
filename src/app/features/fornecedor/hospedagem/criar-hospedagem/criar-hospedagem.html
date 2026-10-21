@@ -102,6 +102,9 @@
           </label>
         </div>
 
+        <!-- VÍDEO (opcional) -->
+        <app-video-upload [url]="videoUrl" (changed)="onVideo($event)" label="Vídeo da hospedagem (opcional)"></app-video-upload>
+
         @if (erro) {
           <span class="ch-erro">{{ erro }}</span>
         }

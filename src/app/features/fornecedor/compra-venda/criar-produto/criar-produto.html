@@ -34,6 +34,9 @@
           </label>
         </div>
 
+        <!-- VÍDEO (opcional) -->
+        <app-video-upload [url]="videoUrl" (changed)="onVideo($event)" label="Vídeo do produto (opcional)"></app-video-upload>
+
         <!-- CATEGORIA -->
         <div class="cp-field">
           <label>Categoria</label>

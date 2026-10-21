@@ -38,6 +38,7 @@ export interface ProductListItemDto {
   price: string;
   description?: string;
   imageUrl?: string;
+  videoUrl?: string;
   isActive: boolean;
   category: ProductListCategoryDto;
   user: ProductListOwnerDto;
@@ -64,6 +65,8 @@ export interface ProductDto {
   description?: string;
   imageUrl?: string;
   imageKey?: string;
+  videoUrl?: string;
+  videoKey?: string;
   isActive: boolean;
   categoryId: number;
   category: ProductCategoryDto;
@@ -86,6 +89,8 @@ export interface CreateProductDto {
   description?: string;
   imageUrl?: string;
   imageKey?: string;
+  videoUrl?: string;
+  videoKey?: string;
   isActive?: boolean;
 }
 

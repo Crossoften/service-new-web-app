@@ -27,6 +27,12 @@
         }
       </div>
 
+      @if (produto.videoUrl) {
+        <div style="padding:12px 16px 0">
+          <video [src]="produto.videoUrl" controls playsinline style="width:100%;max-height:260px;border-radius:12px;background:#000"></video>
+        </div>
+      }
+
       <div class="da-info">
         <h2 class="da-info__nome">{{ produto.name }}</h2>
         <span class="da-info__preco">{{ formatarPreco(produto.price) }}</span>
