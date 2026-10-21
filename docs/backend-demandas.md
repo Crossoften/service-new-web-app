@@ -10,12 +10,14 @@
 
 ---
 
-## 📌 Pendências abertas — topo vivo (atualizado 2026-10-20)
+## 📌 Pendências abertas — topo vivo (atualizado 2026-10-21)
 
 > **Update do back em 19/10** (branch `ajustes-gerais`, commit `05ad788`; `swagger.json` + `ORIENTACOESFRONT.md`
-> atualizados): **todos os bloqueios de backend foram resolvidos ou já estão no contrato.** O que resta agora é
-> **implementação no front** (contrato pronto) + **1 item de ops**. As seções **BE-01…BE-13** mais abaixo são
-> **históricas** (já entregues); ficam como registro.
+> atualizados): **todos os bloqueios de backend foram resolvidos ou já estão no contrato.**
+>
+> **Update do front em 21/10:** as **4 fatias de front** do contrato de 19/10 estão **todas entregues e verdes**
+> (ver tabela abaixo). **Não resta item de front conhecido** — só o item de ops **SEC-1**. As seções
+> **BE-01…BE-13** mais abaixo são **históricas** (já entregues); ficam como registro.
 
 ### ✅ Resolvido no back (não bloqueia mais)
 
@@ -28,14 +30,14 @@
 | **BE-ROUTE-1** | **Não era bug de back.** O artefato `swagger.json` exportado não aplicava o `setGlobalPrefix` → dizia `/subscriptions/catalog` em vez de `/v1/subscriptions/catalog`. O swagger novo já traz o prefixo `/v1` nas 195 rotas. |
 | **BE-W1 / BE-W7 / BE-CHAT-1 / BE-Q5** | **Já estavam no contrato** (garantia-execução + contador; chat no Budget; inbox/não-lidos). Prontos para o front consumir. |
 
-### 🟢 Agora é implementação no **front** (contrato pronto)
+### ✅ Front entregue (contrato de 19/10 — auditado e verde em 21/10)
 
-| Fatia | O quê | Observação |
+| Fatia | O quê | Onde ficou |
 |---|---|---|
-| **U3d — vídeo em anúncios** | Upload + exibição de vídeo no cadastro de produto, hospedagem e transporte (campos `videoUrl/videoKey`). | Upload de vídeo já existe (`UploadService.enviarVideo`); é plugar nas 3 telas de cadastro + exibir. |
-| **Garantia — execução + contador** | Fluxo do *reparo de garantia* (Work vinculado) + contador de garantias no perfil do fornecedor. | Contrato BE-W1/W7 disponível; auditar o shape real no swagger novo antes. |
-| **Chat pré-aceite** | Chat no nível do orçamento (Budget), antes do aceite. | Contrato BE-CHAT-1 disponível; auditar `ChatContextType`/rotas. |
-| **BE-Q5 (inbox)** | Conferir se há tela de inbox além do badge de não-lidos já consumido. | Auditar o que o back expõe hoje. |
+| **U3d — vídeo em anúncios** | Upload + exibição de vídeo no cadastro de produto, hospedagem e transporte (`videoUrl/videoKey`). | `VideoUploadComponent` nas 3 telas de cadastro + exibição nos 4 detalhes. |
+| **Garantia — execução + contador (BE-W1/W7)** | Reparo de garantia como `Work` vinculado (`isWarranty`/`parentWorkId`/`warrantyWorks`) + contador no perfil. | Badge "Garantia" em lista e detalhe (cliente e fornecedor); link original↔reparo; reparo esconde pagar/adicional e bloqueia garantia-de-garantia; `budgetId` tratado como opcional; contador `warrantiesCompleted/warrantiesTotal` ("X de Y atendidas") em `perfil` e `detalhes-prestador`. |
+| **Chat pré-aceite (BE-CHAT-1)** | Chat no nível do orçamento (Budget), antes do aceite. | `budget.chat.id` mapeado para `chatId` nos 4 mapeadores; botão de chat em `aprovar-orcamento` (cliente), `fazer-orcamento` e `orcamentos-fornecedor` (fornecedor); mesma sala no Budget e no Work (`budget.chat.id === work.chat.id`). |
+| **BE-Q5 (inbox)** | Inbox de conversas além do badge de não-lidos. | Tela `/mensagens` (`MensagensComponent`) consome `GET /chats` via `ChatService.inbox()` e abre `/chat/:id`; badge `unread-count` via `ChatUnreadStore` em bottom-nav, hub, home, atividade e mensagens. |
 
 ### ⏳ Pendente (ops — fora do código)
 
