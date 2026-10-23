@@ -4,12 +4,14 @@
  */
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:8000/v1',
+  // {BASE}/v1 (§0.1) — o `/v1` é obrigatório; só o host varia. Alternativas:
+  //   navegador da mesma máquina da API: http://localhost:8000/v1
+  //   homologação: https://homolog.crosoften.com:8029/v1
+  // ⚠️ IP de rede é DHCP e muda sozinho — erro de conexão? confira o IP primeiro.
+  apiBaseUrl: 'http://192.168.1.3:8000/v1',
   /**
    * Bypass TEMPORÁRIO da verificação de conta (verify-code) — ver BE-Q1.
    * Ativo em desenvolvimento enquanto o back-end não envia o email do código.
-   * apiBaseUrl: http://localhost:3000/v1
-   * apiBaseUrl: 'https://homolog.crosoften.com:8029/v1',
    */
   bypassVerifyCode: true,
   /** Chave do Google Maps JavaScript API (Fase 8.4). Vazia = mapa desabilitado. */

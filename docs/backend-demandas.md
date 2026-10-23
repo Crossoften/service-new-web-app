@@ -10,7 +10,7 @@
 
 ---
 
-## 📌 Pendências abertas — topo vivo (atualizado 2026-10-21)
+## 📌 Pendências abertas — topo vivo (atualizado 2026-10-23)
 
 > **Update do back em 19/10** (branch `ajustes-gerais`, commit `05ad788`; `swagger.json` + `ORIENTACOESFRONT.md`
 > atualizados): **todos os bloqueios de backend foram resolvidos ou já estão no contrato.**
@@ -18,6 +18,15 @@
 > **Update do front em 21/10:** as **4 fatias de front** do contrato de 19/10 estão **todas entregues e verdes**
 > (ver tabela abaixo). **Não resta item de front conhecido** — só o item de ops **SEC-1**. As seções
 > **BE-01…BE-13** mais abaixo são **históricas** (já entregues); ficam como registro.
+>
+> **Varredura do §8 em 23/10:** auditei o `ORIENTACOESFRONT.md` §8.1–8.14 inteiro contra o código. **Todos os
+> fluxos de cliente / fornecedor / entregador estão implementados e batem com o contrato** (8.5 carteira/repasse
+> do entregador, 8.6 maquininha, 8.7 estorno `Refunded`, 8.8 orçamento aceite/recusa/sem-preço, 8.9 sacola
+> agendamento/gorjeta/cupom, 8.10 push, 8.11 garantia, 8.12 chat, 8.14 upload). O único conjunto faltante são as
+> **telas de admin** (`admin-delivery-payouts`, `admin-delivery-fees`, `admin-categories`, `admin-coupons`,
+> `admin-providers/:id/subscriptions/grant`) — **decidido 23/10: admin é app separado, fora do escopo deste PWA.**
+> Divergência de doc localizada: §8.6 cita `confirm-cash-payment`, mas swagger e código usam o correto
+> `confirm-payment` (código certo, doc com typo).
 
 ### ✅ Resolvido no back (não bloqueia mais)
 
@@ -42,6 +51,13 @@
 ### ⏳ Pendente (ops — fora do código)
 
 - **SEC-1** — restringir a chave do Google Maps no GCP (referrer HTTP + por API; chave por ambiente). *Segue pendente do lado do cliente/DevOps.*
+
+### 🚪 Fora do escopo deste front (app separado)
+
+- **Área de admin / back-office** — repasses (`admin-delivery-payouts`), taxas de entrega (`admin-delivery-fees`),
+  categorias (`admin-categories` + upload de imagem), cupons (`admin-coupons`), concessão de assinatura
+  (`admin-providers/:id/subscriptions/grant`). *Decidido 23/10: vive em outro projeto; este PWA é só
+  cliente/fornecedor/entregador.*
 
 > ✅ **Já entregue e em produção** (não refazer): domínios de delivery/aluguel/transporte/hospedagem/empregos, Mercado Pago (vínculo + pagamento), fase Mapa (coordenadas + rastreamento), seeds de categorias (BE-Q9), estorno/`Refunded`, maquininha própria, Pix no cadastro bancário, push/VAPID.
 
