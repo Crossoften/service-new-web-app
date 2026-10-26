@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from './api';
 import {
-  ChatContextType,
   ChatInboxItemDto,
   CreateChatMessageDto,
   ResponseFindChatMessagesDto,
@@ -78,10 +77,5 @@ export class ChatService {
   /** Marca o chat como lido — `PATCH /v1/chats/{id}/read`. */
   marcarLido(id: number): Observable<unknown> {
     return this.api.patch(`/chats/${id}/read`, {});
-  }
-
-  /** Abre/recupera o chat a partir do contexto de negócio. */
-  abrirPorContexto(contextType: ChatContextType, referenceId: number): Observable<unknown> {
-    return this.api.get(`/chats/context/${contextType}/${referenceId}`);
   }
 }

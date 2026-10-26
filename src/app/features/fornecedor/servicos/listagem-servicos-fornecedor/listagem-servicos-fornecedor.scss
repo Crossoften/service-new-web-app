@@ -128,19 +128,6 @@
     color: var(--color-text);
     margin-top: 2px;
   }
-
-  &__stats {
-    display: flex;
-    gap: 8px;
-    margin-top: 2px;
-  }
-
-  &__stat {
-    font-size: 12px;
-    color: var(--color-gray-600);
-    &--like { color: #16A34A; }
-    &--dislike { color: #DC2626; }
-  }
 }
 
 .lsf-vazio {
