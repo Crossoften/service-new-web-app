@@ -4,7 +4,6 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { HomeComponent } from './home';
-import { SessionService } from '../../../core/services/session';
 
 describe('HomeComponent', () => {
   let component: HomeComponent;
@@ -85,13 +84,5 @@ describe('HomeComponent', () => {
     flushInit({ works: [work({ status: 'Finished' })], budgets: [budget({ status: 'Rejected' })] });
     expect(component.servicosAtivos).toBe(0);
     expect(component.servicoResumo).toBeUndefined();
-  });
-
-  it('sair() limpa a sessão', () => {
-    flushInit();
-    const session = TestBed.inject(SessionService);
-    session.setSession({ token: 't', userId: 1, profileType: 'Client', role: null });
-    component.sair();
-    expect(session.isAuthenticated()).toBe(false);
   });
 });

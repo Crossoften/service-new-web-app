@@ -1,7 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../../core/services/auth';
 import { ProfileService } from '../../../core/services/profile';
 import { DeliveryService } from '../../../core/services/delivery';
 import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../core/models/food-order';
@@ -29,15 +28,12 @@ const STATUS_LABEL: Record<FoodOrderStatus, string> = {
   styleUrl: './home.scss',
 })
 export class HomeComponent implements OnInit {
-  private readonly auth = inject(AuthService);
   private readonly profile = inject(ProfileService);
   private readonly delivery = inject(DeliveryService);
   private readonly works = inject(WorkService);
   private readonly budgets = inject(BudgetService);
   private readonly unread = inject(ChatUnreadStore);
   private readonly router = inject(Router);
-
-  devMenuAberto = false;
 
   // Identidade real do cliente (sem mock)
   nome = '';
@@ -161,21 +157,9 @@ export class HomeComponent implements OnInit {
     this.router.navigate(['/delivery/pedidos']);
   }
 
-  toggleDevMenu() {
-    this.devMenuAberto = !this.devMenuAberto;
-  }
-
   navegar(rota: string | null) {
     if (rota) {
-      this.devMenuAberto = false;
       this.router.navigate([rota]);
     }
-  }
-
-  /** Encerra a sessão e volta ao login (permite trocar de conta/perfil). */
-  sair() {
-    this.devMenuAberto = false;
-    this.auth.logout();
-    this.router.navigate(['/login']);
   }
 }

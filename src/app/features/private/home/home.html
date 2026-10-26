@@ -1,7 +1,7 @@
 <div class="page-container">
 
   <div class="home-header">
-    <div class="home-user" (click)="toggleDevMenu()">
+    <div class="home-user" (click)="navegar('/perfil')">
       <div class="home-avatar">
         <span>{{ inicial }}</span>
       </div>
@@ -17,35 +17,6 @@
       </svg>
     </button>
   </div>
-
-  <!-- DEV MENU -->
-  @if (devMenuAberto) {
-    <div class="dev-menu">
-      <p class="dev-menu__titulo">🛠 Atalhos Dev</p>
-      <div class="dev-menu__grid">
-        <button (click)="navegar('/perfil')">Perfil</button>
-        <button (click)="sair()">Sair (logout)</button>
-        <button (click)="navegar('/fornecedor/home')">Fornecedor</button>
-        <button (click)="navegar('/fornecedor/servicos')">Forn. Serviços</button>
-        <button (click)="navegar('/entregador/home')">Entregador</button>
-        <button (click)="navegar('/parceiro/home')">Parceiro</button>
-        <button (click)="navegar('/compra-vender/meus-produtos')">Meus Produtos (Venda)</button>
-        <button (click)="navegar('/compra-vender/negociacoes')">Negociações</button>
-        <button (click)="navegar('/aluguel/meus')">Meus Aluguéis</button>
-        <button (click)="navegar('/transporte/meus')">Meus Transportes</button>
-        <button (click)="navegar('/hospedagem/reservas')">Minhas Reservas</button>
-        <button (click)="navegar('/empregos/candidaturas')">Minhas Candidaturas</button>
-<!--    
-        <button (click)="navegar('/delivery')">Delivery</button>
-        <button (click)="navegar('/servicos')">Serviços</button>
-        <button (click)="navegar('/servicos/solicitacoes')">Solicitações</button>
-        <button (click)="navegar('/servicos/orcamentos')">Orçamentos</button>
-        <button (click)="navegar('/parceiro/mais')">Mais Parceiro</button>
-        <button (click)="navegar('/parceiro/saldo')">Saldo</button>
-      <button (click)="navegar('/cadastro/cliente')">Cad. Cliente</button> -->
-      </div>
-    </div>
-  }
 
   <div class="page-content">
 
