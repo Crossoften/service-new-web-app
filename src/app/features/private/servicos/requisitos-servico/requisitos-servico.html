@@ -67,12 +67,17 @@
     </div>
   </div>
 
-  <!-- FAB -->
-  <button class="requisitos-fab" (click)="adicionarArquivo()">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-  </button>
+  <!-- FAB — anexar imagem ou vídeo (vários: repetir) -->
+  <label class="requisitos-fab" [class.requisitos-fab--enviando]="enviandoArquivo" aria-label="Anexar imagem ou vídeo">
+    @if (enviandoArquivo) {
+      <span class="requisitos-fab__spinner">…</span>
+    } @else {
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    }
+    <input type="file" [accept]="anexoAccept" (change)="selecionarArquivo($event)" [disabled]="enviandoArquivo" hidden />
+  </label>
 
   <div class="requisitos-actions">
     <button class="requisitos-btn" (click)="confirmar()" [disabled]="enviando">

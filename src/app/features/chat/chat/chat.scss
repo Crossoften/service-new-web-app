@@ -108,6 +108,16 @@
   margin-top: 4px;
 }
 
+.chat-bolha__imagem {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
 // Botão de anexar vídeo no input do chat.
 .chat-input__anexo {
   flex-shrink: 0;

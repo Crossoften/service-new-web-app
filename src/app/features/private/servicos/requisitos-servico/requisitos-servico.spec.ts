@@ -7,6 +7,8 @@ import {
 } from '@angular/common/http/testing';
 
 import { RequisitosServicoComponent } from './requisitos-servico';
+import { ApiService } from '../../../../core/services/api';
+import { of } from 'rxjs';
 
 describe('RequisitosServicoComponent', () => {
   let component: RequisitosServicoComponent;
@@ -45,6 +47,22 @@ describe('RequisitosServicoComponent', () => {
     expect(reqs.length).toBe(2);
     expect(reqs[0].request.body.serviceId).toBe(1);
     expect(reqs[1].request.body.serviceId).toBe(2);
+    reqs.forEach((r) => r.flush({ message: 'ok', budget: { id: 1 } }));
+  });
+
+  it('anexa imagem (upload) e envia os files no orçamento', () => {
+    const api = TestBed.inject(ApiService);
+    vi.spyOn(api, 'uploadOne').mockReturnValue(of({ fileUrl: 'https://api/v1/files/a', fileKey: 'a' }));
+
+    component.selecionarArquivo({ target: { files: [new File(['x'], 'foto.png', { type: 'image/png' })], value: '' } } as unknown as Event);
+    expect(component.arquivos.length).toBe(1);
+    expect(component.arquivos[0].tipo).toBe('imagem');
+
+    component.descricao = 'Com anexo';
+    component.confirmar();
+    const reqs = httpMock.match((r) => r.url.endsWith('/budgets') && r.method === 'POST');
+    expect(reqs.length).toBe(2);
+    expect(reqs[0].request.body.files).toEqual([{ fileName: 'foto.png', fileUrl: 'https://api/v1/files/a', fileKey: 'a' }]);
     reqs.forEach((r) => r.flush({ message: 'ok', budget: { id: 1 } }));
   });
 });

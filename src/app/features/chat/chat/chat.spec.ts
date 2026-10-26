@@ -9,6 +9,7 @@ import {
 import { ChatComponent } from './chat';
 import { SessionService } from '../../../core/services/session';
 import { UploadService } from '../../../core/services/upload';
+import { ApiService } from '../../../core/services/api';
 import { of } from 'rxjs';
 
 describe('ChatComponent', () => {
@@ -102,6 +103,32 @@ describe('ChatComponent', () => {
       messages: [], currentPage: 1, totalPages: 1, totalRecords: 0,
     });
     expect(component.enviandoVideo).toBe(false);
+  });
+
+  it('ehImagem detecta pela extensão do arquivo/URL', () => {
+    flushCarga();
+    expect(component.ehImagem({ fileName: 'foto.png' } as never)).toBe(true);
+    expect(component.ehImagem({ fileUrl: 'https://api/v1/files/1-x.jpeg' } as never)).toBe(true);
+    expect(component.ehImagem({ fileName: 'v.mp4' } as never)).toBe(false);
+    expect(component.ehImagem({} as never)).toBe(false);
+  });
+
+  it('envia imagem como mensagem (uploadOne → POST com fileUrl/fileKey) e recarrega', () => {
+    flushCarga();
+    const api = TestBed.inject(ApiService);
+    vi.spyOn(api, 'uploadOne').mockReturnValue(of({ fileUrl: 'https://api/v1/files/img', fileKey: 'img' }));
+
+    const file = new File(['x'], 'foto.png', { type: 'image/png' });
+    component.selecionarImagem({ target: { files: [file], value: '' } } as unknown as Event);
+
+    const post = httpMock.expectOne((r) => r.url.endsWith('/chats/1/messages') && r.method === 'POST');
+    expect(post.request.body).toEqual({ message: undefined, fileName: 'foto.png', fileUrl: 'https://api/v1/files/img', fileKey: 'img' });
+    post.flush({});
+    httpMock.expectOne((r) => r.url.endsWith('/chats/1/messages') && r.method === 'GET').flush({
+      chat: { id: 1, contextType: 'Rental', referenceId: 5, createdAt: '', updatedAt: '' },
+      messages: [], currentPage: 1, totalPages: 1, totalRecords: 0,
+    });
+    expect(component.enviandoImagem).toBe(false);
   });
 
   it('recusa vídeo inválido no chat sem enviar', () => {

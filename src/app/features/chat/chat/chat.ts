@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ChatService } from '../../../core/services/chat';
 import { UploadService } from '../../../core/services/upload';
+import { ApiService } from '../../../core/services/api';
 import { VIDEO_ACCEPT } from '../../../core/models/upload';
 import { SessionService } from '../../../core/services/session';
 import { ChatMessageDto } from '../../../core/models/chat';
@@ -23,8 +24,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   private readonly session = inject(SessionService);
   private readonly route = inject(ActivatedRoute);
   private readonly uploads = inject(UploadService);
+  private readonly api = inject(ApiService);
 
   readonly videoAccept = VIDEO_ACCEPT;
+  readonly imageAccept = 'image/png,image/jpeg,image/webp,.heic,.heif';
 
   chatId = 0;
   outroNome = 'Conversa';
@@ -33,6 +36,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   carregando = false;
   enviando = false;
   enviandoVideo = false;
+  enviandoImagem = false;
   erro = '';
   private timer?: ReturnType<typeof setInterval>;
 
@@ -93,6 +97,47 @@ export class ChatComponent implements OnInit, OnDestroy {
   /** A mensagem carrega um vídeo? (pela extensão do arquivo/URL). */
   ehVideo(m: ChatMessageDto): boolean {
     return /\.(mp4|mov|webm|mkv|3gp)$/i.test(m.fileName ?? m.fileUrl ?? '');
+  }
+
+  /** A mensagem carrega uma imagem? (pela extensão do arquivo/URL). */
+  ehImagem(m: ChatMessageDto): boolean {
+    return /\.(png|jpe?g|webp|gif|heic|heif)$/i.test(m.fileName ?? m.fileUrl ?? '');
+  }
+
+  /** Seleciona e envia uma imagem como mensagem (`POST /upload/one-file`, HEIC→JPEG no ApiService). */
+  selecionarImagem(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || this.enviando || this.enviandoVideo || this.enviandoImagem) return;
+    this.erro = '';
+    this.enviandoImagem = true;
+    this.api.uploadOne(file).subscribe({
+      next: (res) => {
+        const texto = this.novaMensagem.trim();
+        this.chat
+          .enviar(this.chatId, {
+            message: texto || undefined,
+            fileName: file.name,
+            fileUrl: res.fileUrl,
+            fileKey: res.fileKey,
+          })
+          .pipe(finalize(() => (this.enviandoImagem = false)))
+          .subscribe({
+            next: () => {
+              this.novaMensagem = '';
+              this.carregar(true);
+            },
+            error: (err: ApiError) => {
+              this.erro = err?.message?.trim() ? err.message : 'Não foi possível enviar a imagem.';
+            },
+          });
+      },
+      error: (err: ApiError) => {
+        this.enviandoImagem = false;
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível enviar a imagem.';
+      },
+    });
   }
 
   /** Seleciona e envia um vídeo como mensagem (upload em 3 passos — §8.14). */
