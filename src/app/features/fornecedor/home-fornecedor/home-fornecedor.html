@@ -5,9 +5,13 @@
     <div style="width: 22px"></div>
     <div class="home-f-header__restaurante">
       <div class="home-f-header__logo">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M3 11l19-9-9 19-2-8-8-2z"/>
-        </svg>
+        @if (restaurante?.imageUrl) {
+          <img [src]="restaurante?.imageUrl" [alt]="restaurante?.name || 'Restaurante'" />
+        } @else {
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 11l19-9-9 19-2-8-8-2z"/>
+          </svg>
+        }
       </div>
       <div class="home-f-header__info">
         <span class="home-f-header__nome">{{ restaurante?.name ?? 'Meu restaurante' }}</span>
