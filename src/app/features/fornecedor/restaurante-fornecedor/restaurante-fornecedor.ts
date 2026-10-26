@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { finalize, timeout } from 'rxjs';
 import { FornecedorService } from '../../../core/services/fornecedor';
 import { DeliveryService } from '../../../core/services/delivery';
+import { CepService } from '../../../core/services/cep';
+import { ApiService } from '../../../core/services/api';
 import {
   RestaurantAddressDto,
   ResponseRestaurantCategoryDto,
@@ -13,6 +15,7 @@ import {
 import { ApiError } from '../../../core/models/common';
 import {
   Coordenadas,
+  EnderecoMapa,
   MapaEnderecoComponent,
 } from '../../../shared/components/mapa-endereco/mapa-endereco';
 
@@ -30,12 +33,17 @@ export class RestauranteFornecedorComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly fornecedorService = inject(FornecedorService);
   private readonly deliveryService = inject(DeliveryService);
+  private readonly cepService = inject(CepService);
+  private readonly api = inject(ApiService);
 
   restaurante: ResponseRestaurantDto | null = null;
   categorias: ResponseRestaurantCategoryDto[] = [];
 
   nome = '';
   descricao = '';
+  imageUrl = '';
+  imageKey = '';
+  enviandoFoto = false;
   categoriaId: number | null = null;
   categoriaAberta = false;
   aberto = true;
@@ -51,6 +59,8 @@ export class RestauranteFornecedorComponent implements OnInit {
   cepEnd = '';
   latEnd?: string;
   lngEnd?: string;
+  cepBuscando = false;
+  cepErro = '';
 
   carregando = false;
   carregandoCategorias = false;
@@ -115,6 +125,7 @@ export class RestauranteFornecedorComponent implements OnInit {
     this.restaurante = r;
     this.nome = r.name;
     this.descricao = r.description ?? '';
+    this.imageUrl = r.imageUrl ?? '';
     this.categoriaId = r.category?.id ?? this.categoriaId;
     this.aberto = r.isOpen;
     this.tempoMin = r.deliveryTimeMinMinutes;
@@ -180,6 +191,65 @@ export class RestauranteFornecedorComponent implements OnInit {
     this.lngEnd = c.longitude;
   }
 
+  /** Upload da foto do restaurante — `POST /upload/one-file` (HEIC→JPEG no ApiService). */
+  selecionarFoto(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.enviandoFoto = true;
+    this.erro = '';
+    this.api
+      .uploadOne(file)
+      .pipe(finalize(() => (this.enviandoFoto = false)))
+      .subscribe({
+        next: (res) => {
+          this.imageUrl = res.fileUrl;
+          this.imageKey = res.fileKey;
+        },
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível enviar a imagem.';
+        },
+      });
+  }
+
+  /** Preenche os campos de endereço a partir do resultado do Maps (§3.2). */
+  onEnderecoMapa(e: EnderecoMapa) {
+    if (e.street) this.ruaEnd = e.street;
+    if (e.number) this.numeroEnd = e.number;
+    if (e.neighborhood) this.bairroEnd = e.neighborhood;
+    if (e.city) this.cidadeEnd = e.city;
+    if (e.state) this.estadoEnd = e.state;
+    if (e.zipCode) this.cepEnd = e.zipCode;
+  }
+
+  /**
+   * Preenche rua/bairro/cidade/UF a partir do CEP (ViaCEP), no blur do campo.
+   * Mantém número e complemento para preenchimento manual (§3.1). CEP incompleto
+   * não faz nada; CEP inexistente ou serviço fora avisa sem bloquear o cadastro.
+   */
+  buscarCep() {
+    const digitos = this.cepEnd.replace(/\D/g, '');
+    if (digitos.length !== 8 || this.cepBuscando) return;
+    this.cepBuscando = true;
+    this.cepErro = '';
+    this.cepService
+      .buscar(this.cepEnd)
+      .then((end) => {
+        if (!end) {
+          this.cepErro = 'CEP não encontrado. Preencha o endereço manualmente.';
+          return;
+        }
+        if (end.street) this.ruaEnd = end.street;
+        if (end.neighborhood) this.bairroEnd = end.neighborhood;
+        if (end.city) this.cidadeEnd = end.city;
+        if (end.state) this.estadoEnd = end.state;
+      })
+      .catch(() => {
+        this.cepErro = 'Não foi possível consultar o CEP agora. Preencha o endereço manualmente.';
+      })
+      .finally(() => (this.cepBuscando = false));
+  }
+
   /** Monta o endereço só se houver algum campo preenchido; senão, não envia. */
   private montarEndereco(): RestaurantAddressDto | undefined {
     const address: RestaurantAddressDto = {
@@ -234,6 +304,8 @@ export class RestauranteFornecedorComponent implements OnInit {
         .atualizarRestaurante(this.restaurante.id, {
           name: this.nome.trim(),
           description: this.descricao.trim() || undefined,
+          imageUrl: this.imageUrl || undefined,
+          imageKey: this.imageKey || undefined,
           categoryId: this.categoriaId,
           isOpen: this.aberto,
           deliveryTimeMinMinutes: this.tempoMin ?? undefined,
@@ -254,6 +326,8 @@ export class RestauranteFornecedorComponent implements OnInit {
           name: this.nome.trim(),
           categoryId: this.categoriaId,
           description: this.descricao.trim() || undefined,
+          imageUrl: this.imageUrl || undefined,
+          imageKey: this.imageKey || undefined,
           deliveryTimeMinMinutes: this.tempoMin ?? undefined,
           deliveryTimeMaxMinutes: this.tempoMax ?? undefined,
           address: this.montarEndereco(),

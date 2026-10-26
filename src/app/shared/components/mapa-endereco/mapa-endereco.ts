@@ -19,6 +19,16 @@ export interface Coordenadas {
   longitude: string;
 }
 
+/** Endereço extraído do resultado do Places Autocomplete (§3.2). */
+export interface EnderecoMapa {
+  street: string;
+  number: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zipCode: string;
+}
+
 /**
  * Seletor de coordenadas no mapa (Fase 8.4). Busca por endereço (Places
  * Autocomplete), pino arrastável e clique no mapa. Emite `latitude/longitude`
@@ -42,6 +52,7 @@ export class MapaEnderecoComponent implements OnInit, OnDestroy {
   @Input() longitude?: string;
 
   @Output() coordenadas = new EventEmitter<Coordenadas>();
+  @Output() endereco = new EventEmitter<EnderecoMapa>();
 
   carregando = true;
   indisponivel = false;
@@ -92,17 +103,20 @@ export class MapaEnderecoComponent implements OnInit, OnDestroy {
 
     if (this.buscaRef) {
       this.autocomplete = new google.maps.places.Autocomplete(this.buscaRef.nativeElement, {
-        fields: ['geometry'],
+        fields: ['geometry', 'address_components'],
       });
       this.autocomplete.addListener('place_changed', () => {
         const place = this.autocomplete.getPlace();
         const loc = place?.geometry?.location;
-        if (!loc) return;
-        this.map.setCenter(loc);
-        this.map.setZoom(16);
-        this.marker.setPosition(loc);
-        this.marker.setVisible(true);
-        this.emitir(loc);
+        if (loc) {
+          this.map.setCenter(loc);
+          this.map.setZoom(16);
+          this.marker.setPosition(loc);
+          this.marker.setVisible(true);
+          this.emitir(loc);
+        }
+        const end = this.parseEndereco(place?.address_components);
+        if (end) this.endereco.emit(end);
       });
     }
   }
@@ -125,5 +139,26 @@ export class MapaEnderecoComponent implements OnInit, OnDestroy {
     this.latitude = latitude;
     this.longitude = longitude;
     this.coordenadas.emit({ latitude, longitude });
+  }
+
+  /**
+   * Extrai rua/número/bairro/cidade/UF/CEP dos `address_components` do Places.
+   * UF usa `short_name` (sigla). Retorna `null` se nada aproveitável veio.
+   */
+  private parseEndereco(components: any[] | undefined): EnderecoMapa | null {
+    if (!components?.length) return null;
+    const get = (type: string, short = false): string => {
+      const c = components.find((x) => x.types?.includes(type));
+      return c ? (short ? c.short_name : c.long_name) : '';
+    };
+    const endereco: EnderecoMapa = {
+      street: get('route'),
+      number: get('street_number'),
+      neighborhood: get('sublocality_level_1') || get('sublocality') || get('neighborhood'),
+      city: get('administrative_area_level_2') || get('locality'),
+      state: get('administrative_area_level_1', true),
+      zipCode: get('postal_code'),
+    };
+    return Object.values(endereco).some((v) => v) ? endereco : null;
   }
 }

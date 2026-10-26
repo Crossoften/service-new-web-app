@@ -21,6 +21,23 @@
         <p class="rest-msg">Carregando dados…</p>
       }
 
+      <!-- FOTO DO RESTAURANTE -->
+      <div class="rest-foto">
+        <div class="rest-foto__preview">
+          @if (imageUrl) {
+            <img [src]="imageUrl" alt="Foto do restaurante" />
+          } @else {
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+            </svg>
+          }
+        </div>
+        <label class="rest-foto__btn">
+          {{ enviandoFoto ? 'Enviando…' : (imageUrl ? 'Trocar imagem' : 'Escolher imagem') }}
+          <input type="file" accept="image/png,image/jpeg,image/webp,.heic,.heif" (change)="selecionarFoto($event)" hidden />
+        </label>
+      </div>
+
       <div class="rest-field">
         <label>Nome</label>
         <input type="text" placeholder="Nome do restaurante" [(ngModel)]="nome" />
@@ -68,7 +85,17 @@
 
       <div class="rest-field">
         <label>CEP</label>
-        <input type="tel" placeholder="00000-000" [(ngModel)]="cepEnd" />
+        <input
+          type="tel"
+          placeholder="00000-000"
+          maxlength="9"
+          [(ngModel)]="cepEnd"
+          (blur)="buscarCep()" />
+        @if (cepBuscando) {
+          <span class="rest-field__hint">Buscando endereço…</span>
+        } @else if (cepErro) {
+          <span class="rest-field__erro">{{ cepErro }}</span>
+        }
       </div>
       <div class="rest-field">
         <label>Rua</label>
@@ -100,7 +127,8 @@
         <app-mapa-endereco
           [latitude]="latEnd"
           [longitude]="lngEnd"
-          (coordenadas)="onCoordenadas($event)"></app-mapa-endereco>
+          (coordenadas)="onCoordenadas($event)"
+          (endereco)="onEnderecoMapa($event)"></app-mapa-endereco>
       </div>
 
       @if (modoEdicao) {

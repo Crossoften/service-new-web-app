@@ -31,6 +31,32 @@ describe('MapaEnderecoComponent', () => {
     expect(component.carregando).toBe(false);
   });
 
+  it('parseEndereco extrai rua/número/bairro/cidade/UF/CEP dos address_components (§3.2)', () => {
+    const components = [
+      { long_name: '1578', short_name: '1578', types: ['street_number'] },
+      { long_name: 'Avenida Paulista', short_name: 'Av. Paulista', types: ['route'] },
+      { long_name: 'Bela Vista', short_name: 'Bela Vista', types: ['sublocality_level_1', 'sublocality'] },
+      { long_name: 'São Paulo', short_name: 'São Paulo', types: ['administrative_area_level_2'] },
+      { long_name: 'São Paulo', short_name: 'SP', types: ['administrative_area_level_1'] },
+      { long_name: '01310-200', short_name: '01310-200', types: ['postal_code'] },
+    ];
+    const end = (component as unknown as { parseEndereco(c: unknown[]): unknown }).parseEndereco(components);
+    expect(end).toEqual({
+      street: 'Avenida Paulista',
+      number: '1578',
+      neighborhood: 'Bela Vista',
+      city: 'São Paulo',
+      state: 'SP',
+      zipCode: '01310-200',
+    });
+  });
+
+  it('parseEndereco retorna null quando não há components aproveitáveis', () => {
+    const parse = (component as unknown as { parseEndereco(c?: unknown[]): unknown }).parseEndereco;
+    expect(parse.call(component, undefined)).toBeNull();
+    expect(parse.call(component, [])).toBeNull();
+  });
+
   it('ngOnDestroy remove o .pac-container solto do body (fim da "linha")', () => {
     const pac = document.createElement('div');
     pac.className = 'pac-container';
