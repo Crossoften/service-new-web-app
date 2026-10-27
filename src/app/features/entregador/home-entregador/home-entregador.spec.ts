@@ -26,6 +26,16 @@ describe('HomeEntregadorComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('carrega nome e foto do perfil para o header (GET /profile/me)', () => {
+    component.carregarPerfil();
+    httpMock.expectOne((r) => r.url.endsWith('/profile/me')).flush({
+      id: 1, name: 'Carlos', email: 'c@e', role: null, profileType: 'Delivery', status: 'Active',
+      fileUrl: 'https://api/v1/files/foto.png', socialMedias: [], createdAt: '', updatedAt: '',
+    });
+    expect(component.nome).toBe('Carlos');
+    expect(component.fotoUrl).toBe('https://api/v1/files/foto.png');
+  });
+
   it('carrega a carteira (available em destaque) de /deliveries/me/earnings', () => {
     component.carregarGanhos();
     httpMock.expectOne((r) => r.url.endsWith('/deliveries/me/earnings')).flush({

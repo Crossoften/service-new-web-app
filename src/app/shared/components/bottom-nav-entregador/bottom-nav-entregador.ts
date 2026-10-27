@@ -2,7 +2,7 @@ import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
-export type TabEntregador = 'home' | 'trabalhos' | 'orcamentos' | 'perfil';
+export type TabEntregador = 'home' | 'trabalhos' | 'perfil';
 
 @Component({
   selector: 'app-bottom-nav-entregador',
@@ -19,7 +19,6 @@ export class BottomNavEntregadorComponent {
     const rotas: Record<TabEntregador, string> = {
       home:       '/entregador/home',
       trabalhos:  '/entregador/trabalhos',
-      orcamentos: '/entregador/orcamentos',
       perfil:     '/entregador/perfil',
     };
     this.router.navigate([rotas[tab]]);

@@ -63,6 +63,7 @@
 | **Serviços §2.2 — cliente responde** (27/10) | Encerrar a jornada do pedido de informações. | `aprovar-orcamento` exibe o thread `informationRequests` (pergunta do prestador) e, em `WaitingInformation`, oferece "Responder pelo chat" reusando a sala do orçamento (BE-CHAT-1). |
 | **Compra-venda / Aluguel — confirmação de recusa** (27/10) | Ação destrutiva sem confirmação (§5). | Novo componente compartilhado `ConfirmDialogComponent`; `negociacao-detalhe` e `aluguel-detalhe` pedem confirmação antes de recusar/cancelar (anti-clique-acidental); status terminal segue visível no detalhe. Justificativa estruturada depende de BE (BE-RENT-REJECT-1 / BE-COMM-REJECT-1). |
 | **Hospedagem / Transporte / Delivery — confirmação de recusa/cancelamento** (27/10) | Mesma ação destrutiva sem confirmação (§5). | `ConfirmDialogComponent` aplicado em `reserva-detalhe` (recusar/cancelar), `transporte-pedido-detalhe` (recusar cotação/cancelar), `detalhes-pedido-fornecedor` (recusar pedido = cancelar) e `status-pedido` (cancelar pedido do cliente). Cobertura de confirmação agora consistente em todas as categorias. |
+| **Entregador — ajustes de UI** (27/10) | Card roxo vazando; menu com rotas mortas; avatar não aparecia. | `he-carteira` ganhou o gutter lateral dos demais cards; removidos os itens de menu "Mais" e "Orçamentos" (rotas inexistentes), restando Home/Trabalhos/Perfil; header da `home-entregador` passou a carregar nome e foto reais via `GET /profile/me` (antes era placeholder fixo). Rota no mapa depende de `BE-DELIVERY-ROUTE-1`. |
 
 ### 🔧 Demandas de back abertas
 
@@ -87,6 +88,21 @@
   esse texto (tem `rejectedAt`, não o motivo). **Pedido:** retornar o motivo da recusa (ex.: `rejectReason`/`rejectMessage`)
   para exibir ao comprador no detalhe. **Enquanto não existir:** a recusa já ganhou **confirmação** (entregue); o motivo pode
   ser enviado pelo chat da negociação.
+
+- **BE-DELIVERY-ROUTE-1** 🔴 (27/10, entregador — rota no mapa) — **falta coordenada de coleta e de entrega para traçar a rota.**
+  Hoje a tela do entregador em corrida (`status-entrega`) mostra só um **placeholder** ("Mapa disponível em breve"); não há
+  rota no mapa. O entregador **já envia** a própria posição (`PATCH /v1/deliveries/{id}/location` → `currentLat/currentLng`),
+  mas os DTOs de entrega/pedido **não trazem os dois pontos da rota**:
+  - `ResponseDeliveryDto` tem só `currentLat/currentLng` (posição do entregador);
+  - `ResponseFoodOrderRestaurantDto` (coleta) e `ResponseFoodOrderUserDto`/endereço de entrega (destino) **não têm
+    `lat`/`lng` nem endereço**. O back **já conhece os dois pontos** (calcula o frete pela distância restaurante↔cliente),
+    só não os expõe.
+  **Pedido ao back:** incluir no `ResponseDeliveryDto` (ou no `ResponseFoodOrderDto`):
+  1. **Coleta (restaurante):** `pickupLat`/`pickupLng` (+ endereço legível, se possível).
+  2. **Entrega (cliente):** `dropoffLat`/`dropoffLng` (+ endereço de entrega legível).
+  Com isso o front traça a rota (Google Maps Directions: coleta → entrega) e sobrepõe o marcador vivo do entregador
+  (`currentLat/currentLng`, que já existe). **Depende também de ops (`SEC-1`)**: a chave do Google Maps precisa ter a
+  **Directions API** habilitada e restrita por ambiente. *Bloqueia a feature de rota do entregador.*
 
 > ✅ Serviços: `BE-SRV-URL-1` e `BE-SRV-MEDIA-1` **resolvidos** (ver tabela "Resolvido no back"). Sem demanda de serviços em aberto.
 
