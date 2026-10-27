@@ -13,13 +13,12 @@ import { AuthService } from '../../../core/services/auth';
 import { SessionService } from '../../../core/services/session';
 import { PushService } from '../../../core/services/push';
 import { ApiError } from '../../../core/models/common';
-import { BillingType } from '../../../core/models/enums';
 import { ResponseProfileDto } from '../../../core/models/profile';
 
 /**
- * Tela "Meu perfil": carrega `GET /profile/me`, edita dados/foto (`PATCH /profile/me`),
- * endereço (`PATCH /profile/me/address`) e — para fornecedor — o modelo de cobrança
- * (`PATCH /profile/me/billing-type`). Inclui logout.
+ * Tela "Meu perfil": carrega `GET /profile/me`, edita dados/foto (`PATCH /profile/me`)
+ * e endereço (`PATCH /profile/me/address`). Inclui logout. O modelo de cobrança não é
+ * escolha do fornecedor — definido pelo back —, então não aparece aqui.
  */
 @Component({
   selector: 'app-perfil',
@@ -64,13 +63,9 @@ export class PerfilComponent implements OnInit {
   latitude?: string;
   longitude?: string;
 
-  // Cobrança (fornecedor)
-  billingType: BillingType = 'None';
-
   carregando = false;
   salvandoDados = false;
   salvandoEndereco = false;
-  salvandoCobranca = false;
   erro = '';
   aviso = '';
 
@@ -125,7 +120,6 @@ export class PerfilComponent implements OnInit {
     this.cep = p.address?.zipCode ?? '';
     this.latitude = p.address?.latitude;
     this.longitude = p.address?.longitude;
-    this.billingType = p.billingType ?? 'None';
   }
 
   editarDados() {
@@ -249,24 +243,6 @@ export class PerfilComponent implements OnInit {
           this.erro = this.msg(err, 'Não foi possível salvar o endereço.');
         },
       });
-  }
-
-  selecionarCobranca(tipo: BillingType) {
-    if (this.billingType === tipo || this.salvandoCobranca) return;
-    this.erro = '';
-    this.aviso = '';
-    this.salvandoCobranca = true;
-    this.profileService.updateBillingType({ billingType: tipo }).subscribe({
-      next: (p) => {
-        this.salvandoCobranca = false;
-        this.aplicar(p);
-        this.aviso = 'Modelo de cobrança atualizado.';
-      },
-      error: (err: ApiError) => {
-        this.salvandoCobranca = false;
-        this.erro = this.msg(err, 'Não foi possível atualizar a cobrança.');
-      },
-    });
   }
 
   onFotoSelecionada(event: Event) {

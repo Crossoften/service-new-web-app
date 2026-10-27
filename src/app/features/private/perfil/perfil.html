@@ -185,30 +185,7 @@
         </div>
       }
 
-      <!-- COBRANÇA (fornecedor) -->
       @if (isSupplier) {
-        <div class="perfil-secao">
-          <span class="perfil-secao__titulo">Modelo de cobrança</span>
-          <p class="perfil-secao__hint">Como você prefere ser cobrado nas suas operações.</p>
-
-          <div class="perfil-billing">
-            <button
-              class="perfil-billing__opt"
-              [class.perfil-billing__opt--ativo]="billingType === 'Subscription'"
-              (click)="selecionarCobranca('Subscription')"
-              [disabled]="salvandoCobranca">
-              Assinatura
-            </button>
-            <button
-              class="perfil-billing__opt"
-              [class.perfil-billing__opt--ativo]="billingType === 'Commission'"
-              (click)="selecionarCobranca('Commission')"
-              [disabled]="salvandoCobranca">
-              Comissão
-            </button>
-          </div>
-        </div>
-
         <!-- CONTA DE RECEBIMENTO (fornecedor) -->
         <div class="perfil-secao">
           <span class="perfil-secao__titulo">Conta de recebimento</span>
