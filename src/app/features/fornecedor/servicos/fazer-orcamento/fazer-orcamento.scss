@@ -81,25 +81,53 @@
   flex-direction: column;
   gap: 8px;
   padding: 0 16px 12px;
+
+  &__titulo {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-gray-600);
+  }
 }
 
 .fo-arquivo {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
   background: var(--color-gray-100);
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: 10px 12px;
   font-size: 14px;
   color: var(--color-text);
+  text-decoration: none;
 
-  &__btn {
-    background: none;
-    border: none;
-    cursor: pointer;
+  &:active { opacity: 0.85; }
+
+  &__thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--color-gray-200);
+
+    &--icone {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-primary);
+    }
+  }
+
+  &__nome {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__abrir {
     color: var(--color-primary);
-    display: flex;
-    align-items: center;
+    flex-shrink: 0;
   }
 }
 

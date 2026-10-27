@@ -60,6 +60,11 @@ export class FazerOrcamentoComponent implements OnInit {
     this.diasAberto = !this.diasAberto;
     this.pagamentoAberto = false;
   }
+
+  /** O anexo do cliente é imagem? (para mostrar thumbnail; senão, ícone + abrir). */
+  ehImagem(nome: string): boolean {
+    return /\.(png|jpe?g|webp|gif|heic|heif)$/i.test(nome);
+  }
   togglePagamento() {
     this.pagamentoAberto = !this.pagamentoAberto;
     this.diasAberto = false;

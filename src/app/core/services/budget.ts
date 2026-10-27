@@ -21,7 +21,7 @@ export interface OrcamentoFornecedor {
   clienteFoto: string;
   descricao: string;
   distancia: string;
-  arquivos: { nome: string; tipo: string }[];
+  arquivos: { nome: string; tipo: string; url: string }[];
   /** Sala de chat do orçamento (BE-CHAT-1); ausente em orçamentos antigos. */
   chatId?: number;
 }
@@ -188,7 +188,7 @@ export class BudgetService {
       clienteFoto: b.requester?.fileUrl ?? '',
       descricao: b.description ?? '',
       distancia: '',
-      arquivos: (b.files ?? []).map((f) => ({ nome: f.fileName, tipo: f.type })),
+      arquivos: (b.files ?? []).map((f) => ({ nome: f.fileName, tipo: f.type, url: f.fileUrl })),
       chatId: b.chat?.id,
     };
   }

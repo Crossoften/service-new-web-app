@@ -42,20 +42,28 @@
       </div>
 
       <!-- ARQUIVOS DO CLIENTE -->
-      <div class="fo-arquivos">
-        @for (arquivo of orcamento.arquivos; track arquivo.nome) {
-          <div class="fo-arquivo">
-            <span>{{ arquivo.nome }}</span>
-            <button class="fo-arquivo__btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="8 12 12 16 16 12"/>
-                <line x1="12" y1="8" x2="12" y2="16"/>
+      @if (orcamento.arquivos.length) {
+        <div class="fo-arquivos">
+          <span class="fo-arquivos__titulo">Anexos do cliente</span>
+          @for (arquivo of orcamento.arquivos; track arquivo.url) {
+            <a class="fo-arquivo" [href]="arquivo.url" target="_blank" rel="noopener" [title]="arquivo.nome">
+              @if (ehImagem(arquivo.nome)) {
+                <img class="fo-arquivo__thumb" [src]="arquivo.url" [alt]="arquivo.nome" />
+              } @else {
+                <span class="fo-arquivo__thumb fo-arquivo__thumb--icone">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                  </svg>
+                </span>
+              }
+              <span class="fo-arquivo__nome">{{ arquivo.nome }}</span>
+              <svg class="fo-arquivo__abrir" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
               </svg>
-            </button>
-          </div>
-        }
-      </div>
+            </a>
+          }
+        </div>
+      }
     }
 
     <div class="fo-divider"></div>

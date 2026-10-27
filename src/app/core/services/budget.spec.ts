@@ -52,6 +52,21 @@ describe('BudgetService — chat do orçamento (BE-CHAT-1)', () => {
     expect((vm as { chatId?: number }).chatId).toBe(55);
   });
 
+  it('detalhe (fornecedor) expõe os anexos do cliente com url (ver/baixar)', () => {
+    let vm: unknown;
+    service.orcamentoFornecedor(9).subscribe((o) => (vm = o));
+    httpMock.expectOne((r) => r.url.endsWith('/budgets/9')).flush(
+      budget({
+        files: [
+          { id: 1, fileName: 'foto.png', fileUrl: 'https://api/v1/files/foto', fileKey: 'foto', type: 'Request', createdAt: '', updatedAt: '' },
+        ],
+      }),
+    );
+    expect((vm as { arquivos: { nome: string; tipo: string; url: string }[] }).arquivos).toEqual([
+      { nome: 'foto.png', tipo: 'Request', url: 'https://api/v1/files/foto' },
+    ]);
+  });
+
   it('lista (fornecedor) expõe chatId', () => {
     let vm: unknown;
     service.recebidos().subscribe((l) => (vm = l));
