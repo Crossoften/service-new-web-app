@@ -4,7 +4,9 @@ import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { EntregadorService } from '../../../core/services/entregador';
 import { DeliveryStatus, ResponseDeliveryDto } from '../../../core/models/delivery';
+import { ResponseFoodOrderAddressDto } from '../../../core/models/food-order';
 import { ApiError } from '../../../core/models/common';
+import { MapaRotaComponent } from '../../../shared/components/mapa-rota/mapa-rota';
 
 interface EtapaEntrega {
   id: DeliveryStatus;
@@ -26,7 +28,7 @@ const STATUS_INDEX: Record<DeliveryStatus, number> = {
 
 @Component({
   selector: 'app-status-entrega',
-  imports: [CommonModule],
+  imports: [CommonModule, MapaRotaComponent],
   templateUrl: './status-entrega.html',
   styleUrl: './status-entrega.scss',
 })
@@ -103,6 +105,29 @@ export class StatusEntregaComponent implements OnInit, OnDestroy {
 
   get pagamento(): string {
     return this.entrega?.foodOrder?.paymentMethod ?? '';
+  }
+
+  // ── Rota (coleta → entrega) ───────────────────────────────────────────────
+
+  get coletaAddr(): ResponseFoodOrderAddressDto | undefined {
+    return this.entrega?.foodOrder?.restaurant?.address;
+  }
+
+  get entregaAddr(): ResponseFoodOrderAddressDto | undefined {
+    return this.entrega?.foodOrder?.deliveryAddress;
+  }
+
+  /** Só há rota quando coleta e entrega têm coordenada (podem faltar — §BE 27/10). */
+  get temRota(): boolean {
+    const c = this.coletaAddr;
+    const e = this.entregaAddr;
+    return !!(c?.latitude && c?.longitude && e?.latitude && e?.longitude);
+  }
+
+  enderecoLinha(a?: ResponseFoodOrderAddressDto): string {
+    if (!a) return '';
+    const cidade = a.city ? a.city + (a.state ? '/' + a.state : '') : '';
+    return [a.street, a.number, a.neighborhood, cidade].filter(Boolean).join(', ');
   }
 
   get cancelado(): boolean {

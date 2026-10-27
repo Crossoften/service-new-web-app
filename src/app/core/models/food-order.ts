@@ -54,11 +54,29 @@ export interface CreateFoodOrderDto {
 
 // ── Resposta / detalhe ───────────────────────────────────────────────────────
 
+/**
+ * Endereço de coleta (restaurante) ou entrega (cliente). `latitude`/`longitude`
+ * vêm em **texto** e são **opcionais** — endereço antigo pode não ter coordenada
+ * (nesse caso o campo vem ausente; nunca `0`). A tela trata a ausência.
+ */
+export interface ResponseFoodOrderAddressDto {
+  street?: string;
+  number?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  latitude?: string;
+  longitude?: string;
+}
+
 export interface ResponseFoodOrderRestaurantDto {
   id: number;
   name: string;
   imageUrl?: string;
   userId: number;
+  /** Endereço do restaurante = ponto de COLETA (BE 27/10). */
+  address?: ResponseFoodOrderAddressDto;
 }
 
 export interface ResponseFoodOrderUserDto {
@@ -112,6 +130,8 @@ export interface ResponseFoodOrderDto {
   chatRoomId: number;
   restaurant: ResponseFoodOrderRestaurantDto;
   customer: ResponseFoodOrderUserDto;
+  /** Endereço de ENTREGA (cliente) = destino da rota (BE 27/10). */
+  deliveryAddress?: ResponseFoodOrderAddressDto;
   items: ResponseFoodOrderItemDto[];
   delivery?: ResponseFoodOrderDeliveryDto;
   acceptedAt?: string;

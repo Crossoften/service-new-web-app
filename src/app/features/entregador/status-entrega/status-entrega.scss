@@ -89,6 +89,37 @@
     color: var(--color-gray-400);
 
     span { font-size: 12px; }
+    small { font-size: 11px; opacity: 0.7; }
+  }
+}
+
+.se-enderecos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 16px 12px;
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+
+.se-endereco {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-transform: uppercase;
+  }
+
+  &__texto {
+    font-size: 13px;
+    color: var(--color-text);
+    line-height: 1.4;
   }
 }
 

@@ -27,19 +27,24 @@
     </button>
   </div>
 
-  <!-- MAPA / GPS -->
+  <!-- MAPA / ROTA (coleta → entrega) -->
   <div class="se-mapa">
-    <div class="se-mapa__placeholder">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-        <circle cx="12" cy="10" r="3"/>
-      </svg>
-      @if (gpsAtivo) {
-        <span>Enviando sua localização…</span>
-      } @else {
-        <span>Mapa disponível em breve</span>
-      }
-    </div>
+    @if (temRota) {
+      <app-mapa-rota
+        [coletaLat]="coletaAddr?.latitude" [coletaLng]="coletaAddr?.longitude"
+        [entregaLat]="entregaAddr?.latitude" [entregaLng]="entregaAddr?.longitude"
+        [entregadorLat]="entrega?.currentLat" [entregadorLng]="entrega?.currentLng">
+      </app-mapa-rota>
+    } @else {
+      <div class="se-mapa__placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <span>Rota no mapa indisponível (endereço sem coordenadas)</span>
+        @if (gpsAtivo) { <small>Enviando sua localização…</small> }
+      </div>
+    }
   </div>
 
   <div class="page-content">
@@ -69,6 +74,24 @@
           }
         </div>
       </div>
+
+      <!-- ENDEREÇOS (coleta e entrega) -->
+      @if (enderecoLinha(coletaAddr) || enderecoLinha(entregaAddr)) {
+        <div class="se-enderecos">
+          @if (enderecoLinha(coletaAddr)) {
+            <div class="se-endereco">
+              <span class="se-endereco__label">Coleta</span>
+              <span class="se-endereco__texto">{{ enderecoLinha(coletaAddr) }}</span>
+            </div>
+          }
+          @if (enderecoLinha(entregaAddr)) {
+            <div class="se-endereco">
+              <span class="se-endereco__label">Entrega</span>
+              <span class="se-endereco__texto">{{ enderecoLinha(entregaAddr) }}</span>
+            </div>
+          }
+        </div>
+      }
 
       @if (cancelado) {
         <div class="se-cancelado"><strong>Entrega cancelada</strong></div>
