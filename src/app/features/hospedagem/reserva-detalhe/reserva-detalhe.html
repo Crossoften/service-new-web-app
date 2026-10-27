@@ -46,16 +46,28 @@
   @if (reserva) {
     <div class="rd-actions">
       @if (podeResponder) {
-        <button class="rd-btn rd-btn--ghost" (click)="recusar()" [disabled]="processando">RECUSAR</button>
+        <button class="rd-btn rd-btn--ghost" (click)="pedirRecusa()" [disabled]="processando">RECUSAR</button>
         <button class="rd-btn" (click)="confirmar()" [disabled]="processando">CONFIRMAR</button>
       } @else if (podeCheckIn) {
         <button class="rd-btn" (click)="checkIn()" [disabled]="processando">REGISTRAR CHECK-IN</button>
       } @else if (podeConcluir) {
         <button class="rd-btn" (click)="concluir()" [disabled]="processando">CONCLUIR</button>
       } @else if (podeCancelar) {
-        <button class="rd-btn rd-btn--ghost" (click)="cancelar()" [disabled]="processando">CANCELAR</button>
+        <button class="rd-btn rd-btn--ghost" (click)="pedirCancelamento()" [disabled]="processando">CANCELAR</button>
       }
     </div>
   }
+
+  <app-confirm-dialog
+    [aberto]="confirmacao !== null"
+    [titulo]="confirmacao === 'recusar' ? 'Recusar reserva' : 'Cancelar reserva'"
+    [mensagem]="confirmacao === 'recusar'
+      ? 'Tem certeza que deseja recusar esta solicitação de reserva? Esta ação não pode ser desfeita.'
+      : 'Tem certeza que deseja cancelar esta reserva? Esta ação não pode ser desfeita.'"
+    [confirmarLabel]="confirmacao === 'recusar' ? 'Recusar' : 'Cancelar reserva'"
+    [processando]="processando"
+    (confirmar)="confirmarAcao()"
+    (fechar)="fecharConfirmacao()">
+  </app-confirm-dialog>
 
 </div>

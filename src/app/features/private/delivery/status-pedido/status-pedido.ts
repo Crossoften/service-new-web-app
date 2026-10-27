@@ -7,6 +7,7 @@ import { DeliveryService } from '../../../../core/services/delivery';
 import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../../core/models/food-order';
 import { ApiError } from '../../../../core/models/common';
 import { MapaRastreioComponent } from '../../../../shared/components/mapa-rastreio/mapa-rastreio';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 
 interface EtapaStatus {
   id: string;
@@ -27,7 +28,7 @@ const STATUS_INDEX: Record<FoodOrderStatus, number> = {
 
 @Component({
   selector: 'app-status-pedido',
-  imports: [CommonModule, FormsModule, MapaRastreioComponent],
+  imports: [CommonModule, FormsModule, MapaRastreioComponent, ConfirmDialogComponent],
   templateUrl: './status-pedido.html',
   styleUrl: './status-pedido.scss',
 })
@@ -44,6 +45,7 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
   carregando = true;
   erro = '';
   cancelando = false;
+  confirmandoCancel = false;
   pagando = false;
   /** Pedido liquidado fora da plataforma (maquininha do restaurante, §8.6): pago na entrega. */
   pagamentoNaEntrega = false;
@@ -206,6 +208,20 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
   /** 400 do `/pay` por pedido liquidado fora da plataforma (maquininha do restaurante, §8.6). */
   private ehPagamentoNaMaquininha(err: ApiError): boolean {
     return err?.status === 400 && /maquin|na entrega|fora da plataforma|estabelecimento/i.test(err?.message ?? '');
+  }
+
+  /** Cancelar é irreversível: pede confirmação antes (§5). */
+  pedirCancelamento() {
+    if (this.cancelando || !this.podeCancelar) return;
+    this.erro = '';
+    this.confirmandoCancel = true;
+  }
+  fecharConfirmacao() {
+    if (!this.cancelando) this.confirmandoCancel = false;
+  }
+  confirmarCancelamento() {
+    this.confirmandoCancel = false;
+    this.cancelar();
   }
 
   cancelar() {

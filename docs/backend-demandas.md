@@ -62,6 +62,7 @@
 | **Serviços §2.1 — fornecedor pede info** (27/10) | Feedback ao pedir mais informações. | `fazer-orcamento`: valida mensagem, estado de envio (anti-duplo-clique), erro mantém o modal e o texto; no sucesso volta à lista com aviso "Solicitação de informações enviada ao cliente". |
 | **Serviços §2.2 — cliente responde** (27/10) | Encerrar a jornada do pedido de informações. | `aprovar-orcamento` exibe o thread `informationRequests` (pergunta do prestador) e, em `WaitingInformation`, oferece "Responder pelo chat" reusando a sala do orçamento (BE-CHAT-1). |
 | **Compra-venda / Aluguel — confirmação de recusa** (27/10) | Ação destrutiva sem confirmação (§5). | Novo componente compartilhado `ConfirmDialogComponent`; `negociacao-detalhe` e `aluguel-detalhe` pedem confirmação antes de recusar/cancelar (anti-clique-acidental); status terminal segue visível no detalhe. Justificativa estruturada depende de BE (BE-RENT-REJECT-1 / BE-COMM-REJECT-1). |
+| **Hospedagem / Transporte / Delivery — confirmação de recusa/cancelamento** (27/10) | Mesma ação destrutiva sem confirmação (§5). | `ConfirmDialogComponent` aplicado em `reserva-detalhe` (recusar/cancelar), `transporte-pedido-detalhe` (recusar cotação/cancelar), `detalhes-pedido-fornecedor` (recusar pedido = cancelar) e `status-pedido` (cancelar pedido do cliente). Cobertura de confirmação agora consistente em todas as categorias. |
 
 ### 🔧 Demandas de back abertas
 

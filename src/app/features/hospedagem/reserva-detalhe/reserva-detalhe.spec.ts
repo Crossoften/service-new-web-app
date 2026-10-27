@@ -50,6 +50,19 @@ describe('ReservaDetalheComponent', () => {
     expect(component.reserva?.status).toBe('Confirmed');
   });
 
+  it('recusa só efetiva após confirmação (§5)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/bookings/1')).flush(booking('Requested'));
+    component.pedirRecusa();
+    expect(component.confirmacao).toBe('recusar');
+    httpMock.expectNone((r) => r.url.endsWith('/bookings/1/respond'));
+    component.confirmarAcao();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/bookings/1/respond'));
+    expect(req.request.body.status).toBe('Rejected');
+    req.flush(booking('Rejected'));
+    expect(component.confirmacao).toBeNull();
+    expect(component.reserva?.status).toBe('Rejected');
+  });
+
   function booking(status: string) {
     return {
       id: 1, status, checkIn: '', checkOut: '', guests: 2, totalValue: '960.00', chatRoomId: 9,

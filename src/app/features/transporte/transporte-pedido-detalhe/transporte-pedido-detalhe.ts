@@ -7,10 +7,11 @@ import { TransportService } from '../../../core/services/transport';
 import { SessionService } from '../../../core/services/session';
 import { TransportRequestDto } from '../../../core/models/transport-request';
 import { ApiError } from '../../../core/models/common';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-transporte-pedido-detalhe',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConfirmDialogComponent],
   templateUrl: './transporte-pedido-detalhe.html',
   styleUrl: './transporte-pedido-detalhe.scss',
 })
@@ -26,6 +27,9 @@ export class TransportePedidoDetalheComponent implements OnInit {
   processando = false;
   erro = '';
   valorCotacao?: number;
+
+  /** Ação destrutiva aguardando confirmação (null = nenhuma). */
+  confirmacao: 'recusar' | 'cancelar' | null = null;
 
   ngOnInit() {
     this.id = Number(this.route.snapshot.paramMap.get('id'));
@@ -88,6 +92,26 @@ export class TransportePedidoDetalheComponent implements OnInit {
   aceitar() {
     this.executar(this.transport.responder(this.id, { status: 'Accepted' }));
   }
+
+  /** Recusar e cancelar são irreversíveis: pedem confirmação antes de efetivar (§5). */
+  pedirRecusa() {
+    this.erro = '';
+    this.confirmacao = 'recusar';
+  }
+  pedirCancelamento() {
+    this.erro = '';
+    this.confirmacao = 'cancelar';
+  }
+  fecharConfirmacao() {
+    if (!this.processando) this.confirmacao = null;
+  }
+  confirmarAcao() {
+    const acao = this.confirmacao;
+    this.confirmacao = null;
+    if (acao === 'recusar') this.recusar();
+    else if (acao === 'cancelar') this.cancelar();
+  }
+
   recusar() {
     this.executar(this.transport.responder(this.id, { status: 'Rejected' }));
   }

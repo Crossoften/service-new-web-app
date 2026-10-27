@@ -111,7 +111,7 @@
         </button>
       }
       @if (podeResponder) {
-        <button class="pedido-f-btn pedido-f-btn--outline" (click)="recusar()" [disabled]="processando">RECUSAR</button>
+        <button class="pedido-f-btn pedido-f-btn--outline" (click)="pedirRecusa()" [disabled]="processando">RECUSAR</button>
         <button class="pedido-f-btn pedido-f-btn--primary" (click)="aceitar()" [disabled]="processando">ACEITAR</button>
       } @else if (podePreparar) {
         <button class="pedido-f-btn pedido-f-btn--primary" (click)="emPreparo()" [disabled]="processando">
@@ -122,5 +122,15 @@
       }
     </div>
   }
+
+  <app-confirm-dialog
+    [aberto]="confirmandoRecusa"
+    titulo="Recusar pedido"
+    mensagem="Tem certeza que deseja recusar este pedido? Ele será cancelado e esta ação não pode ser desfeita."
+    confirmarLabel="Recusar pedido"
+    [processando]="processando"
+    (confirmar)="confirmarRecusa()"
+    (fechar)="fecharConfirmacao()">
+  </app-confirm-dialog>
 
 </div>

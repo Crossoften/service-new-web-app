@@ -163,11 +163,21 @@
       <p class="status-maquininha">💳 Pagamento no cartão será na maquininha do restaurante, na entrega.</p>
     }
     @if (podeCancelar) {
-      <button class="status-btn status-btn--cancel" (click)="cancelar()" [disabled]="cancelando">
+      <button class="status-btn status-btn--cancel" (click)="pedirCancelamento()" [disabled]="cancelando">
         {{ cancelando ? 'CANCELANDO…' : 'CANCELAR PEDIDO' }}
       </button>
     }
     <button class="status-btn" (click)="ajuda()">AJUDA</button>
   </div>
+
+  <app-confirm-dialog
+    [aberto]="confirmandoCancel"
+    titulo="Cancelar pedido"
+    mensagem="Tem certeza que deseja cancelar este pedido? Esta ação não pode ser desfeita."
+    confirmarLabel="Cancelar pedido"
+    [processando]="cancelando"
+    (confirmar)="confirmarCancelamento()"
+    (fechar)="fecharConfirmacao()">
+  </app-confirm-dialog>
 
 </div>

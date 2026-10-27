@@ -64,16 +64,28 @@
       @if (podeCotar) {
         <button class="td-btn" (click)="cotar()" [disabled]="processando">ENVIAR COTAÇÃO</button>
       } @else if (podeResponder) {
-        <button class="td-btn td-btn--ghost" (click)="recusar()" [disabled]="processando">RECUSAR</button>
+        <button class="td-btn td-btn--ghost" (click)="pedirRecusa()" [disabled]="processando">RECUSAR</button>
         <button class="td-btn" (click)="aceitar()" [disabled]="processando">ACEITAR COTAÇÃO</button>
       } @else if (podeIniciar) {
         <button class="td-btn" (click)="iniciar()" [disabled]="processando">INICIAR TRANSPORTE</button>
       } @else if (podeEntregar) {
         <button class="td-btn" (click)="entregar()" [disabled]="processando">CONFIRMAR ENTREGA</button>
       } @else if (podeCancelar) {
-        <button class="td-btn td-btn--ghost" (click)="cancelar()" [disabled]="processando">CANCELAR</button>
+        <button class="td-btn td-btn--ghost" (click)="pedirCancelamento()" [disabled]="processando">CANCELAR</button>
       }
     </div>
   }
+
+  <app-confirm-dialog
+    [aberto]="confirmacao !== null"
+    [titulo]="confirmacao === 'recusar' ? 'Recusar cotação' : 'Cancelar transporte'"
+    [mensagem]="confirmacao === 'recusar'
+      ? 'Tem certeza que deseja recusar esta cotação? Esta ação não pode ser desfeita.'
+      : 'Tem certeza que deseja cancelar este transporte? Esta ação não pode ser desfeita.'"
+    [confirmarLabel]="confirmacao === 'recusar' ? 'Recusar' : 'Cancelar transporte'"
+    [processando]="processando"
+    (confirmar)="confirmarAcao()"
+    (fechar)="fecharConfirmacao()">
+  </app-confirm-dialog>
 
 </div>

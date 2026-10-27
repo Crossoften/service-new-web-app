@@ -55,6 +55,18 @@ describe('TransportePedidoDetalheComponent', () => {
     expect(component.pedido?.status).toBe('Quoted');
   });
 
+  it('recusa só efetiva após confirmação (§5)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/transport-requests/1')).flush(pedido('Quoted'));
+    component.pedirRecusa();
+    expect(component.confirmacao).toBe('recusar');
+    httpMock.expectNone((r) => r.url.endsWith('/transport-requests/1/respond'));
+    component.confirmarAcao();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/transport-requests/1/respond'));
+    expect(req.request.body.status).toBe('Rejected');
+    req.flush(pedido('Rejected'));
+    expect(component.confirmacao).toBeNull();
+  });
+
   function pedido(status: string) {
     return {
       id: 1, status, origin: 'A', destination: 'B', chatRoomId: 9,

@@ -79,6 +79,19 @@ describe('DetalhesPedidoFornecedorComponent', () => {
     expect(component.mostrarStatusPagamento).toBe(false);
   });
 
+  it('recusar só efetiva após confirmação (§5)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/food-orders/1')).flush(order({ status: 'Received' }));
+    component.pedirRecusa();
+    expect(component.confirmandoRecusa).toBe(true);
+    httpMock.expectNone((r) => r.url.endsWith('/food-orders/1/respond'));
+    component.confirmarRecusa();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/food-orders/1/respond') && r.method === 'PATCH');
+    expect(req.request.body.status).toBe('Cancelled');
+    req.flush(order({ status: 'Cancelled' }));
+    expect(component.confirmandoRecusa).toBe(false);
+    expect(component.pedido?.status).toBe('Cancelled');
+  });
+
   it('mostra os adicionais escolhidos em cada item (para a cozinha)', () => {
     httpMock.expectOne((r) => r.url.endsWith('/food-orders/1')).flush(
       order({

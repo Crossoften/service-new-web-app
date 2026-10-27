@@ -104,6 +104,19 @@ describe('StatusPedidoComponent', () => {
     expect(component.erro).toBe('');
   });
 
+  it('cancelar só efetiva após confirmação (§5)', () => {
+    component.pedidoId = 5;
+    component.pedido = pedido({ status: 'Received' });
+    component.pedirCancelamento();
+    expect(component.confirmandoCancel).toBe(true);
+    httpMock.expectNone((r) => r.url.endsWith('/food-orders/5/cancel'));
+    component.confirmarCancelamento();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/food-orders/5/cancel') && r.method === 'PATCH');
+    req.flush(pedido({ status: 'Cancelled' }));
+    expect(component.confirmandoCancel).toBe(false);
+    expect(component.pedido?.status).toBe('Cancelled');
+  });
+
   it('podeAvaliar só quando entregue e ainda não avaliou', () => {
     component.pedido = pedido({ status: 'OnTheWay' });
     expect(component.podeAvaliar).toBe(false);

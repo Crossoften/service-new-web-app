@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FornecedorService } from '../../../core/services/fornecedor';
 import { FoodOrderStatus, PAYMENT_METHOD_LABEL, ResponseFoodOrderDto } from '../../../core/models/food-order';
 import { ApiError } from '../../../core/models/common';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog';
 
 const STATUS_LABEL: Record<FoodOrderStatus, string> = {
   Received: 'Recebido',
@@ -16,7 +17,7 @@ const STATUS_LABEL: Record<FoodOrderStatus, string> = {
 
 @Component({
   selector: 'app-detalhes-pedido-fornecedor',
-  imports: [CommonModule],
+  imports: [CommonModule, ConfirmDialogComponent],
   templateUrl: './detalhes-pedido-fornecedor.html',
   styleUrl: './detalhes-pedido-fornecedor.scss',
 })
@@ -30,6 +31,8 @@ export class DetalhesPedidoFornecedorComponent implements OnInit {
   carregando = false;
   processando = false;
   erro = '';
+  /** Recusa aguardando confirmação (recusar cancela o pedido — irreversível). */
+  confirmandoRecusa = false;
 
   ngOnInit() {
     this.pedidoId = Number(this.route.snapshot.paramMap.get('id'));
@@ -113,6 +116,19 @@ export class DetalhesPedidoFornecedorComponent implements OnInit {
 
   aceitar() {
     this.responder('Accepted');
+  }
+
+  /** Recusar cancela o pedido (irreversível): pede confirmação antes (§5). */
+  pedirRecusa() {
+    this.erro = '';
+    this.confirmandoRecusa = true;
+  }
+  fecharConfirmacao() {
+    if (!this.processando) this.confirmandoRecusa = false;
+  }
+  confirmarRecusa() {
+    this.confirmandoRecusa = false;
+    this.recusar();
   }
 
   recusar() {
