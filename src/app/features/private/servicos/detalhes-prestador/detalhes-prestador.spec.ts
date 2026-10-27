@@ -66,4 +66,24 @@ describe('DetalhesPrestadorComponent', () => {
     expect(component.prestador?.garantiasTotais).toBe(7);
     expect(component.prestador?.naoAtendidas).toBe(2);
   });
+
+  it('mapeia vídeo e galeria do detalhe (BE-SRV-MEDIA-1)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/services/1')).flush(
+      service({
+        videoUrl: 'https://api/v1/files/v.mp4',
+        images: [
+          { id: 10, fileUrl: 'https://api/v1/files/a.jpg', fileKey: 'a', sortOrder: 0 },
+          { id: 11, fileUrl: 'https://api/v1/files/b.jpg', fileKey: 'b', sortOrder: 1 },
+        ],
+      }),
+    );
+    expect(component.prestador?.videoUrl).toBe('https://api/v1/files/v.mp4');
+    expect(component.prestador?.galeria.map((g) => g.id)).toEqual([10, 11]);
+  });
+
+  it('sem mídia: galeria vazia e vídeo ausente', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/services/1')).flush(service());
+    expect(component.prestador?.galeria).toEqual([]);
+    expect(component.prestador?.videoUrl).toBeUndefined();
+  });
 });

@@ -55,6 +55,9 @@ export interface Prestador {
   descricao: string;
   foto: string;
   imagem?: string;
+  /** Mídia do serviço (BE-SRV-MEDIA-1) — só vem no detalhe (`GET /services/{id}`). */
+  videoUrl?: string;
+  galeria: ServiceImageDto[];
   gostei: number;
   naoGostei: number;
   negociacoes: number;
@@ -186,6 +189,7 @@ export class ServiceCatalogService {
       profissao: s.name,
       descricao: s.description ?? '',
       foto: '',
+      galeria: [],
       gostei: s.positiveReviews,
       naoGostei: s.negativeReviews,
       negociacoes: s.completedWorks,
@@ -202,6 +206,8 @@ export class ServiceCatalogService {
     return {
       ...this.mapListItem(s),
       imagem: s.imageUrl,
+      videoUrl: s.videoUrl,
+      galeria: s.images ?? [],
       atendidas,
       naoAtendidas: Math.max(0, total - atendidas),
       garantiasTotais: total,

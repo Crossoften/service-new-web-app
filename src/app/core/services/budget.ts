@@ -222,6 +222,7 @@ export class BudgetService {
       profissao,
       descricao,
       foto: provider.fileUrl ?? '',
+      galeria: [],
       gostei: 0,
       naoGostei: 0,
       negociacoes: 0,

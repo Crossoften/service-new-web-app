@@ -27,6 +27,24 @@
 
   <div class="page-content">
 
+    <!-- VÍDEO DO SERVIÇO -->
+    @if (prestador?.videoUrl) {
+      <div class="detalhes-video">
+        <video [src]="prestador!.videoUrl" controls playsinline></video>
+      </div>
+    }
+
+    <!-- GALERIA -->
+    @if (prestador?.galeria?.length) {
+      <div class="detalhes-galeria">
+        @for (img of prestador!.galeria; track img.id) {
+          <div class="detalhes-galeria__item">
+            <img [src]="img.fileUrl" alt="Imagem do serviço" loading="lazy" />
+          </div>
+        }
+      </div>
+    }
+
     <!-- NOME + AÇÕES -->
     <div class="detalhes-info">
       <h1 class="detalhes-info__nome">{{ prestador?.nome }}</h1>
