@@ -36,9 +36,20 @@ describe('HubFornecedorComponent', () => {
 
   afterEach(() => httpMock.verify());
 
-  function flush(opts: { works?: unknown[]; budgets?: unknown[] } = {}) {
+  function flush(opts: {
+    works?: unknown[];
+    budgets?: unknown[];
+    bookings?: unknown[];
+    rentals?: unknown[];
+    transportRequests?: unknown[];
+    commercial?: unknown[];
+  } = {}) {
     httpMock.expectOne((r) => r.url.endsWith('/works') && r.method === 'GET').flush({ works: opts.works ?? [] });
     httpMock.expectOne((r) => r.url.endsWith('/budgets') && r.method === 'GET').flush({ budgets: opts.budgets ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/bookings') && r.method === 'GET').flush({ bookings: opts.bookings ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/rentals') && r.method === 'GET').flush({ rentals: opts.rentals ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/transport-requests') && r.method === 'GET').flush({ transportRequests: opts.transportRequests ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/commercial-transactions') && r.method === 'GET').flush({ transactions: opts.commercial ?? [] });
   }
 
   it('lista as verticais do fornecedor', () => {
@@ -98,5 +109,19 @@ describe('HubFornecedorComponent', () => {
     const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
     component.irMensagens();
     expect(nav).toHaveBeenCalledWith(['/mensagens']);
+  });
+
+  it('mostra pedidos recebidos em andamento (hospedagem) e ignora cancelados', () => {
+    flush({
+      bookings: [
+        { id: 1, status: 'Requested', accommodation: { id: 2, name: 'Pousada do Sol' } },
+        { id: 2, status: 'Cancelled', accommodation: { id: 3, name: 'Chalé' } },
+      ],
+    });
+    const hosp = component.atividades.find((a) => a.categoria === 'Hospedagem');
+    expect(hosp).toBeTruthy();
+    expect(hosp!.titulo).toBe('Reserva em andamento');
+    expect(hosp!.subtitulo).toBe('Pousada do Sol');
+    expect(component.atividades.length).toBe(1);
   });
 });

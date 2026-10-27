@@ -6,6 +6,10 @@ import { DeliveryService } from '../../../core/services/delivery';
 import { FoodOrderStatus, ResponseFoodOrderDto } from '../../../core/models/food-order';
 import { WorkService, Solicitacao } from '../../../core/services/work';
 import { BudgetService, Orcamento } from '../../../core/services/budget';
+import { AccommodationService } from '../../../core/services/accommodation';
+import { RentalService } from '../../../core/services/rental';
+import { TransportService } from '../../../core/services/transport';
+import { MarketplaceService } from '../../../core/services/marketplace';
 import { BottomNavClienteComponent } from '../../../shared/components/bottom-nav-cliente/bottom-nav-cliente';
 import { ChatUnreadStore } from '../../../core/services/chat-unread-store';
 
@@ -21,6 +25,21 @@ const STATUS_LABEL: Record<FoodOrderStatus, string> = {
   Cancelled: 'Cancelado',
 };
 
+// "Em andamento" = fora de recusados, cancelados e terminais concluídos.
+const BOOKING_ATIVO: string[] = ['Requested', 'Confirmed', 'CheckedIn'];
+const RENTAL_ATIVO: string[] = ['Requested', 'Accepted', 'Active'];
+const TRANSPORT_ATIVO: string[] = ['Requested', 'Quoted', 'Accepted', 'InTransit'];
+const COMMERCIAL_ATIVO: string[] = ['Requested', 'Accepted', 'Paid'];
+const ORDEM_ATIVIDADES = ['Hospedagem', 'Aluguel', 'Transporte', 'Compra e venda'];
+
+/** Resumo de uma categoria com negociação em andamento, para o destaque na home. */
+interface AtividadeHome {
+  categoria: string;
+  titulo: string;
+  subtitulo: string;
+  rota: string;
+}
+
 @Component({
   selector: 'app-home',
   imports: [CommonModule, BottomNavClienteComponent],
@@ -32,6 +51,10 @@ export class HomeComponent implements OnInit {
   private readonly delivery = inject(DeliveryService);
   private readonly works = inject(WorkService);
   private readonly budgets = inject(BudgetService);
+  private readonly accommodation = inject(AccommodationService);
+  private readonly rental = inject(RentalService);
+  private readonly transport = inject(TransportService);
+  private readonly marketplace = inject(MarketplaceService);
   private readonly unread = inject(ChatUnreadStore);
   private readonly router = inject(Router);
 
@@ -45,6 +68,9 @@ export class HomeComponent implements OnInit {
   // Serviços em andamento (destaque na home — fatia 2). Nº de itens + resumo do topo.
   servicosAtivos = 0;
   servicoResumo?: { titulo: string; subtitulo: string; destaque: boolean };
+
+  // Outras categorias com negociação em andamento (hospedagem, aluguel, transporte, compra e venda).
+  atividades: AtividadeHome[] = [];
 
   servicos = [
     { label: 'DELIVERY',                rota: '/delivery' },
@@ -71,6 +97,58 @@ export class HomeComponent implements OnInit {
       error: () => {},
     });
     this.carregarServicos();
+    this.carregarAtividades();
+  }
+
+  /**
+   * Itens em andamento das demais categorias (hospedagem, aluguel, transporte,
+   * compra e venda). Cada categoria vira um card se tiver algo ativo; recusados,
+   * cancelados e concluídos ficam de fora.
+   */
+  private carregarAtividades() {
+    this.accommodation.reservas({ participantRole: 'Requester', take: 50 }).subscribe({
+      next: (p) =>
+        this.empilhar('Hospedagem', 'Reserva', 'reservas', '/hospedagem/reservas',
+          (p.items ?? []).filter((b) => BOOKING_ATIVO.includes(b.status)).map((b) => b.accommodation?.name ?? 'Hospedagem')),
+      error: () => {},
+    });
+    this.rental.alugueis({ participantRole: 'Requester', take: 50 }).subscribe({
+      next: (p) =>
+        this.empilhar('Aluguel', 'Aluguel', 'aluguéis', '/aluguel/meus',
+          (p.items ?? []).filter((r) => RENTAL_ATIVO.includes(r.status)).map((r) => r.product?.name ?? 'Aluguel')),
+      error: () => {},
+    });
+    this.transport.pedidos({ participantRole: 'Requester', take: 50 }).subscribe({
+      next: (p) =>
+        this.empilhar('Transporte', 'Transporte', 'transportes', '/transporte/meus',
+          (p.items ?? []).filter((t) => TRANSPORT_ATIVO.includes(t.status)).map((t) => t.transportation?.name ?? 'Transporte')),
+      error: () => {},
+    });
+    this.marketplace.negociacoes({ participantRole: 'Buyer', take: 50 }).subscribe({
+      next: (p) =>
+        this.empilhar('Compra e venda', 'Negociação', 'negociações', '/compra-vender/negociacoes',
+          (p.items ?? []).filter((t) => COMMERCIAL_ATIVO.includes(t.status)).map((t) => t.title || 'Negociação')),
+      error: () => {},
+    });
+  }
+
+  /** Adiciona (ou substitui) o card de uma categoria quando há itens em andamento. */
+  private empilhar(categoria: string, singular: string, plural: string, rota: string, nomes: string[]) {
+    const outras = this.atividades.filter((a) => a.categoria !== categoria);
+    if (!nomes.length) {
+      this.atividades = outras;
+      return;
+    }
+    const n = nomes.length;
+    this.atividades = [
+      ...outras,
+      {
+        categoria,
+        titulo: n > 1 ? `${n} ${plural} em andamento` : `${singular} em andamento`,
+        subtitulo: nomes[0],
+        rota,
+      },
+    ].sort((a, b) => ORDEM_ATIVIDADES.indexOf(a.categoria) - ORDEM_ATIVIDADES.indexOf(b.categoria));
   }
 
   /** Serviços em andamento para o card de destaque (solicitações ativas + orçamentos em jogo). */

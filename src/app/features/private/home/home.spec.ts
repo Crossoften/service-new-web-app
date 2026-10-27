@@ -28,11 +28,19 @@ describe('HomeComponent', () => {
     foodOrders?: unknown[];
     works?: unknown[];
     budgets?: unknown[];
+    bookings?: unknown[];
+    rentals?: unknown[];
+    transportRequests?: unknown[];
+    commercial?: unknown[];
   } = {}) {
     httpMock.expectOne((r) => r.url.endsWith('/profile/me')).flush({ id: 1, name: opts.nome ?? 'Ana' });
     httpMock.expectOne((r) => r.url.endsWith('/food-orders')).flush({ foodOrders: opts.foodOrders ?? [] });
     httpMock.expectOne((r) => r.url.endsWith('/works/my-requests')).flush({ works: opts.works ?? [] });
     httpMock.expectOne((r) => r.url.endsWith('/budgets')).flush({ budgets: opts.budgets ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/bookings')).flush({ bookings: opts.bookings ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/rentals')).flush({ rentals: opts.rentals ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/transport-requests')).flush({ transportRequests: opts.transportRequests ?? [] });
+    httpMock.expectOne((r) => r.url.endsWith('/commercial-transactions')).flush({ transactions: opts.commercial ?? [] });
   }
 
   function work(overrides: Record<string, unknown> = {}) {
@@ -84,5 +92,20 @@ describe('HomeComponent', () => {
     flushInit({ works: [work({ status: 'Finished' })], budgets: [budget({ status: 'Rejected' })] });
     expect(component.servicosAtivos).toBe(0);
     expect(component.servicoResumo).toBeUndefined();
+  });
+
+  it('mostra hospedagem em andamento (reserva solicitada) e ignora as recusadas', () => {
+    flushInit({
+      bookings: [
+        { id: 1, status: 'Requested', accommodation: { id: 2, name: 'Casa da Praia' } },
+        { id: 2, status: 'Rejected', accommodation: { id: 3, name: 'Chalé' } },
+      ],
+    });
+    const hosp = component.atividades.find((a) => a.categoria === 'Hospedagem');
+    expect(hosp).toBeTruthy();
+    expect(hosp!.titulo).toBe('Reserva em andamento');
+    expect(hosp!.subtitulo).toBe('Casa da Praia');
+    expect(hosp!.rota).toBe('/hospedagem/reservas');
+    expect(component.atividades.length).toBe(1); // só a hospedagem ativa; recusada não entra
   });
 });
