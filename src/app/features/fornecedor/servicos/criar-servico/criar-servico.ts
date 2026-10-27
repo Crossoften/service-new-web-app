@@ -8,10 +8,14 @@ import { ApiService } from '../../../../core/services/api';
 import { ServiceCategoryDto } from '../../../../core/models/service';
 import { ApiError } from '../../../../core/models/common';
 import { formatBRL, maskBRL, parseBRL } from '../../../../core/utils/currency';
+import { VideoUploadComponent } from '../../../../shared/components/video-upload/video-upload';
+
+/** Teto da galeria do serviço (BE-SRV-MEDIA-1 — acima disso a API responde 400). */
+const MAX_GALERIA = 10;
 
 @Component({
   selector: 'app-criar-servico',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, VideoUploadComponent],
   templateUrl: './criar-servico.html',
   styleUrl: './criar-servico.scss',
 })
@@ -33,11 +37,16 @@ export class CriarServicoComponent implements OnInit {
   descricao = '';
   imagem = '';
   imageKey = '';
+  videoUrl = '';
+  videoKey = '';
+  galeria: { fileUrl: string; fileKey: string }[] = [];
+  readonly maxGaleria = MAX_GALERIA;
   bloqueado = false;
   tipoAberto = false;
   erro = '';
   salvando = false;
   enviandoFoto = false;
+  enviandoGaleria = false;
 
   tipos = ['Online', 'Presencial', 'Em domicílio'];
 
@@ -61,6 +70,9 @@ export class CriarServicoComponent implements OnInit {
           this.descricao = s.descricao;
           this.imagem = s.imagem;
           this.imageKey = s.imageKey ?? '';
+          this.videoUrl = s.videoUrl ?? '';
+          this.videoKey = s.videoKey ?? '';
+          this.galeria = (s.galeria ?? []).map((g) => ({ fileUrl: g.fileUrl, fileKey: g.fileKey }));
         },
         error: (err: ApiError) => {
           this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o serviço.';
@@ -98,6 +110,39 @@ export class CriarServicoComponent implements OnInit {
       });
   }
 
+  /** Vídeo do serviço (via `<app-video-upload>`). */
+  onVideo(v: { url: string; key: string }) {
+    this.videoUrl = v.url;
+    this.videoKey = v.key;
+  }
+
+  /** Adiciona uma imagem à galeria (até 10). O teto é barrado aqui (BE responde 400). */
+  adicionarGaleria(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || this.enviandoGaleria) return;
+    if (this.galeria.length >= this.maxGaleria) {
+      this.erro = `A galeria aceita no máximo ${this.maxGaleria} imagens.`;
+      return;
+    }
+    this.enviandoGaleria = true;
+    this.erro = '';
+    this.api
+      .uploadOne(file)
+      .pipe(finalize(() => (this.enviandoGaleria = false)))
+      .subscribe({
+        next: (res) => (this.galeria = [...this.galeria, { fileUrl: res.fileUrl, fileKey: res.fileKey }]),
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível enviar a imagem.';
+        },
+      });
+  }
+
+  removerGaleria(i: number) {
+    this.galeria = this.galeria.filter((_, idx) => idx !== i);
+  }
+
   onValorInput(valor: string) {
     this.valor = maskBRL(valor);
   }
@@ -128,6 +173,10 @@ export class CriarServicoComponent implements OnInit {
       description: this.descricao.trim() || undefined,
       imageUrl: this.imagem || undefined,
       imageKey: this.imageKey || undefined,
+      videoUrl: this.videoUrl || undefined,
+      videoKey: this.videoKey || undefined,
+      // A galeria é substituída pelo que vai aqui (BE-SRV-MEDIA-1): manda sempre a lista final.
+      images: this.galeria.map((g, i) => ({ fileUrl: g.fileUrl, fileKey: g.fileKey, sortOrder: i })),
       categoryId: this.categoryId,
     };
 

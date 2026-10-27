@@ -6,6 +6,7 @@ import {
   CreateServiceReviewDto,
   ServiceCategoryDto,
   ServiceDto,
+  ServiceImageDto,
   ServiceListItemDto,
   ServiceQuery,
   UpdateServiceDto,
@@ -28,6 +29,10 @@ export interface ServicoFornecedor {
   descricao: string;
   imagem: string;
   imageKey?: string;
+  /** Vídeo e galeria do serviço (BE-SRV-MEDIA-1) — para o cadastro/edição. */
+  videoUrl?: string;
+  videoKey?: string;
+  galeria: ServiceImageDto[];
   ativo: boolean;
   bloqueado: boolean;
   avaliacoesPositivas: number;
@@ -161,6 +166,9 @@ export class ServiceCatalogService {
       descricao: s.description ?? '',
       imagem: s.imageUrl ?? '',
       imageKey: (s as ServiceDto).imageKey,
+      videoUrl: (s as ServiceDto).videoUrl,
+      videoKey: (s as ServiceDto).videoKey,
+      galeria: (s as ServiceDto).images ?? [],
       ativo: s.isActive,
       bloqueado: false,
       avaliacoesPositivas: s.positiveReviews ?? 0,

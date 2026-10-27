@@ -46,10 +46,30 @@ export interface ServiceListItemDto {
   completedWorks: number;
 }
 
+/** Imagem da galeria do serviço — resposta (ServiceImageDto, BE-SRV-MEDIA-1). */
+export interface ServiceImageDto {
+  id: number;
+  fileUrl: string;
+  fileKey: string;
+  sortOrder: number;
+}
+
+/** Imagem da galeria no envio (ServiceImageInputDto). `sortOrder` opcional — vale a ordem do array. */
+export interface ServiceImageInputDto {
+  fileUrl: string;
+  fileKey: string;
+  sortOrder?: number;
+}
+
 /** Serviço completo — `GET /v1/services/{id}` (ResponseServiceDto). */
 export interface ServiceDto extends ServiceListItemDto {
   registrationCode?: string;
   imageKey?: string;
+  /** Vídeo do serviço (BE-SRV-MEDIA-1). */
+  videoUrl?: string;
+  videoKey?: string;
+  /** Galeria (até 10) — **só no detalhe**; a listagem traz apenas a capa. Nunca `null`. */
+  images?: ServiceImageDto[];
   categoryId: number;
   category: ServiceCategoryDto;
   userId: number;
@@ -72,6 +92,11 @@ export interface CreateServiceDto {
   description?: string;
   imageUrl?: string;
   imageKey?: string;
+  /** Vídeo do serviço (BE-SRV-MEDIA-1). */
+  videoUrl?: string;
+  videoKey?: string;
+  /** Galeria (até 10). O PATCH **substitui** a lista — mande sempre a final. */
+  images?: ServiceImageInputDto[];
   categoryId: number;
   isActive?: boolean;
 }

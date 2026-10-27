@@ -81,4 +81,28 @@ describe('CriarServicoComponent', () => {
     expect('price' in req.request.body).toBe(false);
     req.flush({ message: 'ok', service: { id: 1 } });
   });
+
+  it('envia a galeria como images[] com sortOrder (BE-SRV-MEDIA-1)', () => {
+    component.categoryId = 3;
+    component.nome = 'Reforma';
+    component.galeria = [
+      { fileUrl: 'https://api/v1/files/a', fileKey: 'a' },
+      { fileUrl: 'https://api/v1/files/b', fileKey: 'b' },
+    ];
+    component.criarServico();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/services') && r.method === 'POST');
+    expect(req.request.body.images).toEqual([
+      { fileUrl: 'https://api/v1/files/a', fileKey: 'a', sortOrder: 0 },
+      { fileUrl: 'https://api/v1/files/b', fileKey: 'b', sortOrder: 1 },
+    ]);
+    req.flush({ message: 'ok', service: { id: 1 } });
+  });
+
+  it('barra a galeria no teto de 10 imagens', () => {
+    component.galeria = Array.from({ length: 10 }, (_, i) => ({ fileUrl: 'u' + i, fileKey: 'k' + i }));
+    component.adicionarGaleria({ target: { files: [new File(['x'], 'f.png', { type: 'image/png' })], value: '' } } as unknown as Event);
+    expect(component.erro).toContain('máximo 10');
+    expect(component.galeria.length).toBe(10);
+    httpMock.expectNone((r) => r.url.endsWith('/upload/one-file'));
+  });
 });

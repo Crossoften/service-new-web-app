@@ -78,9 +78,9 @@
         <textarea placeholder="Descrição" [(ngModel)]="descricao" rows="5"></textarea>
       </div>
 
-      <!-- IMAGEM -->
+      <!-- IMAGEM DE CAPA -->
       <div class="cs-imagem">
-        <h3 class="cs-imagem__titulo">Adicione uma imagem</h3>
+        <h3 class="cs-imagem__titulo">Imagem de capa</h3>
         <div class="cs-imagem__wrapper">
           <div class="cs-imagem__placeholder">
             @if (imagem) {
@@ -99,6 +99,34 @@
             </svg>
             <input type="file" accept="image/png,image/jpeg,image/webp,.heic,.heif" (change)="adicionarImagem($event)" hidden />
           </label>
+        </div>
+      </div>
+
+      <!-- VÍDEO (opcional) -->
+      <app-video-upload [url]="videoUrl" (changed)="onVideo($event)" label="Vídeo do serviço (opcional)"></app-video-upload>
+
+      <!-- GALERIA (até 10) -->
+      <div class="cs-galeria">
+        <h3 class="cs-galeria__titulo">Galeria <span class="cs-galeria__contador">{{ galeria.length }}/{{ maxGaleria }}</span></h3>
+        <div class="cs-galeria__grid">
+          @for (img of galeria; track img.fileKey; let i = $index) {
+            <div class="cs-galeria__item">
+              <img [src]="img.fileUrl" alt="Imagem da galeria" />
+              <button type="button" class="cs-galeria__remover" (click)="removerGaleria(i)" aria-label="Remover imagem">×</button>
+            </div>
+          }
+          @if (galeria.length < maxGaleria) {
+            <label class="cs-galeria__add" [class.cs-galeria__add--enviando]="enviandoGaleria">
+              @if (enviandoGaleria) {
+                <span class="cs-galeria__spinner">…</span>
+              } @else {
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              }
+              <input type="file" accept="image/png,image/jpeg,image/webp,.heic,.heif" (change)="adicionarGaleria($event)" [disabled]="enviandoGaleria" hidden />
+            </label>
+          }
         </div>
       </div>
 
