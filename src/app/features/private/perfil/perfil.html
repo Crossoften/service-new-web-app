@@ -105,7 +105,12 @@
 
         <div class="perfil-field">
           <label>CEP</label>
-          <input type="tel" [(ngModel)]="cep" placeholder="00000-000" [disabled]="!editandoEndereco" />
+          <input type="tel" [(ngModel)]="cep" placeholder="00000-000" maxlength="9" [disabled]="!editandoEndereco" (blur)="buscarCep()" />
+          @if (cepBuscando) {
+            <span class="perfil-hint">Buscando endereço…</span>
+          } @else if (cepErro) {
+            <span class="perfil-hint perfil-hint--erro">{{ cepErro }}</span>
+          }
         </div>
 
         <div class="perfil-field">

@@ -7,6 +7,7 @@ import {
   MapaEnderecoComponent,
 } from '../../../shared/components/mapa-endereco/mapa-endereco';
 import { ProfileService } from '../../../core/services/profile';
+import { CepService } from '../../../core/services/cep';
 import { AuthService } from '../../../core/services/auth';
 import { SessionService } from '../../../core/services/session';
 import { PushService } from '../../../core/services/push';
@@ -28,6 +29,7 @@ import { ResponseProfileDto } from '../../../core/models/profile';
 export class PerfilComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly profileService = inject(ProfileService);
+  private readonly cepService = inject(CepService);
   private readonly auth = inject(AuthService);
   private readonly session = inject(SessionService);
   private readonly push = inject(PushService);
@@ -55,6 +57,8 @@ export class PerfilComponent implements OnInit {
   cidade = '';
   estado = '';
   cep = '';
+  cepBuscando = false;
+  cepErro = '';
   // Coordenadas do endereço (Fase 8.4) — capturadas via mapa (MAP-2); aqui preservadas.
   latitude?: string;
   longitude?: string;
@@ -173,6 +177,31 @@ export class PerfilComponent implements OnInit {
   onCoordenadas(c: Coordenadas) {
     this.latitude = c.latitude;
     this.longitude = c.longitude;
+  }
+
+  /** Preenche rua/bairro/cidade/UF a partir do CEP (ViaCEP), no blur do campo. */
+  buscarCep() {
+    if (!this.editandoEndereco) return;
+    const digitos = this.cep.replace(/\D/g, '');
+    if (digitos.length !== 8 || this.cepBuscando) return;
+    this.cepBuscando = true;
+    this.cepErro = '';
+    this.cepService
+      .buscar(this.cep)
+      .then((end) => {
+        if (!end) {
+          this.cepErro = 'CEP não encontrado. Preencha o endereço manualmente.';
+          return;
+        }
+        if (end.street) this.rua = end.street;
+        if (end.neighborhood) this.bairro = end.neighborhood;
+        if (end.city) this.cidade = end.city;
+        if (end.state) this.estado = end.state;
+      })
+      .catch(() => {
+        this.cepErro = 'Não foi possível consultar o CEP agora. Preencha o endereço manualmente.';
+      })
+      .finally(() => (this.cepBuscando = false));
   }
 
   cancelarEndereco() {

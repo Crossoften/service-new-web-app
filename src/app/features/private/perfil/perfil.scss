@@ -199,6 +199,15 @@
   color: #dc2626;
 }
 
+.perfil-hint {
+  display: block;
+  font-size: 12px;
+  color: var(--color-gray-600);
+  margin-top: 4px;
+
+  &--erro { color: #dc2626; }
+}
+
 .perfil-aviso {
   font-size: 12px;
   color: #16a34a;

@@ -137,6 +137,13 @@
   color: #DC2626;
 }
 
+.ch-hint {
+  font-size: 12px;
+  color: var(--color-gray-600);
+
+  &--erro { color: #DC2626; }
+}
+
 .ch-actions {
   padding: 12px 16px;
   padding-bottom: calc(12px + var(--safe-bottom));

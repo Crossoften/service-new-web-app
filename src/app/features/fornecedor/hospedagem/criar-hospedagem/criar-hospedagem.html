@@ -49,6 +49,17 @@
           </div>
         </div>
 
+        <!-- CEP -->
+        <div class="ch-field">
+          <label>CEP</label>
+          <input type="tel" placeholder="00000-000" maxlength="9" [(ngModel)]="cep" (blur)="buscarCep()" />
+          @if (cepBuscando) {
+            <span class="ch-hint">Buscando endereço…</span>
+          } @else if (cepErro) {
+            <span class="ch-hint ch-hint--erro">{{ cepErro }}</span>
+          }
+        </div>
+
         <!-- RUA -->
         <div class="ch-field">
           <label>Rua</label>

@@ -6,7 +6,9 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 
+import { vi } from 'vitest';
 import { CriarHospedagemComponent } from './criar-hospedagem';
+import { CepService } from '../../../../core/services/cep';
 
 describe('CriarHospedagemComponent', () => {
   let component: CriarHospedagemComponent;
@@ -37,6 +39,18 @@ describe('CriarHospedagemComponent', () => {
     component.salvar();
     expect(component.erro).toContain('categoria');
     httpMock.expectNone((r) => r.url.endsWith('/accommodations') && r.method === 'POST');
+  });
+
+  it('CEP preenche rua/bairro/cidade/UF (ViaCEP)', async () => {
+    const cep = TestBed.inject(CepService);
+    vi.spyOn(cep, 'buscar').mockResolvedValue({ street: 'Av. Afonso Pena', neighborhood: 'Centro', city: 'Uberlândia', state: 'MG' });
+    component.cep = '38400-000';
+    component.buscarCep();
+    await new Promise((r) => setTimeout(r));
+    expect(component.rua).toBe('Av. Afonso Pena');
+    expect(component.bairro).toBe('Centro');
+    expect(component.cidade).toBe('Uberlândia');
+    expect(component.estado).toBe('MG');
   });
 
   it('exige nome', () => {

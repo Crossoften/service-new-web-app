@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AccommodationService } from '../../../../core/services/accommodation';
 import { ApiService } from '../../../../core/services/api';
+import { CepService } from '../../../../core/services/cep';
 import {
   AccommodationCategoryDto,
   CreateAccommodationDto,
@@ -24,6 +25,7 @@ export class CriarHospedagemComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly service = inject(AccommodationService);
   private readonly api = inject(ApiService);
+  private readonly cepService = inject(CepService);
 
   editId?: number;
   categorias: AccommodationCategoryDto[] = [];
@@ -33,6 +35,9 @@ export class CriarHospedagemComponent implements OnInit {
   nome = '';
   preco = '';
   quartos?: number;
+  cep = '';
+  cepBuscando = false;
+  cepErro = '';
   rua = '';
   bairro = '';
   cidade = '';
@@ -125,6 +130,33 @@ export class CriarHospedagemComponent implements OnInit {
 
   onPrecoInput(valor: string) {
     this.preco = maskBRL(valor);
+  }
+
+  /**
+   * Preenche rua/bairro/cidade/UF a partir do CEP (ViaCEP), no blur do campo.
+   * O CEP é só para a busca — a hospedagem não persiste `zipCode` (não está no DTO).
+   */
+  buscarCep() {
+    const digitos = this.cep.replace(/\D/g, '');
+    if (digitos.length !== 8 || this.cepBuscando) return;
+    this.cepBuscando = true;
+    this.cepErro = '';
+    this.cepService
+      .buscar(this.cep)
+      .then((end) => {
+        if (!end) {
+          this.cepErro = 'CEP não encontrado. Preencha o endereço manualmente.';
+          return;
+        }
+        if (end.street) this.rua = end.street;
+        if (end.neighborhood) this.bairro = end.neighborhood;
+        if (end.city) this.cidade = end.city;
+        if (end.state) this.estado = end.state;
+      })
+      .catch(() => {
+        this.cepErro = 'Não foi possível consultar o CEP agora. Preencha o endereço manualmente.';
+      })
+      .finally(() => (this.cepBuscando = false));
   }
 
   salvar() {

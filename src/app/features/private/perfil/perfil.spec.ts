@@ -11,6 +11,7 @@ import { vi } from 'vitest';
 
 import { PerfilComponent } from './perfil';
 import { PushService } from '../../../core/services/push';
+import { CepService } from '../../../core/services/cep';
 
 // Sem service worker no teste: SwPush inativo.
 const swPushStub = {
@@ -50,6 +51,18 @@ describe('PerfilComponent', () => {
     component.onCoordenadas({ latitude: '-18.9', longitude: '-48.2' });
     expect(component.latitude).toBe('-18.9');
     expect(component.longitude).toBe('-48.2');
+  });
+
+  it('CEP preenche rua/bairro/cidade/UF ao editar (ViaCEP)', async () => {
+    const cep = TestBed.inject(CepService);
+    vi.spyOn(cep, 'buscar').mockResolvedValue({ street: 'Rua A', neighborhood: 'Centro', city: 'Uberlândia', state: 'MG' });
+    component.editandoEndereco = true;
+    component.cep = '38400-000';
+    component.buscarCep();
+    await new Promise((r) => setTimeout(r));
+    expect(component.rua).toBe('Rua A');
+    expect(component.cidade).toBe('Uberlândia');
+    expect(component.estado).toBe('MG');
   });
 
   it('salvarEndereco preserva latitude/longitude no PATCH', () => {
