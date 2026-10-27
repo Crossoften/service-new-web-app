@@ -26,7 +26,9 @@ export class HomeEntregadorComponent implements OnInit {
   disponiveis: PedidoEntregador[] = [];
   atividades: AtividadeEntregador[] = [];
   ganhos?: GanhosEntregador;
-  statusOperacional: 'ativo' | 'inativo' = 'ativo';
+  /** Disponibilidade operacional (BE-COURIER-AVAILABILITY-1) — lida do perfil. */
+  disponivel = true;
+  salvandoDisponibilidade = false;
   carregando = false;
   erro = '';
 
@@ -40,14 +42,39 @@ export class HomeEntregadorComponent implements OnInit {
     this.carregarGanhos();
   }
 
-  /** Nome + foto reais do entregador para o header (GET /profile/me). */
+  /** Nome + foto + disponibilidade reais do entregador (GET /profile/me). */
   carregarPerfil() {
     this.profile.me().subscribe({
       next: (p) => {
         this.nome = p.name ?? '';
         this.fotoUrl = p.fileUrl;
+        // `isAvailable` vem só no perfil de entregador; ausente → assume disponível.
+        this.disponivel = p.isAvailable ?? true;
       },
       error: () => {},
+    });
+  }
+
+  /**
+   * Alterna a disponibilidade (PATCH /deliveries/me/availability). A resposta já
+   * traz o estado resultante — não reconsulta o perfil. Em erro, mantém o estado
+   * anterior e mostra a mensagem.
+   */
+  definirDisponibilidade(valor: boolean) {
+    if (this.salvandoDisponibilidade || this.disponivel === valor) return;
+    this.salvandoDisponibilidade = true;
+    this.erro = '';
+    this.entregadorService.definirDisponibilidade(valor).subscribe({
+      next: (estado) => {
+        this.disponivel = estado;
+        this.salvandoDisponibilidade = false;
+        // Voltou à operação: recarrega a fila de corridas (vinha vazia quando off).
+        if (estado) this.carregar();
+      },
+      error: (err: ApiError) => {
+        this.erro = err?.message?.trim() ? err.message : 'Não foi possível atualizar sua disponibilidade.';
+        this.salvandoDisponibilidade = false;
+      },
     });
   }
 

@@ -148,6 +148,18 @@ export class EntregadorService {
     return this.api.patch<ResponseDeliveryDto>(`/deliveries/${id}/location`, { lat, lng });
   }
 
+  /**
+   * Alterna a disponibilidade operacional do entregador
+   * (`PATCH /v1/deliveries/me/availability`, BE-COURIER-AVAILABILITY-1).
+   * `false` tira da fila de corridas e bloqueia o aceite; responde com o estado
+   * resultante — não precisa reconsultar o perfil.
+   */
+  definirDisponibilidade(isAvailable: boolean): Observable<boolean> {
+    return this.api
+      .patch<{ isAvailable: boolean }>('/deliveries/me/availability', { isAvailable })
+      .pipe(map((r) => r.isAvailable));
+  }
+
   // ── Carteira / ganhos (API) ────────────────────────────────────────────────
 
   /** Ganhos do entregador — `GET /v1/deliveries/me/earnings` (§8.5). */

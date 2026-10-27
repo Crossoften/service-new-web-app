@@ -33,6 +33,18 @@
 > **Demanda de BE:** expor disponibilidade do entregador — p.ex. `PATCH /v1/deliveries/me` `{ isAvailable }`
 > (ou campo `isAvailable`/`isOnline` no perfil do entregador) retornando o estado atual, e **filtrar a fila de
 > corridas por esse estado**. Quando existir, o front liga o toggle a esse endpoint.
+>
+> **✅ RESOLVIDO pelo BE (27/10, `dca2e47a-swagger.json`) — front já ligado.** Contrato confirmado no swagger:
+> - Alternar: `PATCH /v1/deliveries/me/availability` com `{ isAvailable: boolean }` (`UpdateCourierAvailabilityDto`),
+>   respondendo `ResponseCourierAvailabilityDto { isAvailable }` — o front usa o estado da resposta, sem reconsultar.
+> - Estado inicial: `isAvailable` em `GET /profile/me` (só no perfil de entregador; ausente → assume disponível).
+> - Indisponível: `GET /deliveries/available` devolve fila vazia (não erro) e `PATCH /deliveries/{id}/accept` responde
+>   **409 com mensagem pronta** — a tela já exibe `err.message`, então o aviso aparece sem código extra.
+> - Entregadores já existentes começam disponíveis.
+>
+> **Front:** `home-entregador` lê `isAvailable` do perfil, o toggle **saiu do desabilitado** e agora faz o PATCH
+> (`EntregadorService.definirDisponibilidade`); ao voltar a disponível, recarrega a fila. `ResponseProfileDto`
+> ganhou `isAvailable?`. Nada mais pendente nesta demanda.
 
 > **Update de 27/10 (varredura geral — conclusão).** Varri todas as jornadas (cliente, fornecedor, entregador,
 > parceiro e as verticais aluguel/hospedagem/transporte/empregos/marketplace/chat) atrás de afordâncias mortas,

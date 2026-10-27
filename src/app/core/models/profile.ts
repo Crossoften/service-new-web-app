@@ -50,6 +50,13 @@ export interface ResponseProfileDto {
    * (taxa própria ou global) — não codificar no app.
    */
   deliveryCommissionRate?: number;
+  /**
+   * Disponibilidade operacional do entregador (BE-COURIER-AVAILABILITY-1). Vem
+   * **só no perfil de entregador** (`profileType: 'Delivery'`). `false` tira o
+   * entregador da fila de corridas e o impede de aceitar entregas; alterna por
+   * `PATCH /v1/deliveries/me/availability`. Entregadores já existentes começam `true`.
+   */
+  isAvailable?: boolean;
   socialMedias: ResponseProfileSocialMediaDto[];
   createdAt: string;
   updatedAt: string;

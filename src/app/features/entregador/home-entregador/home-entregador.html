@@ -51,27 +51,28 @@
       <span class="he-carteira__aviso">Pedidos em dinheiro são pagos na entrega e não entram aqui.</span>
     </div>
 
-    <!-- STATUS OPERACIONAL -->
-    <!-- Desabilitado: ainda não há endpoint de disponibilidade do entregador no BE
-         (ver docs/backend-demandas.md › BE-COURIER-AVAILABILITY). Mantido visível,
-         porém inerte, para não dar ao entregador a falsa impressão de ter ficado offline. -->
+    <!-- STATUS OPERACIONAL (BE-COURIER-AVAILABILITY-1) -->
     <div class="he-card">
       <span class="he-card__titulo">Status Operacional</span>
       <div class="he-status">
         <button
           class="he-status__btn"
-          [class.he-status__btn--ativo]="statusOperacional === 'ativo'"
-          disabled>
+          [class.he-status__btn--ativo]="disponivel"
+          [disabled]="salvandoDisponibilidade"
+          (click)="definirDisponibilidade(true)">
           Ativo
         </button>
         <button
           class="he-status__btn"
-          [class.he-status__btn--ativo]="statusOperacional === 'inativo'"
-          disabled>
+          [class.he-status__btn--ativo]="!disponivel"
+          [disabled]="salvandoDisponibilidade"
+          (click)="definirDisponibilidade(false)">
           Inativo
         </button>
       </div>
-      <span class="he-status__aviso">Controle de disponibilidade em breve.</span>
+      @if (!disponivel) {
+        <span class="he-status__aviso">Você está indisponível — não recebe novas corridas.</span>
+      }
     </div>
 
     <!-- ENTREGAS DISPONÍVEIS -->
