@@ -47,11 +47,11 @@ export class ProfileService {
   }
 
   /**
-   * Remove a foto de perfil — `DELETE /v1/profile-photo`.
-   * O back exige a `fileKey` da foto atual no corpo (DELETE com corpo, como `/push/subscriptions`);
-   * sem ela responde `400 "A chave do arquivo deve ser um texto."`.
+   * Remove a foto de perfil — `DELETE /v1/profile-photo?fileKey=...`.
+   * O back exige a `fileKey` da foto atual na query string; sem ela responde
+   * `400 "A chave do arquivo deve ser um texto."`.
    */
   deletePhoto(fileKey: string): Observable<ApiMessage> {
-    return this.api.deleteBody<ApiMessage>('/profile-photo', { fileKey });
+    return this.api.delete<ApiMessage>('/profile-photo', { fileKey });
   }
 }
