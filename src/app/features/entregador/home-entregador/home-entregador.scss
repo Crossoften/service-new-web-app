@@ -301,6 +301,8 @@
 }
 
 .he-carteira {
+  // Mesma largura/gutter lateral dos demais cards (antes vazava até a borda da tela).
+  margin: 0 16px 12px;
   background: var(--color-primary);
   color: var(--color-white);
   border-radius: 12px;
