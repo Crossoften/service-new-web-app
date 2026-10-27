@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   Coordenadas,
+  EnderecoMapa,
   MapaEnderecoComponent,
 } from '../../../shared/components/mapa-endereco/mapa-endereco';
 import { ProfileService } from '../../../core/services/profile';
@@ -177,6 +178,17 @@ export class PerfilComponent implements OnInit {
   onCoordenadas(c: Coordenadas) {
     this.latitude = c.latitude;
     this.longitude = c.longitude;
+  }
+
+  /** Preenche os campos de endereço a partir do resultado do Maps (§3.2). */
+  onEnderecoMapa(e: EnderecoMapa) {
+    if (!this.editandoEndereco) return;
+    if (e.street) this.rua = e.street;
+    if (e.number) this.numero = e.number;
+    if (e.neighborhood) this.bairro = e.neighborhood;
+    if (e.city) this.cidade = e.city;
+    if (e.state) this.estado = e.state;
+    if (e.zipCode) this.cep = e.zipCode;
   }
 
   /** Preenche rua/bairro/cidade/UF a partir do CEP (ViaCEP), no blur do campo. */

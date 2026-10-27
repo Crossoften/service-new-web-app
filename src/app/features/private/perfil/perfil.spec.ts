@@ -53,6 +53,17 @@ describe('PerfilComponent', () => {
     expect(component.longitude).toBe('-48.2');
   });
 
+  it('onEnderecoMapa preenche o endereço ao editar (§3.2)', () => {
+    component.editandoEndereco = true;
+    component.onEnderecoMapa({ street: 'Av. B', number: '10', neighborhood: 'Centro', city: 'Uberlândia', state: 'MG', zipCode: '38400-000' });
+    expect(component.rua).toBe('Av. B');
+    expect(component.numero).toBe('10');
+    expect(component.bairro).toBe('Centro');
+    expect(component.cidade).toBe('Uberlândia');
+    expect(component.estado).toBe('MG');
+    expect(component.cep).toBe('38400-000');
+  });
+
   it('CEP preenche rua/bairro/cidade/UF ao editar (ViaCEP)', async () => {
     const cep = TestBed.inject(CepService);
     vi.spyOn(cep, 'buscar').mockResolvedValue({ street: 'Rua A', neighborhood: 'Centro', city: 'Uberlândia', state: 'MG' });
