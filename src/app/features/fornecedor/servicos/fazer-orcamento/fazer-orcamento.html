@@ -195,7 +195,13 @@
           </svg>
         </button>
 
-        <button class="modal__btn" (click)="confirmarMaisInfos()">CONFIRMAR</button>
+        @if (infoErro) {
+          <span class="fo-erro">{{ infoErro }}</span>
+        }
+
+        <button class="modal__btn" (click)="confirmarMaisInfos()" [disabled]="enviandoInfo">
+          {{ enviandoInfo ? 'ENVIANDO…' : 'CONFIRMAR' }}
+        </button>
       </div>
     </div>
   }

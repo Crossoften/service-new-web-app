@@ -70,4 +70,24 @@ describe('FazerOrcamentoComponent', () => {
     req.flush({ id: 1 });
     expect(component.mostrarModalMaisInfos).toBe(false);
   });
+
+  it('exige mensagem ao pedir informações (não chama a API)', () => {
+    component.maisInfosDescricao = '   ';
+    component.mostrarModalMaisInfos = true;
+    component.confirmarMaisInfos();
+    expect(component.infoErro).toContain('mensagem');
+    expect(component.mostrarModalMaisInfos).toBe(true);
+    httpMock.expectNone((r) => r.url.endsWith('/budgets/1/request-more-information'));
+  });
+
+  it('erro ao pedir informações mantém o modal aberto e o texto', () => {
+    component.maisInfosDescricao = 'Preciso da metragem';
+    component.mostrarModalMaisInfos = true;
+    component.confirmarMaisInfos();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/budgets/1/request-more-information'));
+    req.flush({ message: 'Falhou' }, { status: 500, statusText: 'Server Error' });
+    expect(component.mostrarModalMaisInfos).toBe(true);
+    expect(component.maisInfosDescricao).toBe('Preciso da metragem');
+    expect(component.infoErro).toBeTruthy();
+  });
 });

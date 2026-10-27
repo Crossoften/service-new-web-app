@@ -134,6 +134,22 @@
         <h2 class="aprovar-descricao__titulo">Descrição</h2>
         <p class="aprovar-descricao__texto">{{ orcamento.descricao }}</p>
       </div>
+
+      <!-- INFORMAÇÕES PEDIDAS PELO PRESTADOR -->
+      @if (orcamento.informacoes.length) {
+        <div class="aprovar-descricao">
+          <h2 class="aprovar-descricao__titulo">Informações solicitadas pelo prestador</h2>
+          @for (info of orcamento.informacoes; track info.id) {
+            <p class="aprovar-descricao__texto aprovar-info-msg">
+              {{ info.mensagem }}
+              @if (info.data) { <span class="aprovar-info-msg__data">· {{ info.data }}</span> }
+            </p>
+          }
+          @if (orcamento.statusApi === 'WaitingInformation') {
+            <p class="aprovar-info-msg__dica">Responda ao prestador pelo chat para que ele finalize o orçamento.</p>
+          }
+        </div>
+      }
     }
 
   </div>
@@ -161,6 +177,14 @@
           <button class="aprovar-btn" (click)="solicitar()" [disabled]="processando">
             {{ processando ? 'AGUARDE…' : 'APROVAR ORÇAMENTO' }}
           </button>
+        }
+      } @else if (orcamento.statusApi === 'WaitingInformation') {
+        @if (orcamento.chatId) {
+          <button class="aprovar-btn" (click)="abrirChat()">RESPONDER PELO CHAT</button>
+        } @else {
+          <div class="aprovar-desfecho">
+            <span class="aprovar-desfecho__label">O prestador pediu mais informações</span>
+          </div>
         }
       } @else if (desfechoLabel) {
         <div class="aprovar-desfecho">

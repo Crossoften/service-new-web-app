@@ -52,6 +52,8 @@ export interface Orcamento {
   temAcrescimoPendente: boolean;
   /** Motivo da recusa, quando o cliente recusou o preço (§8.8). */
   motivoRecusa?: string;
+  /** Pedidos de informação do fornecedor (mais recente por último), para exibir ao cliente. */
+  informacoes: { id: number; mensagem: string; data: string }[];
   /** Sala de chat do orçamento (BE-CHAT-1); ausente em orçamentos antigos. */
   chatId?: number;
 }
@@ -242,6 +244,7 @@ export class BudgetService {
       comentario: '',
       descricao: b.description ?? '',
       temAcrescimoPendente: b.extraRequestStatus === 'Pending',
+      informacoes: [],
       chatId: b.chat?.id,
     };
   }
@@ -260,6 +263,11 @@ export class BudgetService {
       descricao: b.description ?? '',
       temAcrescimoPendente: b.extraRequestStatus === 'Pending',
       motivoRecusa: b.rejectReason,
+      informacoes: (b.informationRequests ?? []).map((i) => ({
+        id: i.id,
+        mensagem: i.message,
+        data: i.createdAt ? new Date(i.createdAt).toLocaleDateString('pt-BR') : '',
+      })),
       chatId: b.chat?.id,
     };
   }

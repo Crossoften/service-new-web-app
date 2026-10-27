@@ -35,6 +35,19 @@ export interface CreateBudgetFileDto {
   fileKey: string;
 }
 
+/**
+ * Item do histórico de pedidos de informação do orçamento
+ * (ResponseBudgetInformationDto). O fornecedor pede mais informações e a troca
+ * subsequente acontece pela sala de chat do orçamento (BE-CHAT-1).
+ */
+export interface BudgetInformationDto {
+  id: number;
+  message: string;
+  files: BudgetFileDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** Orçamento — `GET /v1/budgets/{id}` (ResponseBudgetDto). Valores monetários = string. */
 export interface BudgetDto {
   id: number;
@@ -54,6 +67,8 @@ export interface BudgetDto {
   providerId: number;
   provider: BudgetUserDto;
   files: BudgetFileDto[];
+  /** Pedidos de informação feitos pelo fornecedor (ResponseBudgetDto.informationRequests). */
+  informationRequests?: BudgetInformationDto[];
   /**
    * Sala de chat do orçamento (BE-CHAT-1). **Opcional**: orçamentos antigos não
    * têm sala. Ao aprovar, a mesma sala vira a do trabalho (`budget.chat.id === work.chat.id`).

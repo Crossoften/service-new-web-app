@@ -80,4 +80,26 @@ describe('BudgetService — chat do orçamento (BE-CHAT-1)', () => {
     httpMock.expectOne((r) => r.url.endsWith('/budgets/9')).flush(budget());
     expect((vm as { chatId?: number }).chatId).toBeUndefined();
   });
+
+  it('detalhe mapeia informationRequests → informacoes (2.2)', () => {
+    let vm: unknown;
+    service.orcamento(9).subscribe((o) => (vm = o));
+    httpMock.expectOne((r) => r.url.endsWith('/budgets/9')).flush(
+      budget({
+        status: 'WaitingInformation',
+        informationRequests: [
+          { id: 10, message: 'Qual a metragem?', files: [], createdAt: '2026-01-02T10:00:00Z', updatedAt: '' },
+        ],
+      }),
+    );
+    const o = vm as { informacoes: { id: number; mensagem: string }[] };
+    expect(o.informacoes).toEqual([{ id: 10, mensagem: 'Qual a metragem?', data: expect.any(String) }]);
+  });
+
+  it('detalhe sem informationRequests → informacoes vazio', () => {
+    let vm: unknown;
+    service.orcamento(9).subscribe((o) => (vm = o));
+    httpMock.expectOne((r) => r.url.endsWith('/budgets/9')).flush(budget());
+    expect((vm as { informacoes: unknown[] }).informacoes).toEqual([]);
+  });
 });

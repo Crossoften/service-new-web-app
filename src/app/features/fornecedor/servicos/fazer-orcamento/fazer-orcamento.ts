@@ -42,6 +42,8 @@ export class FazerOrcamentoComponent implements OnInit {
   // Mais informações
   maisInfosDescricao = '';
   maisInfosArquivos: { id: number; nome: string; tipo: string }[] = [];
+  enviandoInfo = false;
+  infoErro = '';
 
   erro = '';
   enviando = false;
@@ -80,28 +82,42 @@ export class FazerOrcamentoComponent implements OnInit {
   }
 
   abrirMaisInfos() {
+    this.infoErro = '';
     this.mostrarModalMaisInfos = true;
   }
   fecharMaisInfos() {
+    if (this.enviandoInfo) return;
     this.mostrarModalMaisInfos = false;
+    this.infoErro = '';
   }
 
   confirmarMaisInfos() {
+    if (this.enviandoInfo) return;
     const message = this.maisInfosDescricao.trim();
+    this.infoErro = '';
     if (!message) {
-      this.mostrarModalMaisInfos = false;
+      this.infoErro = 'Escreva a mensagem para o cliente.';
       return;
     }
-    this.budgets.pedirMaisInfo(this.orcamentoId, { message }).subscribe({
-      next: () => {
-        this.mostrarModalMaisInfos = false;
-        this.maisInfosDescricao = '';
-      },
-      error: (err: ApiError) => {
-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível pedir mais informações.';
-        this.mostrarModalMaisInfos = false;
-      },
-    });
+    this.enviandoInfo = true;
+    this.budgets
+      .pedirMaisInfo(this.orcamentoId, { message })
+      .pipe(finalize(() => (this.enviandoInfo = false)))
+      .subscribe({
+        // Sai da tela de resposta e volta à lista com aviso: o orçamento agora
+        // aguarda o cliente (WaitingInformation), então não cabe continuar aqui.
+        next: () => {
+          this.mostrarModalMaisInfos = false;
+          this.maisInfosDescricao = '';
+          this.router.navigate(['/fornecedor/servicos/orcamentos'], {
+            queryParams: { info: '1' },
+          });
+        },
+        // Mantém o modal aberto e preserva o texto digitado para nova tentativa.
+        error: (err: ApiError) => {
+          this.infoErro = err?.message?.trim() ? err.message : 'Não foi possível pedir mais informações.';
+        },
+      });
   }
 
   adicionarArquivoMaisInfos() {

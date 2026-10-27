@@ -10,10 +10,14 @@
 
 ---
 
-## 📌 Pendências abertas — topo vivo (atualizado 2026-10-26)
+## 📌 Pendências abertas — topo vivo (atualizado 2026-10-27)
+
+> **Update de 27/10 — auditoria de jornadas (cliente↔fornecedor):**
+> - Serviços §2.1 (fornecedor pede mais informações) e §2.2 (cliente responde) — **resolvidos no front** (feedback/loading no pedido; cliente vê o pedido no detalhe e responde pela sala de chat do orçamento).
+> - Hospedagem §2.3 (recusa de reserva) — **aberta demanda de back `BE-BOOK-REJECT-1`**: a recusa precisa aceitar/retornar um **motivo** (hoje `RespondBookingDto` só tem `status`). Decisão do cliente: **justificativa obrigatória** → o front fica bloqueado até o contrato existir. Ver seção abaixo.
+> - As duas demandas de serviços (`BE-SRV-URL-1`, `BE-SRV-MEDIA-1`) foram **resolvidas** (branch `ajustes-gerais`, `e4fb1a4`) — ver tabela de resolvidos.
 
 > **Update de 26/10:** resolvido o **CORP** que travava a exibição de mídia (ver tabela de resolvidos).
-> Abertas duas demandas de back em **serviços** (`BE-SRV-URL-1`, `BE-SRV-MEDIA-1`) — ver seção própria abaixo.
 
 > **Update do back em 19/10** (branch `ajustes-gerais`, commit `05ad788`; `swagger.json` + `ORIENTACOESFRONT.md`
 > atualizados): **todos os bloqueios de backend foram resolvidos ou já estão no contrato.**
@@ -42,6 +46,9 @@
 | **BE-ROUTE-1** | **Não era bug de back.** O artefato `swagger.json` exportado não aplicava o `setGlobalPrefix` → dizia `/subscriptions/catalog` em vez de `/v1/subscriptions/catalog`. O swagger novo já traz o prefixo `/v1` nas 195 rotas. |
 | **BE-W1 / BE-W7 / BE-CHAT-1 / BE-Q5** | **Já estavam no contrato** (garantia-execução + contador; chat no Budget; inbox/não-lidos). Prontos para o front consumir. |
 | **BE-CORP-1** (26/10) | **Resolvido.** As imagens não renderizavam no front: o `GET /v1/files/*` vinha com `Cross-Origin-Resource-Policy: same-origin` (padrão do Helmet). Como front e API ficam em origens diferentes (`localhost:4200`×`:8000`, e domínios distintos em homolog), o navegador baixava o arquivo (200) mas bloqueava o uso em `<img>` (abria só em aba direta). Back passou a responder `Cross-Origin-Resource-Policy: cross-origin`. ⚠️ **Vale para todos os ambientes** — manter `cross-origin` em homolog/produção, senão a mídia volta a não renderizar. |
+| **BE-SRV-URL-1** (27/10) | **Resolvido** (branch `ajustes-gerais`, commit `e4fb1a4`). O validador da URL de arquivo foi corrigido em **3 DTOs** (imageUrl do serviço, fileUrl do anexo de trabalho e fileUrl do anexo de orçamento). Diagnóstico ajustado pelo back: **IP sempre passou; só host sem ponto (`localhost`) falhava.** Nada a fazer no front — segue enviando a `fileUrl` absoluta que a própria API emite. |
+| **BE-SRV-MEDIA-1** (27/10) | **Resolvido** (branch `ajustes-gerais`, commit `e4fb1a4`). O serviço passou a ter **capa** (`imageUrl`/`imageKey`), **vídeo** (`videoUrl`/`videoKey`) e **galeria** (`images: [{fileUrl, fileKey, sortOrder?}]`, até 10). Galeria só volta no **detalhe** (`GET /services/:id`), não na lista. **PATCH substitui** a galeria (manda sempre a lista final; omitir = inalterada, `[]` = esvazia). Teto de 10 barrado no front (acima disso o back responde 400). Imagens removidas são apagadas do storage. Front entregue: cadastro (capa+vídeo+galeria) e exibição no detalhe do cliente. |
+| **Foto de perfil — remover** (27/10) | **Resolvido (front).** `DELETE /v1/profile-photo` exige a `fileKey` da foto atual na **query string** (`?fileKey=...`); sem ela respondia `400 "A chave do arquivo deve ser um texto."`. O front passou a enviar a `fileKey`. (O avatar na home também passou a exibir a foto, não só a inicial.) |
 
 ### ✅ Front entregue (contrato de 19/10 — auditado e verde em 21/10)
 
@@ -51,18 +58,24 @@
 | **Garantia — execução + contador (BE-W1/W7)** | Reparo de garantia como `Work` vinculado (`isWarranty`/`parentWorkId`/`warrantyWorks`) + contador no perfil. | Badge "Garantia" em lista e detalhe (cliente e fornecedor); link original↔reparo; reparo esconde pagar/adicional e bloqueia garantia-de-garantia; `budgetId` tratado como opcional; contador `warrantiesCompleted/warrantiesTotal` ("X de Y atendidas") em `perfil` e `detalhes-prestador`. |
 | **Chat pré-aceite (BE-CHAT-1)** | Chat no nível do orçamento (Budget), antes do aceite. | `budget.chat.id` mapeado para `chatId` nos 4 mapeadores; botão de chat em `aprovar-orcamento` (cliente), `fazer-orcamento` e `orcamentos-fornecedor` (fornecedor); mesma sala no Budget e no Work (`budget.chat.id === work.chat.id`). |
 | **BE-Q5 (inbox)** | Inbox de conversas além do badge de não-lidos. | Tela `/mensagens` (`MensagensComponent`) consome `GET /chats` via `ChatService.inbox()` e abre `/chat/:id`; badge `unread-count` via `ChatUnreadStore` em bottom-nav, hub, home, atividade e mensagens. |
+| **Serviços §2.1 — fornecedor pede info** (27/10) | Feedback ao pedir mais informações. | `fazer-orcamento`: valida mensagem, estado de envio (anti-duplo-clique), erro mantém o modal e o texto; no sucesso volta à lista com aviso "Solicitação de informações enviada ao cliente". |
+| **Serviços §2.2 — cliente responde** (27/10) | Encerrar a jornada do pedido de informações. | `aprovar-orcamento` exibe o thread `informationRequests` (pergunta do prestador) e, em `WaitingInformation`, oferece "Responder pelo chat" reusando a sala do orçamento (BE-CHAT-1). |
 
-### 🔧 Demandas de back abertas (serviços — 26/10)
+### 🔧 Demandas de back abertas
 
-- **BE-SRV-URL-1** 🔴 — `POST`/`PATCH /v1/services` recusa a `imageUrl` com `400 "A URL da imagem do serviço é inválida."`.
-  O front envia exatamente a `fileUrl` **absoluta** que a própria API gerou no upload (ex.: `http://localhost:8000/v1/files/...`),
-  conforme §8.14. O DTO de restaurante aceita essa mesma URL; o de **serviço** não — indica validador `@IsUrl` com opções
-  padrão (rejeita `localhost`/IP, sem TLD) só no serviço. **Pedido:** aceitar a URL que a própria API emite (ou relaxar o
-  validador fora de produção). **Trava editar/criar serviço com imagem no ambiente local.**
-- **BE-SRV-MEDIA-1** 🟡 — serviço suporta **só uma imagem** (`imageUrl`/`imageKey`); **não há array de imagens nem vídeo**
-  nos DTOs (`CreateServiceDto`/`UpdateServiceDto`/`ResponseServiceDto`). Para o fornecedor ter **capa + galeria (várias imagens)
-  e vídeo** no serviço, o back precisa adicionar esses campos (espelhando o padrão de produto/hospedagem/transporte).
-  *Prioridade a definir pelo cliente.* O front hoje faz 1 imagem (bate com o contrato atual).
+- **BE-BOOK-REJECT-1** 🔴 (27/10, auditoria de jornadas §2.3) — **recusa de reserva precisa de motivo.**
+  Hoje `PATCH /v1/bookings/{id}/respond` recebe só `RespondBookingDto { status: 'Confirmed' | 'Rejected' }` e o
+  `ResponseBookingDto` tem `rejectedAt` mas **não tem `rejectReason`** (ao contrário de orçamento, que já tem `rejectReason`
+  no reject). A decisão do cliente é que a **justificativa da recusa seja obrigatória** e fique registrada/visível para o
+  hóspede. **Pedido ao back:**
+  1. `RespondBookingDto` aceitar `rejectReason?: string` (obrigatório quando `status = 'Rejected'`; validar no back).
+  2. `ResponseBookingDto` passar a retornar `rejectReason` para o hóspede ver o motivo no detalhe/lista da reserva.
+  3. Persistir o motivo junto da transição para `Rejected`.
+  **Enquanto não existir:** o front **não** implementa a recusa com justificativa (ficaria sem onde gravar o motivo).
+  A comunicação da recusa segue possível pela **sala de chat da reserva** (`chatRoomId`, já existe), mas sem registro
+  estruturado. *Bloqueia a entrega da fatia §2.3.*
+
+> ✅ Serviços: `BE-SRV-URL-1` e `BE-SRV-MEDIA-1` **resolvidos** (ver tabela "Resolvido no back"). Sem demanda de serviços em aberto.
 
 ### ⏳ Pendente (ops — fora do código)
 

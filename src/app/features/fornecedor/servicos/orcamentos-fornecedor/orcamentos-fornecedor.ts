@@ -28,6 +28,8 @@ export class OrcamentosFornecedorComponent implements OnInit {
   erro = '';
   /** Aviso "orçamento enviado" ao voltar de fazer-orcamento (?enviado=1). */
   enviado = false;
+  /** Aviso "informações solicitadas" ao voltar de fazer-orcamento (?info=1). */
+  infoSolicitada = false;
 
   tabs: { id: TabOrcamento; label: string }[] = [
     { id: 'todos', label: 'Todos' },
@@ -39,6 +41,9 @@ export class OrcamentosFornecedorComponent implements OnInit {
     if (this.route.snapshot.queryParamMap.get('enviado') === '1') {
       this.enviado = true;
       this.tabAtiva = 'respondidos';
+    }
+    if (this.route.snapshot.queryParamMap.get('info') === '1') {
+      this.infoSolicitada = true;
     }
     this.carregar();
   }
