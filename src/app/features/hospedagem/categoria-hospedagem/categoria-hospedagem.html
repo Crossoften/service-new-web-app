@@ -6,12 +6,14 @@
       <p class="ch-msg">Carregando categorias…</p>
     } @else if (erro) {
       <p class="ch-msg">{{ erro }}</p>
-    } @else {
+    } @else if (items.length) {
       <app-categoria-grid
         [items]="items"
         tipo="hospedagem"
         (itemSelecionado)="abrirCategoria($event)">
       </app-categoria-grid>
+    } @else {
+      <p class="ch-msg">Nenhuma categoria disponível no momento.</p>
     }
   </div>
 </div>

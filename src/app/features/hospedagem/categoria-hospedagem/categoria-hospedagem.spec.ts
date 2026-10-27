@@ -33,4 +33,12 @@ describe('CategoriaHospedagemComponent', () => {
       .flush([{ id: 1, name: 'Hotel', slug: 'hotel', isActive: true, sortOrder: 1 }]);
     expect(component.items.length).toBe(1);
   });
+
+  it('mostra estado vazio quando não há categorias', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/accommodations/categories')).flush([]);
+    fixture.detectChanges();
+    expect(component.items.length).toBe(0);
+    const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(texto).toContain('Nenhuma categoria disponível');
+  });
 });

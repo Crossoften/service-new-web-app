@@ -34,6 +34,22 @@
 > (ou campo `isAvailable`/`isOnline` no perfil do entregador) retornando o estado atual, e **filtrar a fila de
 > corridas por esse estado**. Quando existir, o front liga o toggle a esse endpoint.
 
+> **Update de 27/10 (varredura geral — conclusão).** Varri todas as jornadas (cliente, fornecedor, entregador,
+> parceiro e as verticais aluguel/hospedagem/transporte/empregos/marketplace/chat) atrás de afordâncias mortas,
+> estados ausentes e navegação quebrada. **Só gerou UMA demanda de back: `BE-COURIER-AVAILABILITY-1`** (acima).
+> Todo o resto foi **correção de front** (entregue por patches `varredura-R1…R5`), sem tocar em contrato de API:
+> - **Identidade real** no header de telas que mostravam nome/foto fixos (`status-entrega`, `trabalhos-entregador`,
+>   `home-parceiro`) — passam a ler `GET /profile/me`.
+> - **Estados ausentes** (carregando/erro/vazio) em telas que setavam os campos mas nunca os renderizavam, fazendo
+>   erro de API aparecer como "lista vazia": `home-fornecedor`, `listagem-servicos-fornecedor`,
+>   `trabalhos-fornecedor`, `detalhes-trabalho`, `home-parceiro`, `saldo`, `listagem-servicos` e `categoria-hospedagem`.
+> - **Anexos do cliente** em `detalhes-trabalho`: o botão de download era morto e a `fileUrl` era descartada no
+>   mapeamento — agora é link direto (`fileUrl` absoluta da API, usada como está).
+> - **Exclusão com confirmação** no cardápio (`gerenciar-cardapio`), alinhando ao padrão de produtos/vagas.
+> - **Afordâncias mortas removidas** (filtros sem handler, itens de menu sem destino, FAB de anexo, botões REVISÃO/
+>   AJUDA/sinos pontuais) e **"Ver mais" do fornecedor** tornado funcional (expande a lista in-place, já que não há
+>   tela de lista de pedidos). **Nada no back.**
+
 > **Update de 27/10 — auditoria de jornadas (cliente↔fornecedor):**
 > - Serviços §2.1 (fornecedor pede mais informações) e §2.2 (cliente responde) — **resolvidos no front** (feedback/loading no pedido; cliente vê o pedido no detalhe e responde pela sala de chat do orçamento).
 > - Hospedagem §2.3 (recusa de reserva) — **aberta demanda de back `BE-BOOK-REJECT-1`**: a recusa precisa aceitar/retornar um **motivo** (hoje `RespondBookingDto` só tem `status`). Decisão do cliente: **justificativa obrigatória** → o front fica bloqueado até o contrato existir. Ver seção abaixo.
