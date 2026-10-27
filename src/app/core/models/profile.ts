@@ -43,6 +43,13 @@ export interface ResponseProfileDto {
   referralCode?: string;
   birthDate?: string;
   commissionRate?: number;
+  /**
+   * Percentual que a plataforma retém sobre os ITENS de cada pedido de delivery
+   * (BE 27/10). Vem **só no perfil de fornecedor** (`profileType: 'Supplier'`),
+   * como número; `0` é legítimo (fornecedor isento). Já resolvido pelo back
+   * (taxa própria ou global) — não codificar no app.
+   */
+  deliveryCommissionRate?: number;
   socialMedias: ResponseProfileSocialMediaDto[];
   createdAt: string;
   updatedAt: string;

@@ -16,6 +16,26 @@
 
       @if (!modoEdicao) {
         <p class="rest-hint">Cadastre seu restaurante para começar a montar o cardápio e receber pedidos.</p>
+
+        <!-- AVISO: assinatura + comissão por pedido (BE 27/10) -->
+        <div class="rest-comissao">
+          <h4 class="rest-comissao__titulo">Além da assinatura, há uma comissão por pedido</h4>
+          <p class="rest-comissao__texto">
+            Para operar delivery você precisa de uma assinatura ativa.
+            @if (comissaoDelivery != null) {
+              Além dela, a plataforma retém <strong>{{ comissaoDelivery }}%</strong> sobre o valor dos
+              <strong>itens</strong> de cada pedido pago pelo aplicativo.
+            } @else {
+              Além dela, a plataforma retém um percentual sobre o valor dos <strong>itens</strong> de cada
+              pedido pago pelo aplicativo.
+            }
+            O desconto é automático, no recebimento de cada pedido: não há fatura mensal nem cobrança posterior.
+          </p>
+          <p class="rest-comissao__obs">
+            Frete e gorjeta não entram nesse cálculo, e pedidos pagos na entrega (dinheiro ou maquininha do
+            estabelecimento) não têm retenção.
+          </p>
+        </div>
       }
       @if (carregando || carregandoCategorias) {
         <p class="rest-msg">Carregando dados…</p>

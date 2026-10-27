@@ -378,3 +378,31 @@
     .rest-btn { flex: 1; }
   }
 }
+
+.rest-comissao {
+  background: rgba(107, 33, 214, 0.06);
+  border: 1px solid rgba(107, 33, 214, 0.2);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 4px;
+
+  &__titulo {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 6px;
+  }
+
+  &__texto {
+    font-size: 13px;
+    color: var(--color-text);
+    line-height: 1.5;
+  }
+
+  &__obs {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--color-gray-600);
+    line-height: 1.5;
+  }
+}

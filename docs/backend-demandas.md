@@ -12,6 +12,16 @@
 
 ## 📌 Pendências abertas — topo vivo (atualizado 2026-10-27)
 
+> **Update de 27/10 (fim do dia) — BE entregou as 5 demandas; front consumiu.**
+> O back (`swagger.json` + `ORIENTACOES-FRONT-27-10.md`) resolveu tudo o que estava aberto nesta rodada e o front já
+> está ligado:
+> - **`BE-INFLUENCER-CODE-1` ✅** — `referralCode` passou a ser gerado na 1ª leitura de `/referrals/me(/summary)`. Front já lê de lá (nada a mudar).
+> - **`BE-DELIVERY-ROUTE-1` ✅** — coordenadas vêm em `foodOrder.restaurant.address` (coleta) e `foodOrder.deliveryAddress` (entrega). Front: novo `MapaRotaComponent` (Directions coleta→entrega) + endereços escritos + fallback quando faltam coords. Depende de ops: **Directions API** habilitada na chave (SEC-1).
+> - **`BE-BOOK-REJECT-1` / `BE-RENT-REJECT-1` ✅** — `rejectReason` obrigatório na recusa (`respond`) e retornado. Front: motivo obrigatório no diálogo + exibição do motivo.
+> - **`BE-COMM-REJECT-1` ✅** — `rejectReason` devolvido na negociação. Front: exibe no detalhe (sem mudança no envio).
+> - **Delivery — comissão por pedido (produto novo):** aviso de assinatura + `{X}%` na criação do restaurante, lendo `deliveryCommissionRate` do perfil (0 é válido). Painel de payouts (`/restaurants/me/payouts`) já era consumido na `home-fornecedor`.
+> - **Pendente só ops: `SEC-1`** (restringir a chave do Maps + habilitar Directions API).
+
 > **Update de 27/10 — auditoria de jornadas (cliente↔fornecedor):**
 > - Serviços §2.1 (fornecedor pede mais informações) e §2.2 (cliente responde) — **resolvidos no front** (feedback/loading no pedido; cliente vê o pedido no detalhe e responde pela sala de chat do orçamento).
 > - Hospedagem §2.3 (recusa de reserva) — **aberta demanda de back `BE-BOOK-REJECT-1`**: a recusa precisa aceitar/retornar um **motivo** (hoje `RespondBookingDto` só tem `status`). Decisão do cliente: **justificativa obrigatória** → o front fica bloqueado até o contrato existir. Ver seção abaixo.
@@ -64,11 +74,18 @@
 | **Compra-venda / Aluguel — confirmação de recusa** (27/10) | Ação destrutiva sem confirmação (§5). | Novo componente compartilhado `ConfirmDialogComponent`; `negociacao-detalhe` e `aluguel-detalhe` pedem confirmação antes de recusar/cancelar (anti-clique-acidental); status terminal segue visível no detalhe. Justificativa estruturada depende de BE (BE-RENT-REJECT-1 / BE-COMM-REJECT-1). |
 | **Hospedagem / Transporte / Delivery — confirmação de recusa/cancelamento** (27/10) | Mesma ação destrutiva sem confirmação (§5). | `ConfirmDialogComponent` aplicado em `reserva-detalhe` (recusar/cancelar), `transporte-pedido-detalhe` (recusar cotação/cancelar), `detalhes-pedido-fornecedor` (recusar pedido = cancelar) e `status-pedido` (cancelar pedido do cliente). Cobertura de confirmação agora consistente em todas as categorias. |
 | **Entregador — ajustes de UI** (27/10) | Card roxo vazando; menu com rotas mortas; avatar não aparecia. | `he-carteira` ganhou o gutter lateral dos demais cards; removidos os itens de menu "Mais" e "Orçamentos" (rotas inexistentes), restando Home/Trabalhos/Perfil; header da `home-entregador` passou a carregar nome e foto reais via `GET /profile/me` (antes era placeholder fixo). Rota no mapa depende de `BE-DELIVERY-ROUTE-1`. |
+| **Motivo da recusa** (27/10) | Recusa com justificativa + exibição. | Diálogo `ConfirmDialogComponent` ganhou campo de motivo; `reserva-detalhe` e `aluguel-detalhe` **exigem** o motivo e enviam `rejectReason` no `respond`; reserva, aluguel e `negociacao-detalhe` **exibem** o "Motivo da recusa" quando `Rejected`. |
+| **Rota do entregador** (27/10) | Mapa coleta→entrega. | Novo `MapaRotaComponent` (Google Maps Directions) em `status-entrega`; lê `foodOrder.restaurant.address` (coleta) e `foodOrder.deliveryAddress` (entrega); mostra endereços escritos e cai em fallback quando faltam coordenadas. Depende de ops: Directions API habilitada (SEC-1). |
+| **Delivery — comissão por pedido** (27/10) | Aviso de assinatura + `{X}%` na criação do restaurante. | `restaurante-fornecedor` lê `deliveryCommissionRate` de `GET /profile/me` (0 é válido) e mostra o aviso (itens; frete/gorjeta fora; pago na entrega sem retenção). Payouts (`/restaurants/me/payouts`) já consumido na `home-fornecedor`. |
 | **Influencer — link/código de indicação** (27/10) | Link não gerava; título; código de quem indicou ia no campo errado. | `meu-codigo` passou a ler o `referralCode` de `GET /referrals/me/summary` (fallback `/referrals/me`), como a home do parceiro — o `profile/me.referralCode` pode vir vazio p/ influencer; título da tela "Código" → **"Meu link"**. **Correção de regra:** o código de quem indicou (link `?ref=` **e** campo "Código do influencer") agora vai em **`inviteCode`** (contrato: "código de convite do influencer que indicou"); antes o link mandava em `referralCode` (que é o código *próprio* do usuário) → a indicação por link não era atribuída. O cadastro do fornecedor já usa `/register/supplier` (RegisterBaseDto) com `inviteCode`. |
 
-### 🔧 Demandas de back abertas
+### ✅ Demandas de back (27/10) — RESOLVIDAS
 
-- **BE-INFLUENCER-CODE-1** 🔴 (27/10, influencer — **confirmado**) — **o back não gera/retorna o `referralCode` do influencer.**
+> Todas as demandas abaixo foram **resolvidas pelo back** no fim de 27/10 (`swagger.json` novo +
+> `ORIENTACOES-FRONT-27-10.md`) e **consumidas pelo front** (ver topo vivo). Ficam como registro do que foi pedido.
+> Único pendente é de **ops: `SEC-1`**.
+
+- **BE-INFLUENCER-CODE-1** ✅ (27/10, influencer — **confirmado e resolvido**) — **o back não gera/retorna o `referralCode` do influencer.**
   O campo está no contrato (`ResponseMyReferralsSummaryDto.referralCode`, `ResponseMyReferralsDto.referralCode`,
   `ResponseProfileDto.referralCode` nullable), mas **nenhuma resposta real o traz**. Evidência (influencer logado, 27/10):
   - `GET /v1/referrals/me` → `{"referrals":[],"totalRecords":0}` (sem `referralCode`);

@@ -31,6 +31,15 @@ describe('RestauranteFornecedorComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('lê a comissão de delivery do perfil (0 é válido)', () => {
+    component['carregarComissao']();
+    httpMock.expectOne((r) => r.url.endsWith('/profile/me')).flush({
+      id: 1, name: 'Dono', email: 'd@e', role: null, profileType: 'Supplier', status: 'Active',
+      deliveryCommissionRate: 0, socialMedias: [], createdAt: '', updatedAt: '',
+    });
+    expect(component.comissaoDelivery).toBe(0);
+  });
+
   it('envia o tempo de entrega no POST /restaurants', () => {
     component.categorias = [{ id: 2, name: 'Lanches' } as never];
     component.nome = 'Cantina';

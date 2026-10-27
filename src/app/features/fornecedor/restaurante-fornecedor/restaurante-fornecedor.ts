@@ -7,6 +7,7 @@ import { FornecedorService } from '../../../core/services/fornecedor';
 import { DeliveryService } from '../../../core/services/delivery';
 import { CepService } from '../../../core/services/cep';
 import { ApiService } from '../../../core/services/api';
+import { ProfileService } from '../../../core/services/profile';
 import {
   RestaurantAddressDto,
   ResponseRestaurantCategoryDto,
@@ -35,9 +36,12 @@ export class RestauranteFornecedorComponent implements OnInit {
   private readonly deliveryService = inject(DeliveryService);
   private readonly cepService = inject(CepService);
   private readonly api = inject(ApiService);
+  private readonly profile = inject(ProfileService);
 
   restaurante: ResponseRestaurantDto | null = null;
   categorias: ResponseRestaurantCategoryDto[] = [];
+  /** Comissão de delivery (%) do fornecedor, já resolvida pelo back; `0` é válido. */
+  comissaoDelivery?: number;
 
   nome = '';
   descricao = '';
@@ -84,6 +88,15 @@ export class RestauranteFornecedorComponent implements OnInit {
   ngOnInit() {
     this.carregarCategorias();
     this.carregarRestaurante();
+    this.carregarComissao();
+  }
+
+  /** Lê o percentual de comissão de delivery do perfil (só vem p/ fornecedor). */
+  private carregarComissao() {
+    this.profile.me().subscribe({
+      next: (p) => (this.comissaoDelivery = p.deliveryCommissionRate),
+      error: () => {},
+    });
   }
 
   /** Carrega as categorias de restaurante (com timeout e opção de retry). */
