@@ -245,10 +245,6 @@ export class StatusPedidoComponent implements OnInit, OnDestroy {
     return Number(valor ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  ajuda() {
-    // implementar depois
-  }
-
   abrirChat() {
     if (this.pedido) this.router.navigate(['/chat', this.pedido.chatRoomId]);
   }

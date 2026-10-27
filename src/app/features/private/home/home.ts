@@ -81,7 +81,6 @@ export class HomeComponent implements OnInit {
     { label: 'TRANSPORTE',              rota: '/transporte' },
     { label: 'HOSPEDAGEM',              rota: '/hospedagem' },
     { label: 'EMPREGOS E EMPREGADORES', rota: '/empregos/vagas' },
-    { label: 'ANUNCIE AQUI',            rota: null },
   ];
 
   ngOnInit() {

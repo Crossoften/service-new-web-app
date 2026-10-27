@@ -41,7 +41,6 @@ export class FazerOrcamentoComponent implements OnInit {
 
   // Mais informações
   maisInfosDescricao = '';
-  maisInfosArquivos: { id: number; nome: string; tipo: string }[] = [];
   enviandoInfo = false;
   infoErro = '';
 
@@ -118,10 +117,6 @@ export class FazerOrcamentoComponent implements OnInit {
           this.infoErro = err?.message?.trim() ? err.message : 'Não foi possível pedir mais informações.';
         },
       });
-  }
-
-  adicionarArquivoMaisInfos() {
-    // Upload real de anexos em fatia posterior.
   }
 
   enviar() {

@@ -84,6 +84,17 @@ describe('DetalhesSolicitacaoComponent', () => {
     expect(component.mostrarModal).toBe(false);
   });
 
+  it('permite reabrir o modal de acréscimo após fechá-lo (RESPONDER ACRÉSCIMO)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
+      workResponse({ extraRequestStatus: 'Pending', extraRequestValue: '80.00' }),
+    );
+    expect(component.mostrarModal).toBe(true);
+    component.cancelarModal();
+    expect(component.mostrarModal).toBe(false);
+    component.abrirAcrescimo();
+    expect(component.mostrarModal).toBe(true);
+  });
+
   it('abre o modal de garantia quando dentro da validade (sem window.prompt)', () => {
     httpMock.expectOne((r) => r.url.endsWith('/works/1') && r.method === 'GET').flush(
       workResponse({ status: 'Finished', isUnderWarranty: true, warrantyExpiresAt: '2026-09-16T00:00:00.000Z' }),

@@ -48,8 +48,4 @@ export class DetalhesPrestadorComponent implements OnInit {
   voltar() {
     history.back();
   }
-
-  abrirNotificacoes() {
-    // implementar depois
-  }
 }

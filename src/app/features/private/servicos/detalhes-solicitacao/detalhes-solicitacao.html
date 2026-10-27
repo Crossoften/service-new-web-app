@@ -167,9 +167,8 @@
   <!-- BOTÕES POR STEP -->
   <div class="solicitacao-actions">
 
-    @if (stepAtual === 'aguardando') {
-      <button class="solicitacao-btn solicitacao-btn--primary" (click)="finalizar()">FINALIZAR</button>
-      <button class="solicitacao-btn solicitacao-btn--outline" (click)="revisao()">REVISÃO</button>
+    @if (solicitacao?.extraPendente) {
+      <button class="solicitacao-btn solicitacao-btn--primary" (click)="abrirAcrescimo()">RESPONDER ACRÉSCIMO</button>
     }
 
     @if (stepAtual === 'cancelavel') {

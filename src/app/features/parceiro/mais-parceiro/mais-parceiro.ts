@@ -12,15 +12,11 @@ import { AuthService } from '../../../core/services/auth';
 export class MaisParceiroComponent {
   private readonly auth = inject(AuthService);
 
+  // Itens sem destino (Notificações, FAQ, Sobre, Termos, Política, Fale Conosco)
+  // removidos por ora para não haver clique silencioso — religar quando houver páginas.
   opcoes = [
-    { label: 'Notificações', rota: null },
-    { label: 'Saldo',        rota: '/parceiro/saldo' },
-    { label: 'FAQ',          rota: null },
-    { label: 'Sobre',        rota: null },
-    { label: 'Termos de Uso', rota: null },
-    { label: 'Política de Privacidade', rota: null },
-    { label: 'Fale Conosco', rota: null },
-    { label: 'Sair',         rota: '/login' },
+    { label: 'Saldo', rota: '/parceiro/saldo' },
+    { label: 'Sair',  rota: '/login' },
   ];
 
   constructor(private router: Router) {}

@@ -82,13 +82,9 @@ export class DetalhesSolicitacaoComponent implements OnInit {
     }
   }
 
-  finalizar() {
-    // Reservado para responder ao acréscimo (quando houver pendência).
+  /** Abre o modal de resposta ao acréscimo (aprovar/recusar o extra do fornecedor). */
+  abrirAcrescimo() {
     if (this.solicitacao?.extraPendente) this.mostrarModal = true;
-  }
-
-  revisao() {
-    // Avaliação do serviço será implementada em fatia posterior.
   }
 
   cancelar() {

@@ -123,8 +123,6 @@ export class AprovarOrcamentoComponent implements OnInit {
     history.back();
   }
 
-  abrirNotificacoes() {}
-
   formatarPreco(valor: number): string {
     return this.budgets.formatarPreco(valor);
   }
