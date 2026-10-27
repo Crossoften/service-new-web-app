@@ -1,8 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { BottomNavParceiroComponent } from '../../../shared/components/bottom-nav-parceiro/bottom-nav-parceiro';
-import { ProfileService } from '../../../core/services/profile';
+import { ReferralsService } from '../../../core/services/referrals';
 import { ApiError } from '../../../core/models/common';
 
 @Component({
@@ -12,7 +12,7 @@ import { ApiError } from '../../../core/models/common';
   styleUrl: './meu-codigo.scss',
 })
 export class MeuCodigoComponent implements OnInit {
-  private readonly profile = inject(ProfileService);
+  private readonly referrals = inject(ReferralsService);
 
   codigo = '';
   link = '';
@@ -22,12 +22,13 @@ export class MeuCodigoComponent implements OnInit {
 
   ngOnInit() {
     this.carregando = true;
-    this.profile
-      .me()
+    // O código do influencer vem dos endpoints de referral (como na home do parceiro);
+    // o `referralCode` do `profile/me` pode não ser preenchido para o influencer.
+    forkJoin({ summary: this.referrals.summary(), lista: this.referrals.me() })
       .pipe(finalize(() => (this.carregando = false)))
       .subscribe({
-        next: (p) => {
-          this.codigo = p.referralCode?.trim() ?? '';
+        next: ({ summary, lista }) => {
+          this.codigo = (summary.referralCode ?? lista.referralCode ?? '').trim();
           this.link = this.montarLink(this.codigo);
         },
         error: (err: ApiError) => {

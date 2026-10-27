@@ -64,8 +64,15 @@
 | **Compra-venda / Aluguel — confirmação de recusa** (27/10) | Ação destrutiva sem confirmação (§5). | Novo componente compartilhado `ConfirmDialogComponent`; `negociacao-detalhe` e `aluguel-detalhe` pedem confirmação antes de recusar/cancelar (anti-clique-acidental); status terminal segue visível no detalhe. Justificativa estruturada depende de BE (BE-RENT-REJECT-1 / BE-COMM-REJECT-1). |
 | **Hospedagem / Transporte / Delivery — confirmação de recusa/cancelamento** (27/10) | Mesma ação destrutiva sem confirmação (§5). | `ConfirmDialogComponent` aplicado em `reserva-detalhe` (recusar/cancelar), `transporte-pedido-detalhe` (recusar cotação/cancelar), `detalhes-pedido-fornecedor` (recusar pedido = cancelar) e `status-pedido` (cancelar pedido do cliente). Cobertura de confirmação agora consistente em todas as categorias. |
 | **Entregador — ajustes de UI** (27/10) | Card roxo vazando; menu com rotas mortas; avatar não aparecia. | `he-carteira` ganhou o gutter lateral dos demais cards; removidos os itens de menu "Mais" e "Orçamentos" (rotas inexistentes), restando Home/Trabalhos/Perfil; header da `home-entregador` passou a carregar nome e foto reais via `GET /profile/me` (antes era placeholder fixo). Rota no mapa depende de `BE-DELIVERY-ROUTE-1`. |
+| **Influencer — link/código de indicação** (27/10) | Link não gerava; título; código de quem indicou ia no campo errado. | `meu-codigo` passou a ler o `referralCode` de `GET /referrals/me/summary` (fallback `/referrals/me`), como a home do parceiro — o `profile/me.referralCode` pode vir vazio p/ influencer; título da tela "Código" → **"Meu link"**. **Correção de regra:** o código de quem indicou (link `?ref=` **e** campo "Código do influencer") agora vai em **`inviteCode`** (contrato: "código de convite do influencer que indicou"); antes o link mandava em `referralCode` (que é o código *próprio* do usuário) → a indicação por link não era atribuída. O cadastro do fornecedor já usa `/register/supplier` (RegisterBaseDto) com `inviteCode`. |
 
 ### 🔧 Demandas de back abertas
+
+- **BE-INFLUENCER-CODE-1** 🟡 (27/10, influencer — verificar) — **confirmar se o back gera/retorna o `referralCode` do influencer.**
+  O campo existe no contrato (`ResponseMyReferralsSummaryDto.referralCode`, `ResponseProfileDto.referralCode` nullable),
+  mas o link não estava sendo gerado. O front passou a ler de `GET /referrals/me/summary`. **Se, mesmo assim, o
+  `referralCode` voltar vazio/null** para o influencer, o back precisa **gerar e retornar** o código (o front já trata o
+  estado vazio, mas sem código não há link). *Verificar com um influencer real; se vier preenchido, fechar esta demanda.*
 
 - **BE-BOOK-REJECT-1** 🔴 (27/10, auditoria de jornadas §2.3) — **recusa de reserva precisa de motivo.**
   Hoje `PATCH /v1/bookings/{id}/respond` recebe só `RespondBookingDto { status: 'Confirmed' | 'Rejected' }` e o

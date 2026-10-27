@@ -49,6 +49,15 @@ describe('CadastroComponent', () => {
     expect(component.identifier).toBe('+5534998701109');
   });
 
+  it('código do influencer vai em inviteCode e não envia referralCode', () => {
+    component.codigo = 'joaosilva'; // digitado ou pré-preenchido pelo link ?ref=
+    preencherEEnviar('');
+    const req = httpMock.expectOne((r) => r.url.endsWith('/no-auth/register/client'));
+    expect(req.request.body.inviteCode).toBe('joaosilva');
+    expect('referralCode' in req.request.body).toBe(false);
+    req.flush({ message: 'ok', user: { id: 1, name: 'João', email: null, profileType: 'Client', status: 'Pending' } });
+  });
+
   it('inclui e-mail quando preenchido', () => {
     preencherEEnviar('joao@email.com');
     const req = httpMock.expectOne((r) => r.url.endsWith('/no-auth/register/client'));

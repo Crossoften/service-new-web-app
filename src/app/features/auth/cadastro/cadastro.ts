@@ -42,8 +42,9 @@ export class CadastroComponent implements OnInit, OnDestroy {
   nome = '';
   email = '';
   telefone = '';
-  codigo = ''; // → inviteCode (opcional)
-  referralCode = ''; // → referralCode (via link de indicação `?ref=`)
+  // Código de quem indicou (influencer) → `inviteCode`. Vem do campo do formulário
+  // ou pré-preenchido pelo link de indicação `?ref=`.
+  codigo = '';
   termosAceitos = false;
 
   // Step 1 — Parceiro (redes sociais)
@@ -76,8 +77,10 @@ export class CadastroComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.perfil = (this.route.snapshot.paramMap.get('perfil') ?? 'cliente') as Perfil;
-    // Link de indicação: `/cadastro/:perfil?ref=CODIGO` → preenche o referralCode.
-    this.referralCode = this.route.snapshot.queryParamMap.get('ref')?.trim() ?? '';
+    // Link de indicação: `/cadastro/:perfil?ref=CODIGO` → pré-preenche o código do
+    // influencer (inviteCode), o mesmo campo que o usuário pode digitar manualmente.
+    const ref = this.route.snapshot.queryParamMap.get('ref')?.trim();
+    if (ref) this.codigo = ref;
   }
 
   ngOnDestroy() {
@@ -291,10 +294,10 @@ export class CadastroComponent implements OnInit, OnDestroy {
     };
     const email = this.email.trim();
     if (email) dto.email = email; // e-mail é opcional — omitido quando em branco.
+    // Código do influencer que indicou → `inviteCode` (por link `?ref=` ou digitado).
+    // `referralCode` NÃO é enviado: é o código próprio do usuário, gerado pelo back.
     const invite = this.codigo.trim();
     if (invite) dto.inviteCode = invite;
-    const referral = this.referralCode.trim();
-    if (referral) dto.referralCode = referral;
     if (this.perfil === 'parceiro') {
       const socialMedias = this.buildSocialMedias();
       if (socialMedias.length) dto.socialMedias = socialMedias;
