@@ -3,7 +3,11 @@
   <div class="home-header">
     <div class="home-user" (click)="navegar('/perfil')">
       <div class="home-avatar">
-        <span>{{ inicial }}</span>
+        @if (fotoUrl) {
+          <img [src]="fotoUrl" alt="Foto de perfil" />
+        } @else {
+          <span>{{ inicial }}</span>
+        }
       </div>
       <div class="home-user-info">
         <span class="home-welcome">Bem vindo</span>

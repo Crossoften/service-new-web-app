@@ -299,11 +299,11 @@ export class PerfilComponent implements OnInit {
   }
 
   removerFoto() {
-    if (!this.fileUrl || this.salvandoDados) return;
+    if (!this.fileUrl || !this.fileKey || this.salvandoDados) return;
     this.erro = '';
     this.aviso = '';
     this.salvandoDados = true;
-    this.profileService.deletePhoto().subscribe({
+    this.profileService.deletePhoto(this.fileKey).subscribe({
       next: () => {
         this.salvandoDados = false;
         this.fileUrl = undefined;

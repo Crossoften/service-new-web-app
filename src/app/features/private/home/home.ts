@@ -61,6 +61,7 @@ export class HomeComponent implements OnInit {
   // Identidade real do cliente (sem mock)
   nome = '';
   inicial = 'U';
+  fotoUrl?: string;
 
   // Pedidos em andamento (para o destaque na home)
   pedidosAtivos: ResponseFoodOrderDto[] = [];
@@ -89,6 +90,7 @@ export class HomeComponent implements OnInit {
       next: (p) => {
         this.nome = p.name ?? '';
         this.inicial = (this.nome.trim()[0] ?? 'U').toUpperCase();
+        this.fotoUrl = p.fileUrl;
       },
       error: () => {},
     });
