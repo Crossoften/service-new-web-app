@@ -54,6 +54,19 @@ describe('AluguelDetalheComponent', () => {
     expect(component.aluguel?.status).toBe('Accepted');
   });
 
+  it('recusa só efetiva após confirmação (§5)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/rentals/1')).flush(rental('Requested'));
+    component.pedirRecusa();
+    expect(component.confirmacao).toBe('recusar');
+    httpMock.expectNone((r) => r.url.endsWith('/rentals/1/respond'));
+    component.confirmarAcao();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/rentals/1/respond'));
+    expect(req.request.body.status).toBe('Rejected');
+    req.flush(rental('Rejected'));
+    expect(component.confirmacao).toBeNull();
+    expect(component.aluguel?.status).toBe('Rejected');
+  });
+
   function rental(status: string) {
     return {
       id: 1, status, startDate: '', endDate: '', price: '100.00', chatRoomId: 9,

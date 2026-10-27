@@ -15,6 +15,7 @@
 > **Update de 27/10 — auditoria de jornadas (cliente↔fornecedor):**
 > - Serviços §2.1 (fornecedor pede mais informações) e §2.2 (cliente responde) — **resolvidos no front** (feedback/loading no pedido; cliente vê o pedido no detalhe e responde pela sala de chat do orçamento).
 > - Hospedagem §2.3 (recusa de reserva) — **aberta demanda de back `BE-BOOK-REJECT-1`**: a recusa precisa aceitar/retornar um **motivo** (hoje `RespondBookingDto` só tem `status`). Decisão do cliente: **justificativa obrigatória** → o front fica bloqueado até o contrato existir. Ver seção abaixo.
+> - Compra-venda e Aluguel (recusa) — **confirmação antes de recusar/cancelar entregue** (componente compartilhado). A justificativa estruturada abre as demandas `BE-RENT-REJECT-1` (aluguel, sem campo de motivo) e `BE-COMM-REJECT-1` (compra-venda aceita `message` mas não devolve). Ver seção abaixo.
 > - As duas demandas de serviços (`BE-SRV-URL-1`, `BE-SRV-MEDIA-1`) foram **resolvidas** (branch `ajustes-gerais`, `e4fb1a4`) — ver tabela de resolvidos.
 
 > **Update de 26/10:** resolvido o **CORP** que travava a exibição de mídia (ver tabela de resolvidos).
@@ -60,6 +61,7 @@
 | **BE-Q5 (inbox)** | Inbox de conversas além do badge de não-lidos. | Tela `/mensagens` (`MensagensComponent`) consome `GET /chats` via `ChatService.inbox()` e abre `/chat/:id`; badge `unread-count` via `ChatUnreadStore` em bottom-nav, hub, home, atividade e mensagens. |
 | **Serviços §2.1 — fornecedor pede info** (27/10) | Feedback ao pedir mais informações. | `fazer-orcamento`: valida mensagem, estado de envio (anti-duplo-clique), erro mantém o modal e o texto; no sucesso volta à lista com aviso "Solicitação de informações enviada ao cliente". |
 | **Serviços §2.2 — cliente responde** (27/10) | Encerrar a jornada do pedido de informações. | `aprovar-orcamento` exibe o thread `informationRequests` (pergunta do prestador) e, em `WaitingInformation`, oferece "Responder pelo chat" reusando a sala do orçamento (BE-CHAT-1). |
+| **Compra-venda / Aluguel — confirmação de recusa** (27/10) | Ação destrutiva sem confirmação (§5). | Novo componente compartilhado `ConfirmDialogComponent`; `negociacao-detalhe` e `aluguel-detalhe` pedem confirmação antes de recusar/cancelar (anti-clique-acidental); status terminal segue visível no detalhe. Justificativa estruturada depende de BE (BE-RENT-REJECT-1 / BE-COMM-REJECT-1). |
 
 ### 🔧 Demandas de back abertas
 
@@ -74,6 +76,16 @@
   **Enquanto não existir:** o front **não** implementa a recusa com justificativa (ficaria sem onde gravar o motivo).
   A comunicação da recusa segue possível pela **sala de chat da reserva** (`chatRoomId`, já existe), mas sem registro
   estruturado. *Bloqueia a entrega da fatia §2.3.*
+- **BE-RENT-REJECT-1** 🔴 (27/10, auditoria de jornadas — aluguel) — **mesma lacuna da reserva, agora no aluguel.**
+  `PATCH /v1/rentals/{id}/respond` recebe só `RespondRentalDto { status }` e `ResponseRentalDto` não tem `rejectReason`
+  (só `cancelReason`, usado no cancelamento). **Pedido:** espelhar o BE-BOOK-REJECT-1 — `rejectReason?` no respond
+  (obrigatório quando `Rejected`) e retornar no `ResponseRentalDto`. **Enquanto não existir:** front não grava motivo; a
+  recusa já ganhou **confirmação** (entregue) e a comunicação segue pelo chat do aluguel.
+- **BE-COMM-REJECT-1** 🟡 (27/10, auditoria de jornadas — compra e venda) — **o motivo da recusa não volta para o comprador.**
+  `RespondCommercialTransactionDto` já aceita `message?` na recusa, mas `ResponseCommercialTransactionDto` **não devolve**
+  esse texto (tem `rejectedAt`, não o motivo). **Pedido:** retornar o motivo da recusa (ex.: `rejectReason`/`rejectMessage`)
+  para exibir ao comprador no detalhe. **Enquanto não existir:** a recusa já ganhou **confirmação** (entregue); o motivo pode
+  ser enviado pelo chat da negociação.
 
 > ✅ Serviços: `BE-SRV-URL-1` e `BE-SRV-MEDIA-1` **resolvidos** (ver tabela "Resolvido no back"). Sem demanda de serviços em aberto.
 

@@ -7,10 +7,11 @@ import { SessionService } from '../../../core/services/session';
 import { CommercialTransactionDto } from '../../../core/models/commercial-transaction';
 import { PaymentMethod } from '../../../core/models/enums';
 import { ApiError } from '../../../core/models/common';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-negociacao-detalhe',
-  imports: [CommonModule],
+  imports: [CommonModule, ConfirmDialogComponent],
   templateUrl: './negociacao-detalhe.html',
   styleUrl: './negociacao-detalhe.scss',
 })
@@ -32,6 +33,9 @@ export class NegociacaoDetalheComponent implements OnInit {
     { id: 'BankSlip', label: 'Boleto' },
   ];
   metodoSelecionado: PaymentMethod = 'Pix';
+
+  /** Ação destrutiva aguardando confirmação (null = nenhuma). */
+  confirmacao: 'recusar' | 'cancelar' | null = null;
 
   ngOnInit() {
     this.id = Number(this.route.snapshot.paramMap.get('id'));
@@ -83,6 +87,25 @@ export class NegociacaoDetalheComponent implements OnInit {
 
   aceitar() {
     this.executar(this.marketplace.responder(this.id, { status: 'Accepted' }));
+  }
+
+  /** Recusar e cancelar são irreversíveis: pedem confirmação antes de efetivar (§5). */
+  pedirRecusa() {
+    this.erro = '';
+    this.confirmacao = 'recusar';
+  }
+  pedirCancelamento() {
+    this.erro = '';
+    this.confirmacao = 'cancelar';
+  }
+  fecharConfirmacao() {
+    if (!this.processando) this.confirmacao = null;
+  }
+  confirmarAcao() {
+    const acao = this.confirmacao;
+    this.confirmacao = null;
+    if (acao === 'recusar') this.recusar();
+    else if (acao === 'cancelar') this.cancelar();
   }
 
   recusar() {

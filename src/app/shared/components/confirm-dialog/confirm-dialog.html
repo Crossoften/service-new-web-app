@@ -1,0 +1,16 @@
+@if (aberto) {
+  <div class="cd-overlay" (click)="processando ? null : fechar.emit()">
+    <div class="cd-modal" (click)="$event.stopPropagation()">
+      <h3 class="cd-modal__titulo">{{ titulo }}</h3>
+      <p class="cd-modal__msg">{{ mensagem }}</p>
+      <div class="cd-modal__acoes">
+        <button class="cd-btn cd-btn--ghost" (click)="fechar.emit()" [disabled]="processando">
+          {{ cancelarLabel }}
+        </button>
+        <button class="cd-btn cd-btn--danger" (click)="confirmar.emit()" [disabled]="processando">
+          {{ processando ? 'AGUARDE…' : confirmarLabel }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

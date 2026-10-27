@@ -73,4 +73,22 @@ describe('NegociacaoDetalheComponent', () => {
     req.flush({ id: 5, referenceType: 'Product', referenceId: 1, status: 'Paid', requestedAmount: '1000.00', chatRoomId: 9, buyer: { id: 2, name: 'Ana' }, seller: { id: 3, name: 'Bob' }, createdAt: '', updatedAt: '' });
     expect(component.negociacao?.status).toBe('Paid');
   });
+
+  it('recusa só efetiva após confirmação (§5)', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/commercial-transactions/5')).flush({
+      id: 5, referenceType: 'Product', referenceId: 1, status: 'Requested', requestedAmount: '1000.00',
+      chatRoomId: 9, buyer: { id: 2, name: 'Ana' }, seller: { id: 3, name: 'Bob' }, createdAt: '', updatedAt: '',
+    });
+    // pedir recusa não chama a API; só abre a confirmação
+    component.pedirRecusa();
+    expect(component.confirmacao).toBe('recusar');
+    httpMock.expectNone((r) => r.url.endsWith('/commercial-transactions/5/respond'));
+    // confirmar efetiva o PATCH respond com Rejected
+    component.confirmarAcao();
+    const req = httpMock.expectOne((r) => r.url.endsWith('/commercial-transactions/5/respond'));
+    expect(req.request.body.status).toBe('Rejected');
+    req.flush({ id: 5, referenceType: 'Product', referenceId: 1, status: 'Rejected', requestedAmount: '1000.00', chatRoomId: 9, buyer: { id: 2, name: 'Ana' }, seller: { id: 3, name: 'Bob' }, createdAt: '', updatedAt: '' });
+    expect(component.confirmacao).toBeNull();
+    expect(component.negociacao?.status).toBe('Rejected');
+  });
 });

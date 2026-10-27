@@ -6,10 +6,11 @@ import { RentalService } from '../../../core/services/rental';
 import { SessionService } from '../../../core/services/session';
 import { RentalDto } from '../../../core/models/rental';
 import { ApiError } from '../../../core/models/common';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog';
 
 @Component({
   selector: 'app-aluguel-detalhe',
-  imports: [CommonModule],
+  imports: [CommonModule, ConfirmDialogComponent],
   templateUrl: './aluguel-detalhe.html',
   styleUrl: './aluguel-detalhe.scss',
 })
@@ -24,6 +25,9 @@ export class AluguelDetalheComponent implements OnInit {
   carregando = false;
   processando = false;
   erro = '';
+
+  /** Ação destrutiva aguardando confirmação (null = nenhuma). */
+  confirmacao: 'recusar' | 'cancelar' | null = null;
 
   ngOnInit() {
     this.id = Number(this.route.snapshot.paramMap.get('id'));
@@ -75,6 +79,26 @@ export class AluguelDetalheComponent implements OnInit {
   aceitar() {
     this.executar(this.rental.responder(this.id, { status: 'Accepted' }));
   }
+
+  /** Recusar e cancelar são irreversíveis: pedem confirmação antes de efetivar (§5). */
+  pedirRecusa() {
+    this.erro = '';
+    this.confirmacao = 'recusar';
+  }
+  pedirCancelamento() {
+    this.erro = '';
+    this.confirmacao = 'cancelar';
+  }
+  fecharConfirmacao() {
+    if (!this.processando) this.confirmacao = null;
+  }
+  confirmarAcao() {
+    const acao = this.confirmacao;
+    this.confirmacao = null;
+    if (acao === 'recusar') this.recusar();
+    else if (acao === 'cancelar') this.cancelar();
+  }
+
   recusar() {
     this.executar(this.rental.responder(this.id, { status: 'Rejected' }));
   }

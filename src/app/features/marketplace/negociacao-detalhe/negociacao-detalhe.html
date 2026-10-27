@@ -80,7 +80,7 @@
   @if (negociacao) {
     <div class="nd-actions">
       @if (podeResponder) {
-        <button class="nd-btn nd-btn--ghost" (click)="recusar()" [disabled]="processando">RECUSAR</button>
+        <button class="nd-btn nd-btn--ghost" (click)="pedirRecusa()" [disabled]="processando">RECUSAR</button>
         <button class="nd-btn" (click)="aceitar()" [disabled]="processando">ACEITAR</button>
       } @else if (podePagar) {
         <button class="nd-btn" (click)="pagar()" [disabled]="processando">
@@ -89,9 +89,21 @@
       } @else if (podeConcluir) {
         <button class="nd-btn" (click)="concluir()" [disabled]="processando">CONCLUIR</button>
       } @else if (podeCancelar) {
-        <button class="nd-btn nd-btn--ghost" (click)="cancelar()" [disabled]="processando">CANCELAR</button>
+        <button class="nd-btn nd-btn--ghost" (click)="pedirCancelamento()" [disabled]="processando">CANCELAR</button>
       }
     </div>
   }
+
+  <app-confirm-dialog
+    [aberto]="confirmacao !== null"
+    [titulo]="confirmacao === 'recusar' ? 'Recusar negociação' : 'Cancelar negociação'"
+    [mensagem]="confirmacao === 'recusar'
+      ? 'Tem certeza que deseja recusar esta negociação? Esta ação não pode ser desfeita.'
+      : 'Tem certeza que deseja cancelar esta negociação? Esta ação não pode ser desfeita.'"
+    [confirmarLabel]="confirmacao === 'recusar' ? 'Recusar' : 'Cancelar negociação'"
+    [processando]="processando"
+    (confirmar)="confirmarAcao()"
+    (fechar)="fecharConfirmacao()">
+  </app-confirm-dialog>
 
 </div>

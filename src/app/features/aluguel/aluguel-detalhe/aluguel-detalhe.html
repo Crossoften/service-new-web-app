@@ -48,16 +48,28 @@
   @if (aluguel) {
     <div class="ad-actions">
       @if (podeResponder) {
-        <button class="ad-btn ad-btn--ghost" (click)="recusar()" [disabled]="processando">RECUSAR</button>
+        <button class="ad-btn ad-btn--ghost" (click)="pedirRecusa()" [disabled]="processando">RECUSAR</button>
         <button class="ad-btn" (click)="aceitar()" [disabled]="processando">ACEITAR</button>
       } @else if (podeIniciar) {
         <button class="ad-btn" (click)="iniciar()" [disabled]="processando">CONFIRMAR RETIRADA</button>
       } @else if (podeDevolver) {
         <button class="ad-btn" (click)="devolver()" [disabled]="processando">CONFIRMAR DEVOLUÇÃO</button>
       } @else if (podeCancelar) {
-        <button class="ad-btn ad-btn--ghost" (click)="cancelar()" [disabled]="processando">CANCELAR</button>
+        <button class="ad-btn ad-btn--ghost" (click)="pedirCancelamento()" [disabled]="processando">CANCELAR</button>
       }
     </div>
   }
+
+  <app-confirm-dialog
+    [aberto]="confirmacao !== null"
+    [titulo]="confirmacao === 'recusar' ? 'Recusar aluguel' : 'Cancelar aluguel'"
+    [mensagem]="confirmacao === 'recusar'
+      ? 'Tem certeza que deseja recusar esta solicitação de aluguel? Esta ação não pode ser desfeita.'
+      : 'Tem certeza que deseja cancelar este aluguel? Esta ação não pode ser desfeita.'"
+    [confirmarLabel]="confirmacao === 'recusar' ? 'Recusar' : 'Cancelar aluguel'"
+    [processando]="processando"
+    (confirmar)="confirmarAcao()"
+    (fechar)="fecharConfirmacao()">
+  </app-confirm-dialog>
 
 </div>
