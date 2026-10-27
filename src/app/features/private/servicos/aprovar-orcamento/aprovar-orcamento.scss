@@ -91,26 +91,29 @@
   &__item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    gap: 6px;
   }
 
   &__valor {
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--color-text);
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 5px;
     &--like { color: #16A34A; }
     &--dislike { color: #DC2626; }
   }
 
-  &__ic { width: 15px; height: 15px; flex-shrink: 0; }
+  &__ic { width: 22px; height: 22px; flex-shrink: 0; }
 
   &__label {
     font-size: 11px;
     color: var(--color-gray-600);
     line-height: 1.3;
+    text-align: center;
   }
 
   &__divider {
