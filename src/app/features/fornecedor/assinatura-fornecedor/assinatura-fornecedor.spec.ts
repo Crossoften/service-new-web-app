@@ -132,4 +132,35 @@ describe('AssinaturaFornecedorComponent', () => {
     arrancar([categoria({ id: 7, name: 'Serviços', isSubscribed: true })]);
     expect(nav).toHaveBeenCalledWith(['/fornecedor/assinaturas']);
   });
+
+  it('planoDestaqueId é o de menor preço por mês e vira a pré-seleção', () => {
+    arrancar([categoria({ id: 3 })], [
+      plan({ id: 1, name: 'Mensal', monthlyPrice: '19.90' }),
+      plan({ id: 2, name: 'Semestral', monthlyPrice: '14.90' }),
+      plan({ id: 3, name: 'Anual', monthlyPrice: '9.90' }),
+    ]);
+    expect(component.planoDestaqueId).toBe(3);
+    expect(component.planoSelecionado).toBe(3);
+  });
+
+  it('escolherPlano fixa o plano do card e dispara o POST', () => {
+    arrancar([categoria({ id: 3 })], [plan({ id: 1 }), plan({ id: 2, monthlyPrice: '9.90' })]);
+    component.categoriaSelecionada = 3;
+    const orig = window.location;
+    Object.defineProperty(window, 'location', { configurable: true, value: { href: '' } });
+    component.escolherPlano({ id: 1 } as never);
+    const req = httpMock.expectOne((r) => r.url.endsWith('/subscriptions'));
+    expect(req.request.body.planId).toBe(1);
+    req.flush({ message: 'ok', checkoutUrl: 'https://mp/c', subscription: {} });
+    Object.defineProperty(window, 'location', { configurable: true, value: orig });
+  });
+
+  it('?novo=1 ativa o "Assinar depois" e navega para a home', () => {
+    routeSnapshot.queryParamMap = convertToParamMap({ novo: '1' });
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    arrancar([categoria({ id: 3 })]);
+    expect(component.postCadastro).toBe(true);
+    component.assinarDepois();
+    expect(nav).toHaveBeenCalledWith(['/fornecedor/home']);
+  });
 });

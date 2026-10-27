@@ -10,6 +10,10 @@ import { RentalService } from '../../../core/services/rental';
 import { TransportService } from '../../../core/services/transport';
 import { MarketplaceService } from '../../../core/services/marketplace';
 import { ChatUnreadStore } from '../../../core/services/chat-unread-store';
+import { SubscriptionService } from '../../../core/services/subscription';
+
+/** Marca que o fornecedor já viu a apresentação dos planos (uma vez, por dispositivo). */
+const INTRO_ASSINATURA_KEY = 'service:assinatura-intro-vista';
 
 interface VerticalCard {
   icone: string;
@@ -55,6 +59,7 @@ export class HubFornecedorComponent implements OnInit {
   private readonly rental = inject(RentalService);
   private readonly transport = inject(TransportService);
   private readonly marketplace = inject(MarketplaceService);
+  private readonly subscriptions = inject(SubscriptionService);
   protected readonly unread = inject(ChatUnreadStore);
 
   trabalhosAtivos = 0;
@@ -74,6 +79,7 @@ export class HubFornecedorComponent implements OnInit {
   ];
 
   ngOnInit() {
+    this.apresentarPlanosNoPrimeiroAcesso();
     this.unread.refresh(); // badge de não-lidos no hub (BE-Q5)
     // Trabalho ativo = em jogo até o fim do serviço: recém-aprovado (`Pending`) **ou**
     // já iniciado (`InProgress`). Antes só contava `Pending`, então o card sumia assim
@@ -89,6 +95,37 @@ export class HubFornecedorComponent implements OnInit {
       .pipe(catchError(() => of([] as OrcamentoFornecedor[])))
       .subscribe((lista) => (this.orcamentosPendentes = lista.length));
     this.carregarAtividades();
+  }
+
+  /**
+   * Fluxo pós-cadastro: no **primeiro acesso** do fornecedor, se ele ainda **não
+   * tem nenhuma assinatura**, abre a tela de planos com "Assinar depois" (`?novo=1`).
+   * Acontece uma vez (flag por dispositivo); depois, o paywall por categoria (403 no
+   * `errorInterceptor`) é quem leva aos planos quando ele tenta usar um recurso.
+   */
+  private apresentarPlanosNoPrimeiroAcesso() {
+    let jaViu = false;
+    try {
+      jaViu = localStorage.getItem(INTRO_ASSINATURA_KEY) === '1';
+    } catch {
+      jaViu = false;
+    }
+    if (jaViu) return;
+    this.subscriptions.catalog().subscribe({
+      next: (res) => {
+        try {
+          localStorage.setItem(INTRO_ASSINATURA_KEY, '1');
+        } catch {
+          /* ambiente sem storage: segue sem marcar */
+        }
+        const temAssinatura = (res.categories ?? []).some((c) => c.isSubscribed);
+        if (!temAssinatura) {
+          this.router.navigate(['/fornecedor/assinatura'], { queryParams: { novo: 1 } });
+        }
+      },
+      // Erro no catálogo: não marca (tenta de novo no próximo acesso) e não redireciona.
+      error: () => {},
+    });
   }
 
   /**

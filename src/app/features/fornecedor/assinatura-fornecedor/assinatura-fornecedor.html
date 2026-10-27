@@ -12,7 +12,11 @@
 
   <div class="assin-content">
 
-    <p class="assin-hint">Escolha a categoria que você quer atender e o plano de assinatura. O pagamento é concluído no checkout do Mercado Pago.</p>
+    <!-- CABEÇALHO -->
+    <div class="assin-hero">
+      <h1 class="assin-hero__titulo">Planos para prestadores de serviços</h1>
+      <p class="assin-hero__sub">Divulgue seus serviços e conquiste mais clientes.</p>
+    </div>
 
     @if (carregando) {
       <p class="assin-msg">Carregando catálogo…</p>
@@ -20,69 +24,105 @@
       <p class="assin-msg">{{ erro || 'Nenhuma categoria disponível no momento.' }}</p>
     } @else {
 
-      <!-- CATEGORIAS -->
-      <span class="assin-secao">Categoria</span>
+      <!-- CATEGORIA -->
       <div class="assin-cats">
-        @for (cat of categorias; track cat.id) {
-          <button type="button" class="assin-cat"
-            [class.assin-cat--ativo]="categoriaSelecionada === cat.id"
-            [class.assin-cat--assinada]="cat.isSubscribed"
-            [disabled]="cat.isSubscribed"
-            (click)="selecionarCategoria(cat)">
-            <span class="assin-cat__nome">{{ cat.name }}</span>
-            @if (cat.isSubscribed) {
-              <span class="assin-cat__tag">Assinada</span>
-            }
-          </button>
-        }
+        <span class="assin-cats__label">Categoria</span>
+        <div class="assin-cats__chips">
+          @for (cat of categorias; track cat.id) {
+            <button type="button" class="assin-chip"
+              [class.assin-chip--ativo]="categoriaSelecionada === cat.id"
+              [class.assin-chip--assinada]="cat.isSubscribed"
+              [disabled]="cat.isSubscribed"
+              (click)="selecionarCategoria(cat)">
+              {{ cat.name }}@if (cat.isSubscribed) { <span class="assin-chip__tag">✓</span> }
+            </button>
+          }
+        </div>
       </div>
 
       @if (!temCategoriasDisponiveis) {
         <p class="assin-msg">Você já assina todas as categorias disponíveis.</p>
+      } @else if (planos.length === 0) {
+        <p class="assin-msg">Nenhum plano disponível no momento.</p>
       } @else {
 
-        <!-- PLANOS -->
-        <span class="assin-secao">Plano</span>
-        @if (planos.length === 0) {
-          <p class="assin-msg">Nenhum plano disponível no momento.</p>
-        } @else {
-          <div class="assin-planos">
-            @for (plano of planos; track plano.id) {
-              <div class="assin-plano"
-                [class.assin-plano--ativo]="planoSelecionado === plano.id"
-                (click)="planoSelecionado = plano.id">
-                <div class="assin-plano__info">
-                  <span class="assin-plano__nome">{{ cicloLabel(plano) }}</span>
-                  <span class="assin-plano__preco">{{ precoFmt(plano.price) }} · {{ precoFmt(plano.monthlyPrice) }}/mês</span>
-                  @if (plano.description) {
-                    <span class="assin-plano__desc">{{ plano.description }}</span>
-                  }
-                </div>
-                <div class="assin-plano__radio" [class.assin-plano__radio--ativo]="planoSelecionado === plano.id"></div>
+        <!-- PLANOS (cards) -->
+        <div class="assin-planos">
+          @for (plano of planos; track plano.id) {
+            <div class="assin-plano"
+              [class.assin-plano--destaque]="plano.id === planoDestaqueId"
+              [class.assin-plano--ativo]="planoSelecionado === plano.id">
+
+              @if (plano.id === planoDestaqueId) {
+                <span class="assin-plano__badge">MAIS VANTAJOSO</span>
+              }
+
+              <span class="assin-plano__nome">{{ cicloLabel(plano) }}</span>
+
+              <div class="assin-plano__preco">
+                <span class="assin-plano__moeda">R$</span>
+                <span class="assin-plano__valor">{{ precoFmt(plano.monthlyPrice).replace('R$ ', '') }}</span>
+                <span class="assin-plano__mes">/mês</span>
               </div>
-            }
-          </div>
 
-          <!-- E-MAIL DO PAGADOR (opcional) -->
-          <div class="assin-field">
-            <label>E-mail para o pagamento (opcional)</label>
-            <input type="email" placeholder="voce@email.com" [(ngModel)]="payerEmail" />
-          </div>
-        }
+              <span class="assin-plano__total">{{ precoFmt(plano.price) }} / {{ cicloLabel(plano).toLowerCase() }}</span>
 
+              @if (plano.description) {
+                <span class="assin-plano__desc">{{ plano.description }}</span>
+              }
+
+              <button class="assin-plano__btn"
+                (click)="escolherPlano(plano)"
+                [disabled]="assinando">
+                {{ assinando && planoSelecionado === plano.id ? 'PROCESSANDO…' : 'ESCOLHER PLANO' }}
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- NOTA DELIVERY (sucinta; detalhe fica na criação do restaurante) -->
+        <p class="assin-nota">
+          Para <strong>delivery</strong>, além da assinatura há uma comissão por pedido sobre os itens.
+          Os detalhes aparecem ao criar seu restaurante.
+        </p>
+
+        <!-- E-MAIL DO PAGADOR (opcional) -->
+        <div class="assin-field">
+          <label>E-mail para o pagamento <span class="assin-field__opt">(opcional)</span></label>
+          <input type="email" placeholder="voce@email.com" [(ngModel)]="payerEmail" />
+        </div>
       }
 
       @if (erro) { <span class="assin-erro">{{ erro }}</span> }
+
+      <!-- BENEFÍCIOS -->
+      <div class="assin-beneficios">
+        <div class="assin-beneficio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Mais clientes</span>
+        </div>
+        <div class="assin-beneficio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          <span>Mais oportunidades</span>
+        </div>
+        <div class="assin-beneficio">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Mais visibilidade</span>
+        </div>
+        <div class="assin-beneficio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Mais credibilidade</span>
+        </div>
+      </div>
 
     }
 
   </div>
 
-  <div class="assin-actions">
-    <button class="assin-btn" (click)="assinar()"
-      [disabled]="assinando || carregando || !temCategoriasDisponiveis || planos.length === 0">
-      {{ assinando ? 'PROCESSANDO…' : 'IR PARA O PAGAMENTO' }}
-    </button>
-  </div>
+  @if (postCadastro) {
+    <div class="assin-actions">
+      <button class="assin-depois" (click)="assinarDepois()">Assinar depois</button>
+    </div>
+  }
 
 </div>

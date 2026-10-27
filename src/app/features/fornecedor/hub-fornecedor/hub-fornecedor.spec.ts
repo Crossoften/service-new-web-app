@@ -31,10 +31,15 @@ describe('HubFornecedorComponent', () => {
     fixture = TestBed.createComponent(HubFornecedorComponent);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
+    // Intro de planos já vista por padrão: os testes gerais não disparam o catálogo.
+    try { localStorage.setItem('service:assinatura-intro-vista', '1'); } catch { /* ok */ }
     fixture.detectChanges(); // ngOnInit → GET /works + GET /budgets
   });
 
-  afterEach(() => httpMock.verify());
+  afterEach(() => {
+    httpMock.verify();
+    try { localStorage.removeItem('service:assinatura-intro-vista'); } catch { /* ok */ }
+  });
 
   function flush(opts: {
     works?: unknown[];
@@ -109,6 +114,28 @@ describe('HubFornecedorComponent', () => {
     const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
     component.irMensagens();
     expect(nav).toHaveBeenCalledWith(['/mensagens']);
+  });
+
+  it('primeiro acesso sem assinatura → abre os planos (?novo=1)', () => {
+    flush(); // init padrão do componente do beforeEach
+    try { localStorage.removeItem('service:assinatura-intro-vista'); } catch { /* ok */ }
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component['apresentarPlanosNoPrimeiroAcesso']();
+    httpMock.expectOne((r) => r.url.endsWith('/subscriptions/catalog')).flush({
+      plans: [], categories: [{ id: 3, name: 'Serviços', slug: 's', isSubscribed: false }], subscribedCount: 0,
+    });
+    expect(nav).toHaveBeenCalledWith(['/fornecedor/assinatura'], { queryParams: { novo: 1 } });
+  });
+
+  it('já com alguma assinatura → não abre os planos', () => {
+    flush();
+    try { localStorage.removeItem('service:assinatura-intro-vista'); } catch { /* ok */ }
+    const nav = vi.spyOn(TestBed.inject(Router), 'navigate');
+    component['apresentarPlanosNoPrimeiroAcesso']();
+    httpMock.expectOne((r) => r.url.endsWith('/subscriptions/catalog')).flush({
+      plans: [], categories: [{ id: 3, name: 'Serviços', slug: 's', isSubscribed: true }], subscribedCount: 1,
+    });
+    expect(nav).not.toHaveBeenCalledWith(['/fornecedor/assinatura'], { queryParams: { novo: 1 } });
   });
 
   it('mostra pedidos recebidos em andamento (hospedagem) e ignora cancelados', () => {

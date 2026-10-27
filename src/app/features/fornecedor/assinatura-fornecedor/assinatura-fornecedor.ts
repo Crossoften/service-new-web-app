@@ -35,19 +35,22 @@ export class AssinaturaFornecedorComponent implements OnInit {
   categoriaSelecionada: number | null = null;
   planoSelecionado: number | null = null;
   payerEmail = '';
+  /** Veio logo após o cadastro (`?novo=1`): mostra o "Assinar depois". */
+  postCadastro = false;
 
   carregando = false;
   assinando = false;
   erro = '';
 
   ngOnInit() {
+    this.postCadastro = this.route.snapshot.queryParamMap.get('novo') === '1';
     this.carregando = true;
     this.subscriptions.catalog().subscribe({
       next: (res) => {
         this.carregando = false;
         this.planos = res.plans ?? [];
         this.categorias = res.categories ?? [];
-        this.planoSelecionado = this.planos.length ? this.planos[0].id : null;
+        this.planoSelecionado = this.planoDestaqueId ?? (this.planos.length ? this.planos[0].id : null);
         if (this.aplicarCategoriaDaRota()) return; // redirecionou (categoria vencida)
         // Sem pré-seleção pela rota: usa a primeira categoria ainda não assinada.
         if (this.categoriaSelecionada == null) {
@@ -64,6 +67,31 @@ export class AssinaturaFornecedorComponent implements OnInit {
 
   get temCategoriasDisponiveis(): boolean {
     return this.categorias.some((c) => !c.isSubscribed);
+  }
+
+  /** Plano "mais vantajoso" = menor preço por mês (destaque no card). */
+  get planoDestaqueId(): number | null {
+    if (!this.planos.length) return null;
+    return this.planos.reduce((melhor, p) =>
+      Number(p.monthlyPrice) < Number(melhor.monthlyPrice) ? p : melhor,
+    ).id;
+  }
+
+  /** Categoria selecionada (para o rótulo e o `assinar`). */
+  get categoriaAtual(): ResponseCatalogCategoryDto | undefined {
+    return this.categorias.find((c) => c.id === this.categoriaSelecionada);
+  }
+
+  /** Escolhe o plano do card e vai direto para o pagamento. */
+  escolherPlano(plano: ResponsePlanDto) {
+    if (this.assinando) return;
+    this.planoSelecionado = plano.id;
+    this.assinar();
+  }
+
+  /** "Assinar depois": segue para a home do fornecedor (fluxo pós-cadastro). */
+  assinarDepois() {
+    this.router.navigate(['/fornecedor/home']);
   }
 
   /**
