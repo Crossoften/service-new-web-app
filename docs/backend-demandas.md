@@ -77,6 +77,7 @@
 | **Motivo da recusa** (27/10) | Recusa com justificativa + exibição. | Diálogo `ConfirmDialogComponent` ganhou campo de motivo; `reserva-detalhe` e `aluguel-detalhe` **exigem** o motivo e enviam `rejectReason` no `respond`; reserva, aluguel e `negociacao-detalhe` **exibem** o "Motivo da recusa" quando `Rejected`. |
 | **Rota do entregador** (27/10) | Mapa coleta→entrega. | Novo `MapaRotaComponent` (Google Maps Directions) em `status-entrega`; lê `foodOrder.restaurant.address` (coleta) e `foodOrder.deliveryAddress` (entrega); mostra endereços escritos e cai em fallback quando faltam coordenadas. Depende de ops: Directions API habilitada (SEC-1). |
 | **Delivery — comissão por pedido** (27/10) | Aviso de assinatura + `{X}%` na criação do restaurante. | `restaurante-fornecedor` lê `deliveryCommissionRate` de `GET /profile/me` (0 é válido) e mostra o aviso (itens; frete/gorjeta fora; pago na entrega sem retenção). Payouts (`/restaurants/me/payouts`) já consumido na `home-fornecedor`. |
+| **Planos — layout + fluxo** (27/10) | Tela de planos redesenhada + quando aparece. | `assinatura-fornecedor`: 3 cards de plano (dinâmicos do catálogo), destaque "MAIS VANTAJOSO" (menor preço/mês), benefícios, nota sucinta de delivery, "Assinar depois" (`?novo=1`). **Fluxo:** 1º acesso do fornecedor sem assinatura abre os planos uma vez (gatilho no `hub-fornecedor`, flag por dispositivo); paywall por categoria já era automático via `errorInterceptor` (403 "assinatura ativa" + `categoryId`) — ver `BE-PAYWALL-403-1`. |
 | **Influencer — link/código de indicação** (27/10) | Link não gerava; título; código de quem indicou ia no campo errado. | `meu-codigo` passou a ler o `referralCode` de `GET /referrals/me/summary` (fallback `/referrals/me`), como a home do parceiro — o `profile/me.referralCode` pode vir vazio p/ influencer; título da tela "Código" → **"Meu link"**. **Correção de regra:** o código de quem indicou (link `?ref=` **e** campo "Código do influencer") agora vai em **`inviteCode`** (contrato: "código de convite do influencer que indicou"); antes o link mandava em `referralCode` (que é o código *próprio* do usuário) → a indicação por link não era atribuída. O cadastro do fornecedor já usa `/register/supplier` (RegisterBaseDto) com `inviteCode`. |
 
 ### ✅ Demandas de back (27/10) — RESOLVIDAS
@@ -133,6 +134,20 @@
   **Directions API** habilitada e restrita por ambiente. *Bloqueia a feature de rota do entregador.*
 
 > ✅ Serviços: `BE-SRV-URL-1` e `BE-SRV-MEDIA-1` **resolvidos** (ver tabela "Resolvido no back"). Sem demanda de serviços em aberto.
+
+### 🔎 Verificar com o back (paywall de assinatura)
+
+- **BE-PAYWALL-403-1** 🟡 (27/10, assinatura — **a confirmar**) — **padronizar o 403 de "assinatura ativa" nas ações gated.**
+  O front leva o fornecedor à tela de planos **automaticamente** via `errorInterceptor`: em qualquer `403` cuja mensagem
+  contém **"assinatura ativa"**, redireciona para `/fornecedor/assinatura`, pré-selecionando a categoria quando o corpo do
+  erro traz **`categoryId`**. Isso já funciona para **criar restaurante** (o back já responde esse 403). **Verificar se as
+  demais ações gated respondem o mesmo 403 padronizado** (mesma frase "assinatura ativa" + `categoryId` no corpo), senão o
+  paywall não dispara nelas:
+  - **Anunciar** aluguel / venda / transporte (criar anúncio na vertical);
+  - **Responder orçamento** (fornecedor) e **aceitar pedido/corrida** (reserva/aluguel/transporte/negociação/food-order).
+  **Pedido ao back:** confirmar (ou padronizar) que essas rotas, quando o fornecedor não tem assinatura ativa **daquela
+  categoria**, respondem `403` com a frase **"assinatura ativa"** e, de preferência, `categoryId` no corpo. *Sem isso, o
+  front não tem como saber que foi bloqueio de assinatura (não vamos adivinhar por outras pistas).*
 
 ### ⏳ Pendente (ops — fora do código)
 
