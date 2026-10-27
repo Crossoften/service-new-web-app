@@ -189,10 +189,17 @@
         <!-- CONTA DE RECEBIMENTO (fornecedor) -->
         <div class="perfil-secao">
           <span class="perfil-secao__titulo">Conta de recebimento</span>
-          <p class="perfil-secao__hint">Conecte o Mercado Pago para receber pagamentos online.</p>
-          <button class="perfil-btn perfil-btn--outline" (click)="irContaRecebimento()">
-            CONECTAR MERCADO PAGO
-          </button>
+          @if (perfil?.mercadoPagoLinked) {
+            <p class="perfil-secao__hint perfil-secao__hint--ok">✓ Mercado Pago conectado — você recebe seus pagamentos normalmente.</p>
+            <button class="perfil-btn perfil-btn--outline" (click)="irContaRecebimento()">
+              GERENCIAR CONEXÃO
+            </button>
+          } @else {
+            <p class="perfil-secao__hint perfil-secao__hint--alerta">Conecte o Mercado Pago para receber. Enquanto não conectar, nenhum cliente consegue pagar seus pedidos.</p>
+            <button class="perfil-btn perfil-btn--outline" (click)="irContaRecebimento()">
+              CONECTAR MERCADO PAGO
+            </button>
+          }
         </div>
       }
 

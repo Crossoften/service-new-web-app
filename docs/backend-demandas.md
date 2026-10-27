@@ -22,6 +22,15 @@
 > - **Delivery — comissão por pedido (produto novo):** aviso de assinatura + `{X}%` na criação do restaurante, lendo `deliveryCommissionRate` do perfil (0 é válido). Painel de payouts (`/restaurants/me/payouts`) já era consumido na `home-fornecedor`.
 > - **Pendente só ops: `SEC-1`** (restringir a chave do Maps + habilitar Directions API).
 
+> **Update de 27/10 — recebimento do fornecedor (Mercado Pago) ✅ resolvido pelo BE, front ligado.**
+> `GET /profile/me` passou a trazer **`mercadoPagoLinked: boolean`** no perfil de fornecedor
+> (`f5f6ce82-swagger.json`). `false` = nenhum cliente consegue pagar nada dele — **nada bloqueia** (ele assina e
+> publica normalmente), só o **recebimento** não funciona. Front: **aviso persistente** na `home-fornecedor`
+> enquanto `mercadoPagoLinked === false`, levando ao vínculo (tela `/fornecedor/mercado-pago`, que já usava
+> `GET /v1/mercado-pago/connect-url` → `POST /v1/mercado-pago/oauth/callback`); e indicador de status
+> (conectado × pendente) na seção "Conta de recebimento" do perfil. `ResponseProfileDto` ganhou
+> `mercadoPagoLinked?`. O push/WhatsApp ao assinar sem vínculo é responsabilidade do BE (fora do front).
+
 > **Update de 27/10 (varredura geral — entregador) — nova demanda `BE-COURIER-AVAILABILITY-1`.**
 > A `home-entregador` tinha um toggle **Ativo/Inativo** (status operacional) que só mexia num campo local
 > (`statusOperacional`), sem nenhuma chamada à API — o entregador marcava "Inativo" achando que tinha ficado

@@ -8,6 +8,7 @@ import {
   StatusPedidoFornecedor,
 } from '../../../core/services/fornecedor';
 import { BottomNavFornecedorComponent } from '../../../shared/components/bottom-nav-fornecedor/bottom-nav-fornecedor';
+import { ProfileService } from '../../../core/services/profile';
 import {
   PayoutPeriod,
   ResponseRestaurantDto,
@@ -29,10 +30,16 @@ interface PeriodoOpcao {
 export class HomeFornecedorComponent implements OnInit {
   readonly router = inject(Router);
   private readonly fornecedorService = inject(FornecedorService);
+  private readonly profile = inject(ProfileService);
 
   restaurante: ResponseRestaurantDto | null = null;
   payout?: ResponseRestaurantPayoutDto;
   pedidos: PedidoFornecedor[] = [];
+  /**
+   * Conta do Mercado Pago ainda não vinculada (BE: `mercadoPagoLinked === false`):
+   * nenhum cliente consegue pagar o fornecedor. Não bloqueia nada — só o recebimento.
+   */
+  mpPendente = false;
   carregando = false;
   carregandoPedidos = false;
   /** "Atividades Recentes" mostra os primeiros; "Ver mais" expande a lista inteira. */
@@ -62,6 +69,19 @@ export class HomeFornecedorComponent implements OnInit {
         },
         error: () => {},
       });
+    this.verificarMercadoPago();
+  }
+
+  /** Lê `mercadoPagoLinked` do perfil para o aviso persistente de recebimento. */
+  private verificarMercadoPago() {
+    this.profile.me().subscribe({
+      next: (p) => (this.mpPendente = p.mercadoPagoLinked === false),
+      error: () => {},
+    });
+  }
+
+  irContaRecebimento() {
+    this.router.navigate(['/fornecedor/mercado-pago']);
   }
 
   irParaRestaurante() {

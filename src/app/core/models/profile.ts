@@ -57,6 +57,13 @@ export interface ResponseProfileDto {
    * `PATCH /v1/deliveries/me/availability`. Entregadores já existentes começam `true`.
    */
   isAvailable?: boolean;
+  /**
+   * Vínculo do fornecedor com o Mercado Pago. Vem **só no perfil de fornecedor**
+   * (`profileType: 'Supplier'`). `false` = nenhum cliente consegue pagar nada dele;
+   * nada bloqueia a operação, mas ele não recebe. Resolve-se vinculando a conta
+   * (`GET /v1/mercado-pago/connect-url` → `POST /v1/mercado-pago/oauth/callback`).
+   */
+  mercadoPagoLinked?: boolean;
   socialMedias: ResponseProfileSocialMediaDto[];
   createdAt: string;
   updatedAt: string;

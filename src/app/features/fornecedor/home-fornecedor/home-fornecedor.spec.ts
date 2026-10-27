@@ -47,4 +47,22 @@ describe('HomeFornecedorComponent', () => {
     expect(component.periodoPayout).toBe('week');
     expect(component.payout?.period).toBe('week');
   });
+
+  it('sinaliza Mercado Pago pendente quando mercadoPagoLinked é false', () => {
+    (component as unknown as { verificarMercadoPago(): void }).verificarMercadoPago();
+    httpMock.expectOne((r) => r.url.endsWith('/profile/me')).flush({
+      id: 1, name: 'F', email: 'f@e', role: null, profileType: 'Supplier', status: 'Active',
+      mercadoPagoLinked: false, socialMedias: [], createdAt: '', updatedAt: '',
+    });
+    expect(component.mpPendente).toBe(true);
+  });
+
+  it('não sinaliza quando o Mercado Pago já está vinculado', () => {
+    (component as unknown as { verificarMercadoPago(): void }).verificarMercadoPago();
+    httpMock.expectOne((r) => r.url.endsWith('/profile/me')).flush({
+      id: 1, name: 'F', email: 'f@e', role: null, profileType: 'Supplier', status: 'Active',
+      mercadoPagoLinked: true, socialMedias: [], createdAt: '', updatedAt: '',
+    });
+    expect(component.mpPendente).toBe(false);
+  });
 });

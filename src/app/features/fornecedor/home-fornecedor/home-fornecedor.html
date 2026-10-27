@@ -28,6 +28,16 @@
 
   <div class="page-content">
 
+    @if (mpPendente) {
+      <div class="home-f-mp-aviso" (click)="irContaRecebimento()">
+        <div class="home-f-mp-aviso__texto">
+          <strong>Conecte o Mercado Pago para receber</strong>
+          <span>Enquanto a conta não estiver vinculada, nenhum cliente consegue pagar seus pedidos.</span>
+        </div>
+        <span class="home-f-mp-aviso__acao">CONECTAR</span>
+      </div>
+    }
+
     @if (semRestaurante) {
       <div class="home-f-card" style="flex-direction: column; gap: 12px; align-items: flex-start;">
         <span class="home-f-card__titulo">Você ainda não cadastrou seu restaurante.</span>
