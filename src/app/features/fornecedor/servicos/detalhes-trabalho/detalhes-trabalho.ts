@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { of, switchMap } from 'rxjs';
+import { finalize, of, switchMap } from 'rxjs';
 import { WorkService, TrabalhoFornecedor } from '../../../../core/services/work';
 import { UploadService } from '../../../../core/services/upload';
 import { VIDEO_ACCEPT } from '../../../../core/models/upload';
@@ -30,6 +30,7 @@ export class DetalhesTrabalhoComponent implements OnInit {
   stepAtual: StepTrabalho = 'inicial';
   mostrarModalAcrescimo = false;
   processando = false;
+  carregando = false;
   erro = '';
 
   // Resposta do fornecedor (descrição de conclusão)
@@ -57,15 +58,20 @@ export class DetalhesTrabalhoComponent implements OnInit {
   }
 
   private carregar() {
-    this.works.trabalho(this.trabalhoId).subscribe({
-      next: (t) => {
-        this.trabalho = t;
-        this.stepAtual = this.stepDe(t);
-      },
-      error: (err: ApiError) => {
-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o trabalho.';
-      },
-    });
+    this.carregando = true;
+    this.erro = '';
+    this.works
+      .trabalho(this.trabalhoId)
+      .pipe(finalize(() => (this.carregando = false)))
+      .subscribe({
+        next: (t) => {
+          this.trabalho = t;
+          this.stepAtual = this.stepDe(t);
+        },
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar o trabalho.';
+        },
+      });
   }
 
   private stepDe(t: TrabalhoFornecedor): StepTrabalho {

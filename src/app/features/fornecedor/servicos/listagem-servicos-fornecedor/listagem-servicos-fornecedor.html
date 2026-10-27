@@ -36,6 +36,11 @@
 
   <div class="page-content">
     <div class="lsf-lista">
+      @if (carregando) {
+        <div class="lsf-vazio"><p>Carregando serviços…</p></div>
+      } @else if (erro) {
+        <div class="lsf-vazio"><p>{{ erro }}</p></div>
+      }
       @for (servico of servicos; track servico.id) {
         <div class="lsf-card" (click)="abrirServico(servico)">
 
@@ -71,7 +76,7 @@
         </div>
       }
 
-      @if (servicos.length === 0) {
+      @if (!carregando && !erro && servicos.length === 0) {
         <div class="lsf-vazio">
           <p>Nenhum serviço {{ tabAtiva === 'ativos' ? 'ativo' : 'inativo' }} encontrado.</p>
         </div>

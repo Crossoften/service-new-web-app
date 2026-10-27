@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { BottomNavParceiroComponent } from '../../../shared/components/bottom-nav-parceiro/bottom-nav-parceiro';
 import { ReferralsService } from '../../../core/services/referrals';
+import { ProfileService } from '../../../core/services/profile';
 import { MyReferralDto } from '../../../core/models/referral';
 import { UserProfileType } from '../../../core/models/enums';
 import { ApiError } from '../../../core/models/common';
@@ -31,11 +32,16 @@ const PERFIL_LABEL: Record<UserProfileType, string> = {
 })
 export class HomeParceiroComponent implements OnInit {
   private readonly referrals = inject(ReferralsService);
+  private readonly profile = inject(ProfileService);
 
   link = '';
   linkCopiado = false;
   carregando = false;
   erro = '';
+
+  // Identidade real do parceiro (antes era "João Carlos" / "U" fixos no header).
+  nome = '';
+  fotoUrl?: string;
 
   stats = { downloads: 0, pagantes: 0, comissao: 0, ranking: 0 };
   ultimasIndicacoes: IndicacaoResumo[] = [];
@@ -43,6 +49,7 @@ export class HomeParceiroComponent implements OnInit {
   constructor(public router: Router) {}
 
   ngOnInit() {
+    this.carregarPerfil();
     this.carregando = true;
     forkJoin({ summary: this.referrals.summary(), lista: this.referrals.me() }).subscribe({
       next: ({ summary, lista }) => {
@@ -62,6 +69,22 @@ export class HomeParceiroComponent implements OnInit {
         this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar suas indicações.';
       },
     });
+  }
+
+  /** Nome + foto reais do parceiro para o header (GET /profile/me). */
+  carregarPerfil() {
+    this.profile.me().subscribe({
+      next: (p) => {
+        this.nome = p.name ?? '';
+        this.fotoUrl = p.fileUrl;
+      },
+      error: () => {},
+    });
+  }
+
+  /** Inicial para o avatar quando não há foto. */
+  get inicial(): string {
+    return this.nome.trim().charAt(0).toUpperCase() || 'U';
   }
 
   private toResumo(r: MyReferralDto): IndicacaoResumo {

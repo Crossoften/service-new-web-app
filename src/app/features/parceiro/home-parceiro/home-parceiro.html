@@ -4,11 +4,15 @@
   <div class="home-parceiro-header">
     <div class="home-parceiro-header__user">
       <div class="home-parceiro-header__avatar">
-        <span>U</span>
+        @if (fotoUrl) {
+          <img [src]="fotoUrl" alt="Foto de perfil" />
+        } @else {
+          <span>{{ inicial }}</span>
+        }
       </div>
       <div class="home-parceiro-header__info">
         <span class="home-parceiro-header__welcome">Bem vindo</span>
-        <span class="home-parceiro-header__nome">João Carlos</span>
+        <span class="home-parceiro-header__nome">{{ nome || 'Parceiro' }}</span>
       </div>
     </div>
     <button class="home-parceiro-header__sino">
@@ -20,6 +24,12 @@
   </div>
 
   <div class="page-content">
+
+    @if (carregando) {
+      <p class="parceiro-msg">Carregando suas indicações…</p>
+    } @else if (erro) {
+      <p class="parceiro-msg parceiro-msg--erro">{{ erro }}</p>
+    }
 
     <!-- LINK DE INDICAÇÃO -->
     <div class="parceiro-card">
@@ -73,6 +83,10 @@
             <span class="indicacao-card__descricao">{{ indicacao.descricao }}</span>
           </div>
         </div>
+      } @empty {
+        @if (!carregando && !erro) {
+          <p class="parceiro-msg">Você ainda não tem indicações. Compartilhe seu link!</p>
+        }
       }
     </div>
 

@@ -61,6 +61,8 @@ export class GerenciarCardapioComponent implements OnInit {
   }
 
   excluir(item: ItemCardapioFornecedor) {
+    // Exclusão é destrutiva: confirma antes (padrão das telas de produtos/vagas).
+    if (!confirm(`Excluir "${item.nome}" do cardápio?`)) return;
     this.erro = '';
     this.aviso = '';
     this.fornecedorService.excluirItem(item.id).subscribe({

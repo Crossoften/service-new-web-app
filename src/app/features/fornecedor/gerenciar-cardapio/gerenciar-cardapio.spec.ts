@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -36,6 +37,8 @@ describe('GerenciarCardapioComponent', () => {
     httpMock = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
     httpMock.expectOne((r) => r.url.endsWith('/restaurants/me') && r.method === 'GET').flush(restauranteComItem());
+    // Exclusão agora pede confirmação; por padrão o usuário confirma nos testes.
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
   });
 
   afterEach(() => httpMock.verify());
@@ -59,5 +62,12 @@ describe('GerenciarCardapioComponent', () => {
     req.flush({ deleted: true });
     expect(component.itens.length).toBe(0);
     expect(component.aviso).toContain('excluído');
+  });
+
+  it('não exclui quando o usuário cancela a confirmação', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    component.excluir(component.itens[0]);
+    httpMock.expectNone((r) => r.method === 'DELETE');
+    expect(component.itens.length).toBe(1);
   });
 });

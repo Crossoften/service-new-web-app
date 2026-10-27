@@ -34,6 +34,9 @@ export class HomeFornecedorComponent implements OnInit {
   payout?: ResponseRestaurantPayoutDto;
   pedidos: PedidoFornecedor[] = [];
   carregando = false;
+  carregandoPedidos = false;
+  /** "Atividades Recentes" mostra os primeiros; "Ver mais" expande a lista inteira. */
+  verTodosPedidos = false;
 
   periodoPayout?: PayoutPeriod;
   periodos: PeriodoOpcao[] = [
@@ -86,12 +89,30 @@ export class HomeFornecedorComponent implements OnInit {
   }
 
   private carregarPedidos() {
-    this.fornecedorService.getPedidosRecebidos().subscribe({
-      next: (lista) => (this.pedidos = lista),
-      error: (err: ApiError) => {
-        this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar os pedidos.';
-      },
-    });
+    this.carregandoPedidos = true;
+    this.erro = '';
+    this.fornecedorService
+      .getPedidosRecebidos()
+      .pipe(finalize(() => (this.carregandoPedidos = false)))
+      .subscribe({
+        next: (lista) => (this.pedidos = lista),
+        error: (err: ApiError) => {
+          this.erro = err?.message?.trim() ? err.message : 'Não foi possível carregar os pedidos.';
+        },
+      });
+  }
+
+  /** Pedidos exibidos: os 4 primeiros até o usuário tocar "Ver mais". */
+  get pedidosVisiveis(): PedidoFornecedor[] {
+    return this.verTodosPedidos ? this.pedidos : this.pedidos.slice(0, 4);
+  }
+
+  get temMaisPedidos(): boolean {
+    return this.pedidos.length > 4;
+  }
+
+  alternarVerPedidos() {
+    this.verTodosPedidos = !this.verTodosPedidos;
   }
 
   criarRestaurante() {

@@ -36,6 +36,11 @@
 
     <!-- HISTÓRICO -->
     @if (tabAtiva === 'historico') {
+      @if (carregando) {
+        <div class="saldo-vazio"><p>Carregando…</p></div>
+      } @else if (erro) {
+        <div class="saldo-vazio"><p>{{ erro }}</p></div>
+      }
       <div class="saldo-lista">
         @for (item of historico; track item.id) {
           <div class="saldo-item">
@@ -58,6 +63,10 @@
               <span class="saldo-item__valor">{{ formatarPreco(item.valor) }}</span>
             </div>
           </div>
+        } @empty {
+          @if (!carregando && !erro) {
+            <div class="saldo-vazio"><p>Nenhum recebimento no período.</p></div>
+          }
         }
       </div>
     }

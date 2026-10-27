@@ -97,7 +97,7 @@ export interface TrabalhoFornecedor {
   realizado: string;
   valorServico: number;
   total: number;
-  arquivosCliente: { nome: string; tipo: string }[];
+  arquivosCliente: { nome: string; tipo: string; url: string }[];
   chatId?: number;
   extraPendente: boolean;
   /** Dentro da janela de garantia (informativo — `isUnderWarranty`). */
@@ -424,7 +424,8 @@ export class WorkService {
       total: Number(w.totalValue ?? w.serviceValue ?? 0),
       arquivosCliente: (w.files ?? [])
         .filter((f) => f.type === 'Requester')
-        .map((f) => ({ nome: f.fileName, tipo: f.type })),
+        // `fileUrl` vem absoluta da API — usar como está, sem reconcatenar host.
+        .map((f) => ({ nome: f.fileName, tipo: f.type, url: f.fileUrl })),
       chatId: w.chat?.id,
       extraPendente: w.extraRequestStatus === 'Pending',
       sobGarantia: w.isUnderWarranty,

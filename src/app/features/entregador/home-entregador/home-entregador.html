@@ -52,22 +52,26 @@
     </div>
 
     <!-- STATUS OPERACIONAL -->
+    <!-- Desabilitado: ainda não há endpoint de disponibilidade do entregador no BE
+         (ver docs/backend-demandas.md › BE-COURIER-AVAILABILITY). Mantido visível,
+         porém inerte, para não dar ao entregador a falsa impressão de ter ficado offline. -->
     <div class="he-card">
       <span class="he-card__titulo">Status Operacional</span>
       <div class="he-status">
         <button
           class="he-status__btn"
           [class.he-status__btn--ativo]="statusOperacional === 'ativo'"
-          (click)="statusOperacional = 'ativo'">
+          disabled>
           Ativo
         </button>
         <button
           class="he-status__btn"
           [class.he-status__btn--ativo]="statusOperacional === 'inativo'"
-          (click)="statusOperacional = 'inativo'">
+          disabled>
           Inativo
         </button>
       </div>
+      <span class="he-status__aviso">Controle de disponibilidade em breve.</span>
     </div>
 
     <!-- ENTREGAS DISPONÍVEIS -->

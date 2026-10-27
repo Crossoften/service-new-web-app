@@ -31,6 +31,11 @@
 
   <div class="page-content">
     <div class="tf-lista">
+      @if (carregando) {
+        <div class="tf-vazio"><p>Carregando trabalhos…</p></div>
+      } @else if (erro) {
+        <div class="tf-vazio"><p>{{ erro }}</p></div>
+      }
       @for (trabalho of trabalhosFiltrados; track trabalho.id) {
         <div class="tf-card" (click)="abrirTrabalho(trabalho)">
 
@@ -72,7 +77,7 @@
         </div>
       }
 
-      @if (trabalhosFiltrados.length === 0) {
+      @if (!carregando && !erro && trabalhosFiltrados.length === 0) {
         <div class="tf-vazio">
           <p>Nenhum trabalho encontrado.</p>
         </div>

@@ -9,13 +9,17 @@
     </button>
     <div class="se-header__user">
       <div class="se-header__foto">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
+        @if (fotoUrl) {
+          <img [src]="fotoUrl" alt="Foto de perfil" />
+        } @else {
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        }
       </div>
       <div class="se-header__info">
-        <span class="se-header__nome">Olá, Carlos Oliveira!</span>
+        <span class="se-header__nome">{{ nome ? 'Olá, ' + nome + '!' : 'Olá!' }}</span>
         <span class="se-header__role">Entregador</span>
       </div>
     </div>

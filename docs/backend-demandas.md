@@ -22,6 +22,18 @@
 > - **Delivery — comissão por pedido (produto novo):** aviso de assinatura + `{X}%` na criação do restaurante, lendo `deliveryCommissionRate` do perfil (0 é válido). Painel de payouts (`/restaurants/me/payouts`) já era consumido na `home-fornecedor`.
 > - **Pendente só ops: `SEC-1`** (restringir a chave do Maps + habilitar Directions API).
 
+> **Update de 27/10 (varredura geral — entregador) — nova demanda `BE-COURIER-AVAILABILITY-1`.**
+> A `home-entregador` tinha um toggle **Ativo/Inativo** (status operacional) que só mexia num campo local
+> (`statusOperacional`), sem nenhuma chamada à API — o entregador marcava "Inativo" achando que tinha ficado
+> offline, mas o back nunca ficava sabendo e as corridas continuavam chegando. **Não há endpoint de
+> disponibilidade do entregador no Swagger** (`/v1/deliveries/available` lista *corridas* disponíveis, não o
+> status do entregador; `UpdateProfileDto` não tem campo de disponibilidade; "Online" no Swagger é só
+> `ServiceTypeEnum`). **Decisão de front:** o toggle foi mantido visível porém **desabilitado** com aviso
+> "Controle de disponibilidade em breve", para não dar falsa sensação de ter saído de operação.
+> **Demanda de BE:** expor disponibilidade do entregador — p.ex. `PATCH /v1/deliveries/me` `{ isAvailable }`
+> (ou campo `isAvailable`/`isOnline` no perfil do entregador) retornando o estado atual, e **filtrar a fila de
+> corridas por esse estado**. Quando existir, o front liga o toggle a esse endpoint.
+
 > **Update de 27/10 — auditoria de jornadas (cliente↔fornecedor):**
 > - Serviços §2.1 (fornecedor pede mais informações) e §2.2 (cliente responde) — **resolvidos no front** (feedback/loading no pedido; cliente vê o pedido no detalhe e responde pela sala de chat do orçamento).
 > - Hospedagem §2.3 (recusa de reserva) — **aberta demanda de back `BE-BOOK-REJECT-1`**: a recusa precisa aceitar/retornar um **motivo** (hoje `RespondBookingDto` só tem `status`). Decisão do cliente: **justificativa obrigatória** → o front fica bloqueado até o contrato existir. Ver seção abaixo.

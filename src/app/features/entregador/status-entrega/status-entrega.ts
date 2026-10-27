@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { finalize } from 'rxjs';
 import { EntregadorService } from '../../../core/services/entregador';
+import { ProfileService } from '../../../core/services/profile';
 import { DeliveryStatus, ResponseDeliveryDto } from '../../../core/models/delivery';
 import { ResponseFoodOrderAddressDto } from '../../../core/models/food-order';
 import { ApiError } from '../../../core/models/common';
@@ -36,6 +37,7 @@ export class StatusEntregaComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly entregadorService = inject(EntregadorService);
+  private readonly profile = inject(ProfileService);
 
   entregaId = 0;
   entrega?: ResponseDeliveryDto;
@@ -44,6 +46,10 @@ export class StatusEntregaComponent implements OnInit, OnDestroy {
   erro = '';
   gpsAtivo = false;
   private gpsTimer?: ReturnType<typeof setInterval>;
+
+  // Identidade real do entregador (antes era placeholder fixo no header).
+  nome = '';
+  fotoUrl?: string;
 
   etapas: EtapaEntrega[] = [
     { id: 'Accepted', label: 'Aceito' },
@@ -54,7 +60,19 @@ export class StatusEntregaComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.entregaId = Number(this.route.snapshot.paramMap.get('id'));
+    this.carregarPerfil();
     this.carregar();
+  }
+
+  /** Nome + foto reais do entregador para o header (GET /profile/me). */
+  carregarPerfil() {
+    this.profile.me().subscribe({
+      next: (p) => {
+        this.nome = p.name ?? '';
+        this.fotoUrl = p.fileUrl;
+      },
+      error: () => {},
+    });
   }
 
   ngOnDestroy() {

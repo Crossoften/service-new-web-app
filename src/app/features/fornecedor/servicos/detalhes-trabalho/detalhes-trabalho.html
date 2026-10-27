@@ -21,6 +21,12 @@
 
   <div class="page-content">
 
+    @if (!trabalho && carregando) {
+      <p class="dt-msg">Carregando trabalho…</p>
+    } @else if (!trabalho && erro) {
+      <p class="dt-msg dt-msg--erro">{{ erro }}</p>
+    }
+
     @if (trabalho) {
 
       <!-- DETALHES DO SERVIÇO -->
@@ -86,13 +92,14 @@
         @for (arquivo of trabalho.arquivosCliente; track arquivo.nome) {
           <div class="dt-arquivo">
             <span>{{ arquivo.nome }}</span>
-            <button class="dt-arquivo__btn">
+            <a class="dt-arquivo__btn" [href]="arquivo.url" target="_blank" rel="noopener"
+               [attr.aria-label]="'Abrir ' + arquivo.nome" [title]="arquivo.nome">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="8 12 12 16 16 12"/>
                 <line x1="12" y1="8" x2="12" y2="16"/>
               </svg>
-            </button>
+            </a>
           </div>
         }
       </div>
@@ -225,7 +232,7 @@
       <div class="modal" (click)="$event.stopPropagation()">
         <h3 class="modal__titulo">Atenção!</h3>
         <p class="modal__descricao">
-          Ouve algum acréscimo no orçamento devido a algum serviço extra?
+          Houve algum acréscimo no orçamento devido a algum serviço extra?
           Se sim, justifique e insira o valor, se não, clique apenas em "continuar"
         </p>
 

@@ -28,6 +28,10 @@ describe('HomeParceiroComponent', () => {
   afterEach(() => httpMock.verify());
 
   it('mapeia summary para os stats e monta o link', () => {
+    httpMock.expectOne((r) => r.url.endsWith('/profile/me')).flush({
+      id: 1, name: 'João Carlos', email: 'j@e', role: null, profileType: 'Influencer', status: 'Active',
+      fileUrl: 'https://api/v1/files/foto.png', socialMedias: [], createdAt: '', updatedAt: '',
+    });
     httpMock.expectOne((r) => r.url.endsWith('/referrals/me/summary')).flush({
       referralCode: 'joao',
       totalReferrals: 100,
@@ -45,5 +49,7 @@ describe('HomeParceiroComponent', () => {
     expect(component.stats.comissao).toBe(500);
     expect(component.stats.ranking).toBe(24);
     expect(component.link).toContain('ref=joao');
+    expect(component.nome).toBe('João Carlos');
+    expect(component.fotoUrl).toBe('https://api/v1/files/foto.png');
   });
 });
