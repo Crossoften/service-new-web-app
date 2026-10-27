@@ -68,11 +68,15 @@
 
 ### 🔧 Demandas de back abertas
 
-- **BE-INFLUENCER-CODE-1** 🟡 (27/10, influencer — verificar) — **confirmar se o back gera/retorna o `referralCode` do influencer.**
-  O campo existe no contrato (`ResponseMyReferralsSummaryDto.referralCode`, `ResponseProfileDto.referralCode` nullable),
-  mas o link não estava sendo gerado. O front passou a ler de `GET /referrals/me/summary`. **Se, mesmo assim, o
-  `referralCode` voltar vazio/null** para o influencer, o back precisa **gerar e retornar** o código (o front já trata o
-  estado vazio, mas sem código não há link). *Verificar com um influencer real; se vier preenchido, fechar esta demanda.*
+- **BE-INFLUENCER-CODE-1** 🔴 (27/10, influencer — **confirmado**) — **o back não gera/retorna o `referralCode` do influencer.**
+  O campo está no contrato (`ResponseMyReferralsSummaryDto.referralCode`, `ResponseMyReferralsDto.referralCode`,
+  `ResponseProfileDto.referralCode` nullable), mas **nenhuma resposta real o traz**. Evidência (influencer logado, 27/10):
+  - `GET /v1/referrals/me` → `{"referrals":[],"totalRecords":0}` (sem `referralCode`);
+  - `GET /v1/referrals/me/summary` → `{"totalReferrals":0,"totalPaying":0,"accumulatedCommission":0,"rankingPosition":1,"commissionRate":null,"effectiveCommissionRate":10}` (**sem `referralCode`**).
+  **Impacto:** o influencer **não tem link de indicação** (a tela "Meu link" fica no estado vazio) e, por consequência,
+  ninguém consegue se cadastrar indicado por ele. O front já está pronto (lê o campo e trata o vazio). **Pedido ao back:**
+  gerar o `referralCode` do influencer (na aprovação/ativação da conta, ou sob demanda) e **retorná-lo** em
+  `GET /referrals/me/summary` (e, idealmente, também em `/referrals/me` e `profile/me`). *Bloqueia o link de indicação do influencer.*
 
 - **BE-BOOK-REJECT-1** 🔴 (27/10, auditoria de jornadas §2.3) — **recusa de reserva precisa de motivo.**
   Hoje `PATCH /v1/bookings/{id}/respond` recebe só `RespondBookingDto { status: 'Confirmed' | 'Rejected' }` e o
